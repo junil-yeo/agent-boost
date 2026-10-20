@@ -3,8 +3,11 @@
 #
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/junil-yeo/agent-boost/main/install.sh)"
 #
-# It checks everything the app needs and installs what is missing (Command Line Tools, Homebrew, tmux, Claude Code,
-# GitHub CLI), signs you in to Claude if needed, builds the app for this Mac, puts it in Applications and opens it.
+# macOS: checks and installs what is missing (Command Line Tools, Homebrew, tmux, Claude Code, GitHub CLI), signs you in
+# to Claude if needed, builds the app for this Mac, puts it in Applications and opens it.
+# Linux: installs tmux, the Electron app's system libraries, a private Node.js, Claude Code and the GitHub CLI, signs you
+# in, installs the Linux version under ~/.local/share/agent-boost with an app-menu entry and an `agent-boost` command,
+# and opens it.
 # Run it again at any time to update to the latest source; running sessions keep running.
 set -euo pipefail
 
@@ -23,9 +26,161 @@ interactive() { [ -t 0 ] || [ -r /dev/tty ]; }
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 has() { command -v "$1" >/dev/null 2>&1; }
 
+download_source() {   # → $top: the unpacked source tree
+  say "Downloading the source ($REPO, $BRANCH)"
+  tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+  curl -fsSL "https://codeload.github.com/$REPO/tar.gz/refs/heads/$BRANCH" -o "$tmp/src.tar.gz" \
+    || die "Could not download the source. Check the internet connection and the repository ($REPO)."
+  mkdir -p "$tmp/x" && tar -xzf "$tmp/src.tar.gz" -C "$tmp/x"
+  top=$(find "$tmp/x" -mindepth 1 -maxdepth 1 -type d | head -1)
+  ok "Source ready"
+}
+
+sign_in() {
+  if claude auth status 2>/dev/null | grep -q '"loggedIn": *true'; then
+    ok "Signed in to Claude"
+  elif interactive; then
+    say "Signing in to Claude (a browser window opens)"
+    claude auth login </dev/tty || warn "Not signed in yet. Run 'claude' in a terminal later to sign in."
+  else
+    warn "Not signed in to Claude. Run 'claude' in a terminal to sign in."
+  fi
+}
+
+# ════════════════════════════════════ Linux ════════════════════════════════════════════
+install_linux() {
+  local DEST="$HOME/.local/share/agent-boost" NODE_DIR="$HOME/.local/share/agent-boost/node"
+  say "Checking this computer"
+  ok "$( (. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME") || uname -sr) ($(uname -m))"
+  case "$(uname -m)" in x86_64|amd64) arch=x64 ;; aarch64|arm64) arch=arm64 ;; *) die "Unsupported CPU: $(uname -m) (x86_64 or arm64 needed)." ;; esac
+
+  # package manager (system packages need sudo; it asks for your password once)
+  local pm="" SUDO=""
+  [ "$(id -u)" -ne 0 ] && SUDO="sudo"
+  if has apt-get; then pm=apt; elif has dnf; then pm=dnf; elif has pacman; then pm=pacman; elif has zypper; then pm=zypper; fi
+  pkg_install() {
+    [ -n "$pm" ] || return 1
+    case $pm in
+      apt) $SUDO apt-get update -qq </dev/tty && $SUDO apt-get install -y "$@" </dev/tty ;;
+      dnf) $SUDO dnf install -y "$@" </dev/tty ;;
+      pacman) $SUDO pacman -S --needed --noconfirm "$@" </dev/tty ;;
+      zypper) $SUDO zypper --non-interactive install "$@" </dev/tty ;;
+    esac
+  }
+
+  # tmux (required)
+  if has tmux; then ok "tmux $(tmux -V | cut -d' ' -f2)"
+  else
+    say "Installing tmux"
+    pkg_install tmux || true
+    has tmux || die "tmux could not be installed. Install it with your package manager, then run this again."
+    ok "tmux $(tmux -V | cut -d' ' -f2)"
+  fi
+
+  # git and curl helpers some distros lack
+  has git || pkg_install git >/dev/null 2>&1 || true
+
+  # Node.js for installing the app (a private copy: no system change, no version conflicts)
+  local NODE_VER="v22.11.0"
+  if [ ! -x "$NODE_DIR/bin/node" ] || [ "$("$NODE_DIR/bin/node" -v)" != "$NODE_VER" ]; then
+    say "Installing Node.js $NODE_VER (private copy for Agent Boost)"
+    rm -rf "$NODE_DIR"; mkdir -p "$NODE_DIR"
+    curl -fsSL "https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-linux-$arch.tar.xz" | tar -xJ -C "$NODE_DIR" --strip-components=1 \
+      || die "Could not download Node.js."
+  fi
+  export PATH="$NODE_DIR/bin:$PATH"
+  ok "Node.js $(node -v)"
+
+  # Claude Code CLI (required)
+  if has claude; then ok "Claude Code $(claude --version 2>/dev/null | cut -d' ' -f1)"
+  else
+    say "Installing Claude Code"
+    curl -fsSL https://claude.ai/install.sh | bash || true
+    has claude || die "Claude Code could not be installed. See https://code.claude.com/docs/en/setup, then run this again."
+    ok "Claude Code $(claude --version 2>/dev/null | cut -d' ' -f1)"
+  fi
+
+  # GitHub CLI (optional: repository list for cloud sessions)
+  if has gh; then ok "GitHub CLI"
+  else
+    pkg_install gh >/dev/null 2>&1 || pkg_install github-cli >/dev/null 2>&1 || true
+    has gh && ok "GitHub CLI" || warn "GitHub CLI not installed (optional; used to list repositories for cloud sessions)."
+  fi
+
+  sign_in
+  download_source
+  [ -f "$top/linux/package.json" ] || die "The downloaded source has no linux/ app."
+
+  say "Installing Agent Boost for Linux"
+  local NEW="$DEST/app.new"
+  rm -rf "$NEW"; mkdir -p "$DEST"
+  cp -R "$top/linux" "$NEW"
+  cp -R "$top/Resources/l10n" "$NEW/l10n"
+  ( cd "$NEW" && npm install --omit=optional --no-audit --no-fund --foreground-scripts >/dev/null 2>&1 \
+      || npm install --no-audit --no-fund ) || die "Installing the app's packages failed. See the messages above."
+  local ELECTRON="$NEW/node_modules/electron/dist/electron"
+  [ -x "$ELECTRON" ] || ( cd "$NEW" && node node_modules/electron/install.js ) || die "Electron could not be downloaded."
+
+  # system libraries Electron needs (desktop distros usually have them)
+  local missing_libs
+  missing_libs=$(ldd "$ELECTRON" 2>/dev/null | awk '/not found/ {print $1}' | tr '\n' ' ')
+  if [ -n "$missing_libs" ]; then
+    say "Installing system libraries for the app window"
+    case $pm in
+      apt) pkg_install libnss3 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libxss1 libxshmfence1 libdrm2 libxkbcommon0 \
+             libasound2t64 2>/dev/null || pkg_install libnss3 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libxss1 libxshmfence1 libdrm2 libxkbcommon0 libasound2 ;;
+      dnf) pkg_install nss atk at-spi2-atk gtk3 mesa-libgbm libXScrnSaver libxshmfence libdrm libxkbcommon alsa-lib ;;
+      pacman) pkg_install nss atk at-spi2-core gtk3 mesa libxss libxshmfence libdrm libxkbcommon alsa-lib ;;
+      zypper) pkg_install mozilla-nss libatk-1_0-0 libatk-bridge-2_0-0 gtk3 libgbm1 libXss1 libxshmfence1 libdrm2 libxkbcommon0 alsa ;;
+    esac || warn "Some libraries may be missing: $missing_libs"
+  fi
+
+  # Chromium's sandbox helper must be owned by root (setuid); without sudo the app starts with --no-sandbox
+  local SANDBOX_FLAG=""
+  if [ -f "$NEW/node_modules/electron/dist/chrome-sandbox" ] && $SUDO chown root:root "$NEW/node_modules/electron/dist/chrome-sandbox" </dev/tty 2>/dev/null \
+     && $SUDO chmod 4755 "$NEW/node_modules/electron/dist/chrome-sandbox" 2>/dev/null; then :; else SANDBOX_FLAG="--no-sandbox"; fi
+
+  # replace the running copy (sessions keep running: they live in tmux)
+  pkill -f "$DEST/app/node_modules/electron/dist/electron" 2>/dev/null || true
+  rm -rf "$DEST/app"; mv "$NEW" "$DEST/app"
+  ELECTRON="$DEST/app/node_modules/electron/dist/electron"
+
+  mkdir -p "$HOME/.local/bin" "$HOME/.local/share/applications" "$HOME/.local/share/icons/hicolor/512x512/apps"
+  cat > "$HOME/.local/bin/agent-boost" <<LAUNCH
+#!/bin/sh
+exec "$ELECTRON" $SANDBOX_FLAG "$DEST/app" "\$@"
+LAUNCH
+  chmod +x "$HOME/.local/bin/agent-boost"
+  cp "$DEST/app/assets/icon.png" "$HOME/.local/share/icons/hicolor/512x512/apps/agent-boost.png"
+  cat > "$HOME/.local/share/applications/agent-boost.desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=Agent Boost
+Comment=Watch and drive teams of Claude Code agents
+Exec=$HOME/.local/bin/agent-boost
+Icon=agent-boost
+Terminal=false
+Categories=Development;
+StartupWMClass=Agent Boost
+DESKTOP
+  has update-desktop-database && update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1 || true
+  ok "Installed: $DEST/app (command: agent-boost, and 'Agent Boost' in the app menu)"
+
+  say "Done"
+  if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    nohup "$HOME/.local/bin/agent-boost" >/dev/null 2>&1 &
+  else
+    warn "No graphical session here: start it later with 'agent-boost' or from the app menu."
+  fi
+  exit 0
+}
+
+[ "$(uname)" = "Linux" ] && install_linux
+
+# ════════════════════════════════════ macOS ════════════════════════════════════════════
 # ── 1. macOS 15 or later ────────────────────────────────────────────────────────────────
 say "Checking this Mac"
-[ "$(uname)" = "Darwin" ] || die "Agent Boost runs on macOS only."
+[ "$(uname)" = "Darwin" ] || die "Agent Boost runs on macOS and Linux only."
 major=$(sw_vers -productVersion | cut -d. -f1)
 [ "$major" -ge 15 ] || die "macOS 15 or later is required (this Mac: $(sw_vers -productVersion))."
 ok "macOS $(sw_vers -productVersion) ($(uname -m))"
@@ -90,25 +245,12 @@ else
 fi
 
 # ── 7. Claude sign-in ───────────────────────────────────────────────────────────────────
-if claude auth status 2>/dev/null | grep -q '"loggedIn": *true'; then
-  ok "Signed in to Claude"
-elif interactive; then
-  say "Signing in to Claude (a browser window opens)"
-  claude auth login </dev/tty || warn "Not signed in yet. Run 'claude' in Terminal later to sign in."
-else
-  warn "Not signed in to Claude. Run 'claude' in Terminal to sign in."
-fi
+sign_in
 
 # ── 8. Source ───────────────────────────────────────────────────────────────────────────
-say "Downloading the source ($REPO, $BRANCH)"
-tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-curl -fsSL "https://codeload.github.com/$REPO/tar.gz/refs/heads/$BRANCH" -o "$tmp/src.tar.gz" \
-  || die "Could not download the source. Check the internet connection and the repository ($REPO)."
-mkdir -p "$tmp/x" && tar -xzf "$tmp/src.tar.gz" -C "$tmp/x"
-top=$(find "$tmp/x" -mindepth 1 -maxdepth 1 -type d | head -1)
+download_source
 [ -f "$top/build.sh" ] || die "The downloaded source has no build.sh."
 rm -rf "$SRC"; mkdir -p "$(dirname "$SRC")"; mv "$top" "$SRC"
-ok "Source ready"
 
 # ── 9. Build for this Mac (a few minutes) ───────────────────────────────────────────────
 say "Building — this takes a few minutes"

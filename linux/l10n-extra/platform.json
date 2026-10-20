@@ -1,0 +1,8 @@
+{
+  "터미널 프로그램을 찾지 못했습니다 (%@)": {
+    "en": "No terminal program found (%@)",
+    "ja": "ターミナルプログラムが見つかりません (%@)",
+    "zh": "未找到终端程序 (%@)",
+    "es": "No se encontró ningún programa de terminal (%@)"
+  }
+}

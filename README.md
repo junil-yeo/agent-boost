@@ -1,13 +1,22 @@
 # Agent Boost
 
-A native macOS app (SwiftUI) to watch and drive teams of Claude Code agents from one window.
+Watch and drive teams of Claude Code agents from one window, on macOS and Linux.
 tmux is used only as an invisible engine underneath; you work in the app.
+
+- **macOS**: a native SwiftUI app (`Sources/`, built with `build.sh`).
+- **Linux**: a separate Electron app with the same features (`linux/`). It reads the same Claude Code files, uses the
+  same tmux engine and the same translations, and shows the same screens.
 
 ## Install
 
-Paste one line into Terminal. It checks and installs everything the app needs (Command Line Tools, Homebrew, tmux,
-Claude Code, GitHub CLI), signs you in to Claude, builds the app for your Mac, puts it in Applications and opens it.
-Run it again to update.
+Paste one line into a terminal, on macOS or Linux. It checks and installs everything the app needs, signs you in to
+Claude, installs the app and opens it. Run it again to update.
+
+- **macOS**: Command Line Tools, Homebrew, tmux, Claude Code, GitHub CLI; builds the app for your Mac and puts it in
+  Applications.
+- **Linux** (Ubuntu/Debian, Fedora, Arch, openSUSE; x86_64 or arm64): tmux and the window's system libraries through
+  your package manager (it asks for your password once), a private Node.js, Claude Code, GitHub CLI; installs the app
+  under `~/.local/share/agent-boost` with an `agent-boost` command and an entry in your app menu.
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/junil-yeo/agent-boost/main/install.sh)"
@@ -16,7 +25,15 @@ Run it again to update.
 Languages: English, 한국어, 日本語, 简体中文, Español. You pick one at first launch and can change it at any time from
 the menu above the clock.
 
-## Run / build
+## Linux version
+
+- Start: `agent-boost`, or "Agent Boost" in the app menu.
+- Develop: `cd linux && npm install && npm start`. Tests: `npm test`.
+- Layout: `linux/main/` holds the logic (one module per Swift file, same function names: `TmuxControl.send` →
+  `tmux.send`), `linux/renderer/` the screens (Preact, no build step). Translations come from `Resources/l10n`.
+- `AB_READONLY=1 npm start` runs it without changing any session or file (for trying it next to a running copy).
+
+## Run / build (macOS)
 
 - Run: double-click `AgentBoost.app`
 - Build: `./build.sh` (development, fast) / `./build.sh release` (optimized, for this Mac) / `./build.sh dist`
