@@ -351,6 +351,7 @@ const cache = {
   onAutoConfirm: null,
   /** The app just sent /model: a "Switch model?" confirmation in the next 20 s was caused by the user's own choice. */
   expectModelConfirm(pane) { C._modelSentAt[pane] = now(); },
+  clearModelConfirm(pane) { delete C._modelSentAt[pane]; },
   /** Text was just typed into the pane: it is busy now, whatever an older capture says. */
   markSent(pane, busy) { C._sentAt[pane] = now(); if (busy) C._busy[pane] = true; },
   /** True when the cached busy flag was captured after the last send settled: safe to type slash commands. */
@@ -422,7 +423,7 @@ Object.assign(T, {
   cache,
   cachedPanes: () => cache.panes, cachedPaneSessions: () => cache.paneSessions,
   state: cache.state, prompt: cache.prompt, overlay: cache.overlay, foreignTyped: cache.foreignTyped, status: cache.status, mates: cache.mates,
-  busy: cache.busy, setWanted: cache.setWanted, expectModelConfirm: cache.expectModelConfirm, markSent: cache.markSent,
+  busy: cache.busy, setWanted: cache.setWanted, expectModelConfirm: cache.expectModelConfirm, clearModelConfirm: cache.clearModelConfirm, markSent: cache.markSent,
   isSettled: cache.isSettled, probe: cache.probe, update: cache.update,
 });
 Object.defineProperty(T, 'onAutoConfirm', { enumerable: true, get: () => cache.onAutoConfirm, set: (f) => { cache.onAutoConfirm = f; } });

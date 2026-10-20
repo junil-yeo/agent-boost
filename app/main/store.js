@@ -354,6 +354,7 @@ const Cache = {
   busy: (p) => TmuxCache().busy(p) ?? null,
   setWanted: (s) => TmuxCache().setWanted(s),
   expectModelConfirm: (p) => TmuxCache().expectModelConfirm(p),
+  clearModelConfirm: (p) => { const c = TmuxCache(); if (c.clearModelConfirm) c.clearModelConfirm(p); },
   markSent: (p, busy) => TmuxCache().markSent(p, busy),
   isSettled: (p) => !!TmuxCache().isSettled(p),
   mates: (p) => (typeof TmuxCache().mates === 'function' ? TmuxCache().mates(p) : null) ?? null,
@@ -521,7 +522,9 @@ function refresh() {
       setNoticeValue(L("'%@' 은(는) 이 tmux 서버에 없는 pane이라 제어할 수 없습니다 — 대기 중이던 %@ 명령을 취소했습니다.", a.name, cmds[0] ?? ''));
       delete pendingCommands[sid]; delete pendingSince[sid]; continue;
     }
-    if (!working(a) && settled && cmds.length > 0) {
+    // /exit waits for the turn to end; other commands go as soon as no question is waiting (overlay / typing held above)
+    const ready = cmds[0] === '/exit' ? (!working(a) && settled) : a.state !== 'needsInput';
+    if (ready && cmds.length > 0) {
       const first = cmds[0];
       delete pendingSince[sid];
       if (cmds.length > 1) pendingCommands[sid] = cmds.slice(1); else delete pendingCommands[sid];
@@ -532,8 +535,8 @@ function refresh() {
   for (const [sid, name] of Object.entries(pendingRenames)) {
     const a = agent(sid);
     if (!a) { delete pendingRenames[sid]; continue; }
-    if (!working(a) && a.tmuxPane != null && Cache.isSettled(a.tmuxPane)) {
-      Cache.markSent(a.tmuxPane, false); TmuxControl().rename(name, a.tmuxPane); delete pendingRenames[sid];
+    if (a.tmuxPane != null && a.state !== 'needsInput' && a.overlay == null) {
+      Cache.markSent(a.tmuxPane, working(a)); TmuxControl().rename(name, a.tmuxPane); delete pendingRenames[sid];
     } else if (a.state === 'ended') { delete pendingRenames[sid]; writeTitle(name, a); }
   }
   changed();
@@ -1414,10 +1417,10 @@ function rename(a, raw) {
     // Claude picks it up the next time the session is opened
     writeTitle(name, a);
     setNoticeValue(L("'%@'은(는) 입력할 수 없는 세션이라 이름을 기록에 저장했습니다. 다음에 다시 시작할 때부터 '%@'(으)로 표시됩니다.", a.name, name));
-  } else if (working(a)) {
+  } else if (a.state === 'needsInput' || a.overlay != null) {
     pendingRenames[a.sessionId] = name;
     setNoticeValue(L("'%@' 작업 중 — 대기 상태가 되면 이름을 바꿉니다.", a.name));
-  } else {
+  } else {                                      // also while a turn runs: the CLI renames at once
     TmuxControl().rename(name, a.tmuxPane);
   }
   if (a.teamName != null && seen[a.teamName] && seen[a.teamName][a.sessionId]) { seen[a.teamName][a.sessionId].name = name; saveSeen(); }
@@ -1500,7 +1503,10 @@ function command(cmd, a) {
   if (a.state === 'ended' || a.tmuxPane == null) { setNoticeValue(L('tmux pane이 없거나 종료된 세션이라 변경할 수 없습니다.')); return; }
   if (ro(`command ${a.sessionId} ${cmd}`, a)) return;
   const p = a.tmuxPane;
-  if (!working(a) && Cache.isSettled(p) && (pendingCommands[a.sessionId] || []).length === 0) sendSlash(cmd, p, a.sessionId);
+  // the CLI takes /model, /effort, /rename … while a turn runs (applied at once, like typing them there): only a question
+  // waiting for an answer, a list on screen or someone typing in the terminal holds a command. /exit still waits.
+  const hold = cmd === '/exit' || a.state === 'needsInput' || a.overlay != null || Cache.foreignTyped(p);
+  if (!hold && (pendingCommands[a.sessionId] || []).length === 0) sendSlash(cmd, p, a.sessionId);
   else { (pendingCommands[a.sessionId] = pendingCommands[a.sessionId] || []).push(cmd); setNoticeValue(L("'%@' 작업 중 — 대기 상태가 되면 %@ 을(를) 보냅니다.", a.name, cmd)); }
   refresh();
 }
@@ -1572,6 +1578,22 @@ function sendSlash(cmd, pane, sid = null) {
   if (sid != null) addEcho(cmd, sid, 20, !userInitiated);
   const C = TmuxControl();
   C.command(cmd, pane);
+  if (cmd.startsWith('/model')) {
+    // the "Switch model?" window may follow. Answer it on the pane's own queue before anything else goes in: a /rename
+    // sent right after /model (both are sent at once now, even mid-turn) was swallowed by that window.
+    C.queue(pane, async () => {
+      for (let i = 0; i < 32; i++) {                        // up to 8 s: mid-turn the window can come late
+        await sleep(250);
+        const out = (await Shell.tmux(['capture-pane', '-p', '-t', pane])).out;   // not C.exec: that waits on this same queue
+        if (Screen().isSwitchModelPrompt(out)) {
+          if (Cache.clearModelConfirm) Cache.clearModelConfirm(pane);   // answered here: the background check must not press Enter again
+          await C.keys(['-t', pane, 'Enter'], L('모델 전환 확인(Enter)'));
+          await sleep(300);
+          return;
+        }
+      }
+    });
+  }
   if (touchesDefaults && sid != null) {
     // the pane answers at once ("Set model to …" / "Set effort level to …"): that is the real confirmation
     const key = sid + '|' + (cmd.startsWith('/model') ? '/model' : '/effort');
