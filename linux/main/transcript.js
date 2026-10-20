@@ -136,11 +136,13 @@ class TranscriptReader {
     const st = TranscriptReader.stamp(p);
     if (this.warming.has(p)) return true;
     if ((this.levels.get(p) || 0) >= mode) return false;                                  // loaded at this level
-    // a failed try with the file unchanged: still not parsed here (the caller would parse inline), but do not retry
-    // a broken file more than every 30 s
-    if (this.tried.get(p) === st && this.triedAt.has(p) && Date.now() - this.triedAt.get(p) < 30000) return true;
+    // a failed try at this level with the file unchanged: still not parsed here (the caller would parse inline), but
+    // do not retry a broken file more than every 30 s. Only failures count: a successful light read used to count
+    // too, so selecting that session waited up to 30 s for its full conversation.
+    const key = st + '|' + mode;
+    if (this.tried.get(p) === key && this.triedAt.has(p) && Date.now() - this.triedAt.get(p) < 30000) return true;
     this.warming.add(p);
-    const job = { p, mode, st, done };
+    const job = { p, mode, st, key, done };
     if (mode === Mode.full) this.runWarm(job, true);
     else { this.queue.push(job); this.pump(); }
     return true;
@@ -152,7 +154,9 @@ class TranscriptReader {
     if (!immediate) this.running++;
     const finish = (res) => {
       if (res) this.commit(job.p, res.st, res.size);
-      this.warming.delete(job.p); this.tried.set(job.p, job.st); this.triedAt.set(job.p, Date.now());
+      this.warming.delete(job.p);
+      if ((this.levels.get(job.p) || 0) >= job.mode) { this.tried.delete(job.p); this.triedAt.delete(job.p); }
+      else { this.tried.set(job.p, job.key); this.triedAt.set(job.p, Date.now()); }
       if (!immediate) { this.running--; this.pump(); }
       if (job.done) { try { job.done(); } catch (e) { console.error(e); } }
     };

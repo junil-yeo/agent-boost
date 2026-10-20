@@ -57,13 +57,18 @@ final class TranscriptReader {
         lock.lock()
         if warming.contains(path) { lock.unlock(); return true }
         if (levels[path] ?? 0) >= mode.rawValue { lock.unlock(); return false }                       // loaded at this level
-        // a failed try with the file unchanged: still not parsed here (the caller would parse on the main thread), but do
-        // not retry a broken file more than every 30 s
-        if tried[path] == st, let t = triedAt[path], Date().timeIntervalSince(t) < 30 { lock.unlock(); return true }
+        // a failed try at this level with the file unchanged: still not parsed here (the caller would parse on the main
+        // thread), but do not retry a broken file more than every 30 s. Only failures count: a successful light read
+        // used to count too, so selecting that session waited up to 30 s for its full conversation.
+        let key = st + "|\(mode.rawValue)"
+        if tried[path] == key, let t = triedAt[path], Date().timeIntervalSince(t) < 30 { lock.unlock(); return true }
         warming.insert(path); lock.unlock()
         let work = { [self] in
             _ = snapshot(path, mode: mode)
-            lock.lock(); warming.remove(path); tried[path] = st; triedAt[path] = Date(); lock.unlock()
+            lock.lock()
+            warming.remove(path)
+            if (levels[path] ?? 0) >= mode.rawValue { tried[path] = nil; triedAt[path] = nil } else { tried[path] = key; triedAt[path] = Date() }
+            lock.unlock()
             DispatchQueue.main.async { done() }
         }
         if mode == .full { DispatchQueue.global(qos: .userInitiated).async(execute: work) } else { warmQueue.addOperation(work) }
