@@ -184,8 +184,12 @@ enum TmuxControl {
             let raw = Shell.tmux(["capture-pane", "-p", "-e", "-t", pane, "-S", "-4"])
             guard raw.code == 0, Screen.typedInput(raw.out) else {
                 // a slash command the CLI runs itself is not always written to history: only messages are checked
-                guard !sid.isEmpty, !sid.hasPrefix("session-"), !text.hasPrefix("/") else { SendLog.note("tmux \(pane): Enter 후 입력창 비었음 (전송됨)"); return }
-                if accepted(sid, history: mark, transcript: tmark, seconds: 6) { SendLog.note("tmux \(pane): CLI 기록에서 받은 것 확인 (전송됨)"); return }
+                guard !sid.isEmpty, !sid.hasPrefix("session-"), !text.hasPrefix("/") else {
+                    SendLog.note("tmux \(pane): Enter 후 입력창 비었음 (전송됨)"); Attach.discard(in: text); return
+                }
+                if accepted(sid, history: mark, transcript: tmark, seconds: 6) {
+                    SendLog.note("tmux \(pane): CLI 기록에서 받은 것 확인 (전송됨)"); Attach.discard(in: text); return
+                }
                 SendLog.note("tmux \(pane): 입력창은 비었지만 CLI가 받지 않음 — 입력창에 되돌림")
                 onLost?(sid)
                 return

@@ -114,6 +114,7 @@ final class BoardStore: ObservableObject {
         TmuxControl.onDone = { [weak self] sid in self?.sending.remove(sid) }
         DispatchQueue.global().async { Shell.tmux(["set-environment", "-g", "PATH", Shell.path]) }
         BoardStore.shared = self
+        CLICheck.start(self)
         // the tmux cache must exist before the first refresh: otherwise every pane is unknown ("view only" flicker) and
         // resumeSavedSessions would judge liveness from an empty cache
         afterFirstRefresh = { [unowned self] in

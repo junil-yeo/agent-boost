@@ -112,6 +112,16 @@ enum Attach {
             return (try? FileManager.default.copyItem(at: u, to: to)) != nil ? to : u
         }
     }
+    /// The CLI keeps a pasted image inside its transcript (base64) once it has taken the message, so the copies made
+    /// here for that message are no longer needed: removed after a confirmed send (kept when the message came back).
+    static func discard(in text: String) {
+        let root = dir.path + "/"
+        for w in text.split(whereSeparator: { $0 == " " || $0 == "\n" }) where w.hasPrefix(root) {
+            let p = String(w)
+            guard !p.dropFirst(root.count).contains("/") else { continue }
+            try? FileManager.default.removeItem(atPath: p)
+        }
+    }
     static func png(from img: NSImage) -> Data? {
         guard let t = img.tiffRepresentation, let r = NSBitmapImageRep(data: t) else { return nil }
         return r.representation(using: .png, properties: [:])

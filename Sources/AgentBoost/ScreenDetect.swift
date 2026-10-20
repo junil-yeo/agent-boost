@@ -207,6 +207,7 @@ extension Screen {
     }
     /// Someone typed into the CLI's input box: text that is neither the dim suggestion nor the dim placeholder.
     static func typedInput(_ raw: String) -> Bool { inputText(raw)?.typed ?? false }
+    static func hasInputBox(_ raw: String) -> Bool { inputText(raw) != nil }
 
     /// The dim text right after "❯" on the input line between the box rules: the CLI's suggestion. Typed text is not dim,
     /// so a box with something typed in it yields nil.

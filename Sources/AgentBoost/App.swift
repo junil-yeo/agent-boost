@@ -214,6 +214,7 @@ struct AgentBoostApp: App {
 struct RootView: View {
     @EnvironmentObject var store: BoardStore
     @State private var tab: String = "home"
+    @State private var searching = false
     @State private var creating = false
     @State private var alive: [String] = ["home"]
     private func tabExists(_ k: String) -> Bool {
@@ -272,6 +273,8 @@ struct RootView: View {
                     Image(systemName: isDark ? "sun.max" : "moon").frame(width: 16)
                 }
                 .buttonStyle(QuietButtonStyle()).help(isDark ? "화이트 모드로 바꿉니다" : "다크 모드로 바꿉니다")
+                Button { searching = true } label: { Label("대화 검색", systemImage: "magnifyingglass") }
+                    .keyboardShortcut("f", modifiers: [.command, .shift]).buttonStyle(QuietButtonStyle()).help("모든 세션의 지난 대화에서 찾습니다 (⌘⇧F)")
                 Button { creating = true } label: { Label("새 세션", systemImage: "plus") }.keyboardShortcut("n").buttonStyle(TabFaceStyle(strong: true))
                 }
             }
@@ -306,6 +309,7 @@ struct RootView: View {
         .onAppear { PromptNotifier.shared.install(store: store); if let t = store.launchTab { tab = t }; SelfTest.runIfRequested(store: store) { tab = $0 } }
         .onChange(of: waitingForAnswer) { _, w in PromptNotifier.shared.update(waiting: w, enabled: showNotices) }
         .sheet(isPresented: $creating) { NewSessionSheet() }
+        .sheet(isPresented: $searching) { ConvoSearchSheet() }
         .onChange(of: store.navRequest) { _, r in if let r { tab = r.tab } }
         .onChange(of: tab) { _, _ in store.refreshSoon() }   // tmux + files off the main thread first
         .onChange(of: store.selectedAgent) { _, sid in
