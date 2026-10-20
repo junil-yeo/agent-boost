@@ -53,10 +53,20 @@ let electron = null;
 try { if (process.versions.electron) electron = require('electron'); } catch { }
 
 const RO = !!process.env.AB_READONLY;
+/** AB_ONLY=<prefix> (only.js): actions only on sandbox sessions; start-up routines that act are skipped as under RO. */
+const Only = require('./only');
+const ONLY = Only.active();
 /** macOS: where the Linux port does something Linux-specific, the Swift app's own behaviour on the Mac. */
 const isMac = process.platform === 'darwin';
 /** AB_READONLY guard: true = refuse (and say so on the console). */
-function ro(action) { if (!RO) return false; console.log(`[readonly] ${action}`); return true; }
+function ro(action, ...target) {
+  if (RO) { console.log(`[readonly] ${action}`); return true; }
+  if (!ONLY) return false;
+  // AB_ONLY: allowed only with a target (agent, pane, tmux session, launch) that belongs to the sandbox; a call without
+  // one (a start-up routine, a server-wide change) is refused
+  if (target.length > 0 && Only.allows(target[0])) return false;
+  return Only.refuse(action);
+}
 
 // ── small helpers ─────────────────────────────────────────────────────────────────────────────────────────────────
 const home = Shell.home;
@@ -98,7 +108,10 @@ function readTail(p, n) {
     const b = Buffer.alloc(size - from); const got = fs.readSync(fd, b, 0, size - from, from); return { size, data: b.subarray(0, got) };
   } catch { return null; } finally { if (fd !== undefined) try { fs.closeSync(fd); } catch { } }
 }
-function writeFileSafe(p, data) { try { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, data); return true; } catch { return false; } }
+function writeFileSafe(p, data) {
+  // AB_ONLY: the board's own files go to a temp folder (only.dataDir), ~/.agent-boost stays untouched
+  if (ONLY && p.startsWith(home + '/.agent-boost/')) p = path.join(Only.dataDir(), p.slice((home + '/.agent-boost/').length));
+  try { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, data); return true; } catch { return false; } }
 /** Moves a file or folder to the desktop Trash (recoverable). false when the Trash refused. macOS: the Finder's Trash
  *  (FileManager.trashItem, which Electron's shell.trashItem calls) and nothing else, as Swift. */
 async function trashItem(p) {
@@ -430,8 +443,12 @@ function refresh() {
     t.members.sort((x, y) => cmp(x.isLead ? 0 : 1, y.isLead ? 0 : 1) || cmp(x.name, y.name));
   }
   // every session is the lead of an implicit team; until it has a teammate it is an individual session
+  // a session that leads a real team (a resumed lead: its old implicit team is still remembered under its own id while
+  // the CLI wrote the new team under another, see liveLeadOf) is drawn there only, never a second time as a solo card
+  const inRealTeam = new Set(all.filter((t) => !M.teamIsSolo(t)).flatMap((t) => t.members.map((m) => m.sessionId)));
   for (const t of all.filter(M.teamIsSolo)) {
     const a = copyAgent(t.members.find((m) => !m.isSubagent)); a.solo = true;
+    if (inRealTeam.has(a.sessionId)) continue;
     if (a.state === 'ended' && a.transcriptPath == null) {
       const last = seen[t.name] && seen[t.name][a.sessionId] ? seen[t.name][a.sessionId].lastSeen : null;
       if (last != null && now() - last > 600 * 1000) delete seen[t.name];
@@ -565,7 +582,7 @@ function attachSubagents(teams, loose) {
 function answerPrompt(a, optionIndex) {
   const p = a.tmuxPane, expected = a.prompt;
   if (p == null || !expected || !(optionIndex >= 0 && optionIndex < expected.options.length) || S.promptSending.has(a.sessionId)) return;
-  if (ro(`answerPrompt ${a.sessionId} ${optionIndex}`)) return;
+  if (ro(`answerPrompt ${a.sessionId} ${optionIndex}`, a)) return;
   S.promptSending.add(a.sessionId); changed();
   const sid = a.sessionId;
   TmuxControl().queue(p, async () => {
@@ -577,7 +594,7 @@ function answerPrompt(a, optionIndex) {
 /** Esc: cancels / declines whatever the window asks. */
 function cancelPrompt(a) {
   if (a.tmuxPane == null || S.promptSending.has(a.sessionId)) return;
-  if (ro(`cancelPrompt ${a.sessionId}`)) return;
+  if (ro(`cancelPrompt ${a.sessionId}`, a)) return;
   TmuxControl().interrupt(a.tmuxPane);
   setTimeout(refreshSoon, 800);
 }
@@ -592,7 +609,7 @@ function forceSendPending(a, choice) {
   const p = a.tmuxPane, cmds = pendingCommands[a.sessionId];
   if (p == null || !cmds || !cmds.length) return;
   if (choice !== 'esc' && choice !== 'asis') return;
-  if (ro(`forceSendPending ${a.sessionId}`)) return;
+  if (ro(`forceSendPending ${a.sessionId}`, a)) return;
   if (choice === 'esc') TmuxControl().interrupt(p, 0.6);
   sendSlash(cmds[0], p, a.sessionId);
   if (cmds.length > 1) pendingCommands[a.sessionId] = cmds.slice(1); else delete pendingCommands[a.sessionId];
@@ -1026,6 +1043,23 @@ function teamIdentity(pid) {
   return v;
 }
 
+/** The lead's real session id. Claude Code 2.1.304, in a session reopened with --resume, writes the team config with a
+ *  stale leadSessionId (an id the process held before it switched to the resumed conversation; the team is named after
+ *  it too), so the lead's card was missing from its team, the team showed an ended "team-lead", and the teammate spawn
+ *  check reported "failed" although the teammate ran (found in an end-to-end test; the Swift app has the same gap).
+ *  Every live teammate names its lead on its command line (--parent-session-id): when the config's id is not a live
+ *  session and a live teammate's parent is, that parent is the lead. */
+function liveLeadOf(configLead, j, sessions, panes) {
+  if (configLead == null || sessions[configLead]) return configLead;
+  for (const m of Array.isArray(j.members) ? j.members : []) {
+    if (!m || typeof m !== 'object' || typeof m.tmuxPaneId !== 'string' || !m.tmuxPaneId.startsWith('%')) continue;
+    const pid = panes[m.tmuxPaneId];
+    if (pid == null || !alive(pid)) continue;
+    const parent = flag('--parent-session-id', cmdline(pid));
+    if (parent && sessions[parent]) return parent;
+  }
+  return configLead;
+}
 function loadTeams(sessions, panes, hidden = new Set()) {
   const teams = [];
   const claimed = new Set();
@@ -1042,10 +1076,12 @@ function loadTeams(sessions, panes, hidden = new Set()) {
     if (!j || typeof j !== 'object' || Array.isArray(j)) j = { name: d };
     if (data == null && (!seen[d] || Object.keys(seen[d]).length === 0)) continue;
     const name = typeof j.name === 'string' ? j.name : d;
-    const leadSid = typeof j.leadSessionId === 'string' ? j.leadSessionId : null;
+    const configLead = typeof j.leadSessionId === 'string' ? j.leadSessionId : null;
+    const leadSid = liveLeadOf(configLead, j, sessions, panes);
     const firsts = seen[d] ? Object.values(seen[d]).map((x) => x.firstSeen) : [];
     const team = M.newTeam(name, typeof j.createdAt === 'number' ? j.createdAt : (firsts.length ? Math.min(...firsts) : null), leadSid, []);
     const bucket = seen[name] || {};
+    if (leadSid !== configLead && configLead != null) delete bucket[configLead];   // the stale id's "team-lead" card
     const liveMates = {};
     for (const m of Array.isArray(j.members) ? j.members : []) {
       if (!m || typeof m !== 'object') continue;
@@ -1160,7 +1196,7 @@ async function scanTeammateTranscript(team, agentName, since, strict) {
 
 let saveSeenLogged = false;
 function saveSeen() {
-  if (RO) { if (!saveSeenLogged) { saveSeenLogged = true; ro('saveSeen (seen-members.json, job-names.json) — logged once'); } return; }
+  if (RO || ONLY) { if (!saveSeenLogged) { saveSeenLogged = true; ro('saveSeen (seen-members.json, job-names.json) — logged once'); } return; }
   writeFileSafe(memoryURL, JSON.stringify(seenToDisk()));
   writeFileSafe(jobNamesURL, JSON.stringify(jobNames));
 }
@@ -1200,7 +1236,7 @@ function pullQueue(a) {
   if (Cache.foreignTyped(p)) { setNoticeValue(L("'%@'의 CLI 입력창에 글이 있어 대기 메시지를 꺼내지 않았습니다. 그 글을 보내거나 지운 뒤 다시 시도하세요.", a.name)); return; }
   const texts = queuedTexts(tp);
   if (!texts.length) return;
-  if (ro(`pullQueue ${a.sessionId}`)) return;
+  if (ro(`pullQueue ${a.sessionId}`, a)) return;
   const done = (ok) => {
     if (!ok) { setNoticeValue(L('대기 메시지를 꺼내지 못했습니다. 이미 처리됐을 수 있습니다.')); return; }
     if (echoes[a.sessionId]) echoes[a.sessionId] = echoes[a.sessionId].filter((e) => !texts.includes(e.text));
@@ -1228,7 +1264,7 @@ function sendChecked(text, a) {
     setNoticeValue(L("'%@'의 CLI가 질문에 대한 답을 기다리는 중이라 보내지 않았습니다. 질문 카드에서 먼저 답하거나 Esc로 취소한 뒤 다시 보내세요.", a.name)); return false;
   }
   if (Cache.foreignTyped(p)) { setNoticeValue(L("'%@'의 CLI 입력창에 입력 중인 글이 있어 보내지 않았습니다 (터미널에서 같이 쓰는 중). 그 글을 보내거나 지운 뒤 다시 시도하세요.", a.name)); return false; }
-  if (ro(`send ${a.sessionId} ${JSON.stringify(prefixChars(text, 40))}`)) return false;
+  if (ro(`send ${a.sessionId} ${JSON.stringify(prefixChars(text, 40))}`, a)) return false;
   S.lastSentAt = now();
   if (text.startsWith('/model')) Cache.expectModelConfirm(p);     // typed by the user: a "Switch model?" window is theirs too
   addEcho(text, a.sessionId, 90);
@@ -1241,17 +1277,17 @@ function sendChecked(text, a) {
 }
 function clearCLIInput(a) {
   if (a.tmuxPane == null) return;
-  if (ro(`clearCLIInput ${a.sessionId}`)) return;
+  if (ro(`clearCLIInput ${a.sessionId}`, a)) return;
   TmuxControl().clearInput(a.tmuxPane);
   setTimeout(refreshSoon, 1200);
 }
-function interrupt(a) { if (a.tmuxPane != null && !ro(`interrupt ${a.sessionId}`)) TmuxControl().interrupt(a.tmuxPane); }
+function interrupt(a) { if (a.tmuxPane != null && !ro(`interrupt ${a.sessionId}`, a)) TmuxControl().interrupt(a.tmuxPane); }
 /** Messages typed while a turn runs wait in the CLI's queue. Esc stops the turn and the CLI puts the queued text back
  *  into its input box; Enter then submits it right away. */
 function pushQueue(a) {
   const p = a.tmuxPane;
   if (p == null) return;
-  if (ro(`pushQueue ${a.sessionId}`)) return;
+  if (ro(`pushQueue ${a.sessionId}`, a)) return;
   const C = TmuxControl();
   C.queue(p, async () => {
     await C.keys(['-t', p, 'Escape'], L('중단(Esc)'));
@@ -1268,7 +1304,7 @@ function pushQueue(a) {
 function cycleMode(a) {
   const p = a.tmuxPane;
   if (p == null || a.state === 'ended') return;
-  if (ro(`cycleMode ${a.sessionId}`)) return;
+  if (ro(`cycleMode ${a.sessionId}`, a)) return;
   const C = TmuxControl();
   C.queue(p, async () => { await C.keys(['-t', p, 'BTab'], L('모드 전환(Shift+Tab)')); });
   setTimeout(refreshSoon, 600);
@@ -1282,7 +1318,7 @@ function rename(a, raw) {
   if (host != null && (a.state === 'ended' || a.tmuxPane == null)) {
     setNoticeValue(L("'%@'은(는) %@에서 만든 대화라 이름은 %@에서 바꿔 주세요. 앱이 기록 파일에 쓰면 %@가 이 세션을 거부합니다.", a.name, host, host, host)); return;
   }
-  if (ro(`rename ${a.sessionId} ${JSON.stringify(name)}`)) return;
+  if (ro(`rename ${a.sessionId} ${JSON.stringify(name)}`, a)) return;
   if (a.state === 'ended') {
     writeTitle(name, a);
   } else if (a.tmuxPane == null) {
@@ -1300,7 +1336,7 @@ function rename(a, raw) {
   refresh();
 }
 function writeTitle(name, a) {
-  if (ro(`writeTitle ${a.sessionId}`)) return;
+  if (ro(`writeTitle ${a.sessionId}`, a)) return;
   const p = a.transcriptPath ?? transcript(a.sessionId);
   if (p == null || !exists(p)) { setNoticeValue(L('대화 기록 파일을 찾지 못해 이름을 저장하지 못했습니다.')); return; }
   const rec = { type: 'custom-title', customTitle: name, sessionId: a.sessionId };
@@ -1374,7 +1410,7 @@ function storedTitle(p) {
 /** Slash command now if idle, otherwise queued until the agent is idle. */
 function command(cmd, a) {
   if (a.state === 'ended' || a.tmuxPane == null) { setNoticeValue(L('tmux pane이 없거나 종료된 세션이라 변경할 수 없습니다.')); return; }
-  if (ro(`command ${a.sessionId} ${cmd}`)) return;
+  if (ro(`command ${a.sessionId} ${cmd}`, a)) return;
   const p = a.tmuxPane;
   if (!working(a) && Cache.isSettled(p) && (pendingCommands[a.sessionId] || []).length === 0) sendSlash(cmd, p, a.sessionId);
   else { (pendingCommands[a.sessionId] = pendingCommands[a.sessionId] || []).push(cmd); setNoticeValue(L("'%@' 작업 중 — 대기 상태가 되면 %@ 을(를) 보냅니다.", a.name, cmd)); }
@@ -1391,7 +1427,7 @@ function toggleRemote(a) {
   if (pane == null || on == null || S.rcPending.has(a.sessionId)) {
     setNoticeValue(L("'%@'는 앱이 조작할 수 있는 터미널(tmux) 세션이 아니라 Remote Control을 바꿀 수 없습니다.", a.name)); return; }
   if (working(a)) { setNoticeValue(L("'%@'가 작업 중입니다. 끝난 뒤 다시 눌러 주세요.", a.name)); return; }
-  if (ro(`toggleRemote ${a.sessionId}`)) return;
+  if (ro(`toggleRemote ${a.sessionId}`, a)) return;
   S.rcPending.add(a.sessionId); changed();
   const C = TmuxControl();
   C.command('/remote-control', pane);
@@ -1425,11 +1461,24 @@ function toggleRemote(a) {
 }
 
 function sendSlash(cmd, pane, sid = null) {
-  if (ro(`sendSlash ${pane} ${cmd}`)) return;
+  if (ro(`sendSlash ${pane} ${cmd}`, pane)) return;
   const touchesDefaults = cmd.startsWith('/model') || cmd.startsWith('/effort');
-  const before = touchesDefaults ? readDefaults() : null;
-  let rawBefore = null;
-  if (touchesDefaults) { try { rawBefore = fs.readFileSync(settingsPath()); } catch { } }
+  // The user's defaults as they were before the board's FIRST /model or /effort of a burst. A second command sent while
+  // the first one's restore window is still open (model, then effort, a few seconds apart) used to snapshot the file
+  // with the first command's change still in it, and its own restore then wrote that change back for good (found in an
+  // end-to-end test: the user's default model stayed switched). The Swift app has the same race.
+  let guard = null;
+  if (touchesDefaults) {
+    if (defaultsGuard && now() < defaultsGuard.until) guard = defaultsGuard;
+    else {
+      guard = { before: readDefaults(), raw: null, mode: null, until: 0 };
+      try { guard.raw = fs.readFileSync(settingsPath()); guard.mode = fs.statSync(settingsPath()).mode & 0o777; } catch { }
+      defaultsGuard = guard;
+    }
+    guard.until = now() + 9000;                              // the restore below runs 2.5 s and 8.5 s after the command
+  }
+  const before = guard ? guard.before : null;
+  const rawBefore = guard ? guard.raw : null;
   Cache.markSent(pane, false);
   if (cmd.startsWith('/model')) Cache.expectModelConfirm(pane);
   if (sid != null) addEcho(cmd, sid, 20, !userInitiated);
@@ -1457,9 +1506,9 @@ function sendSlash(cmd, pane, sid = null) {
       // file keeps the user's exact formatting. Otherwise patch just those keys.
       if (rawBefore != null && onlyDefaultsChanged(rawBefore)) {
         let cur = null; try { cur = fs.readFileSync(settingsPath()); } catch { }
-        if (!cur || !cur.equals(rawBefore)) { try { const tmp = settingsPath() + '.agentboost.tmp'; fs.writeFileSync(tmp, rawBefore); fs.renameSync(tmp, settingsPath()); } catch { } }
+        if (!cur || !cur.equals(rawBefore)) { try { const tmp = settingsPath() + '.agentboost.tmp'; fs.writeFileSync(tmp, rawBefore, guard.mode != null ? { mode: guard.mode } : undefined); keepMode(tmp, guard.mode); fs.renameSync(tmp, settingsPath()); } catch { } }
       } else {
-        restoreDefaults(before);
+        restoreDefaults(before, guard.mode);
       }
     }
   })();
@@ -1478,7 +1527,10 @@ function readDefaults() {
   for (const k of defaultKeys) out[k] = k in j ? j[k] : null;
   return out;
 }
-function restoreDefaults(before) {
+/** The file is put back with the user's own permissions (settings.json is usually 0600; a fresh temp file was 0644). */
+function keepMode(p, mode) { if (mode != null) { try { fs.chmodSync(p, mode); } catch { } } }
+let defaultsGuard = null;   // {before, raw, mode, until}: see sendSlash
+function restoreDefaults(before, mode = null) {
   if (!before || Object.keys(before).length === 0) return;
   const j = readJSON(settingsPath());
   if (!j || typeof j !== 'object') return;
@@ -1490,7 +1542,7 @@ function restoreDefaults(before) {
   }
   if (!changedAny) return;
   const tmp = settingsPath() + '.agentboost.tmp';
-  try { fs.writeFileSync(tmp, JSON.stringify(j, null, 2)); fs.renameSync(tmp, settingsPath()); } catch { }
+  try { fs.writeFileSync(tmp, JSON.stringify(j, null, 2)); keepMode(tmp, mode); fs.renameSync(tmp, settingsPath()); } catch { }
 }
 
 // ── quit (the same for leads, teammates and single sessions) ────────────────────────────────────────────────────────
@@ -1507,7 +1559,7 @@ const canQuit = (a) => a.state !== 'ended' && a.pid != null;
 function quit(a, mode = 'now') {
   const pid = a.pid;
   if (pid == null || a.state === 'ended') return;
-  if (ro(`quit ${a.sessionId} ${mode}`)) return;
+  if (ro(`quit ${a.sessionId} ${mode}`, a)) return;
   if (working(a) && mode === 'whenIdle') {
     (pendingCommands[a.sessionId] = pendingCommands[a.sessionId] || []).push('/exit');
     setNoticeValue(L("'%@' 작업이 끝나면 종료합니다.", a.name));  // queued /exit
@@ -1543,7 +1595,7 @@ function quit(a, mode = 'now') {
 }
 /** ctrl+c twice: how the CLI quits an interactive viewer of a background job (its /exit only returns to the agents screen). */
 function closeViewer(pane, pid) {
-  if (ro(`closeViewer ${pane}`)) return;
+  if (ro(`closeViewer ${pane}`, pane)) return;
   // The CLI's own way first (ctrl+c twice); it is unreliable from the conversation view of a parked session (verified:
   // the presses switch screens instead), so the viewer process is then ended by signal. It holds no conversation
   // state — that lives in the job daemon, which is untouched.
@@ -1560,7 +1612,7 @@ function closeViewer(pane, pid) {
 }
 /** `claude stop <job>` in the background; SIGTERM only if the process outlives it. */
 function stopJob(job, name, pid) {
-  if (ro(`claude stop ${job}`)) return;
+  if (ro(`claude stop ${job}`, { name })) return;
   (async () => {
     const r = await Shell.run([Shell.claude, 'stop', job], { timeout: 60 });
     for (let i = 0; i < 50 && alive(pid); i++) await sleep(200);
@@ -1670,7 +1722,7 @@ function addTeammates(specs0, a) {
   if (valid.length < specs.filter((s) => trimWS(s.name)).length) setNoticeValue(L('팀원 이름은 영문·숫자·_·- 만 쓸 수 있습니다 (Claude의 Agent 도구 제한). 잘못된 이름은 건너뛰었습니다.'));
   if (!valid.length) return;
   if (a.state === 'ended' || a.tmuxPane == null) { setNoticeValue(L('tmux pane에서 실행 중인 세션에만 팀원을 추가할 수 있습니다.')); return; }
-  if (ro(`addTeammates ${a.sessionId}`)) return;
+  if (ro(`addTeammates ${a.sessionId}`, a)) return;
   send(teammateInstruction(valid), a);
   startSpawnCheck(a.tmuxPane, valid);
   setNoticeValue(null);
@@ -1790,7 +1842,7 @@ function launchFailed(l, screen) {
 }
 /** The person's answer to Claude Code's own folder-trust prompt. */
 function trustFolder(l) {
-  if (ro(`trustFolder ${l.tmuxName}`)) return;
+  if (ro(`trustFolder ${l.tmuxName}`, { tmuxName: l.tmuxName })) return;
   const n = l.tmuxName;
   const C = TmuxControl();
   C.queue(n, async () => {
@@ -1801,13 +1853,13 @@ function trustFolder(l) {
   setNoticeValue(L("'%@' 폴더를 신뢰하고 '%@'을(를) 시작합니다.", l.cwd, l.name));
 }
 function cancelLaunch(l) {
-  if (ro(`cancelLaunch ${l.tmuxName}`)) return;
+  if (ro(`cancelLaunch ${l.tmuxName}`, { tmuxName: l.tmuxName })) return;
   Shell.tmux(['kill-session', '-t', l.tmuxName]);
   S.launches = S.launches.filter((x) => x.id !== l.id);
   setNoticeValue(L("'%@' 시작을 취소했습니다.", l.name));
 }
 async function launchInTmux(label, cwd, argv, attachJob = null, resume = null) {
-  if (ro(`launchInTmux ${label} ${argv.slice(1).join(' ').slice(0, 80)}`)) return null;
+  if (ro(`launchInTmux ${label} ${argv.slice(1).join(' ').slice(0, 80)}`, { name: label, cwd })) return null;
   let slug = Array.from(label).map((ch) => (/^[A-Za-z0-9]$/.test(ch) ? ch : '-')).slice(0, 24).join('').replace(/^-+|-+$/g, '');
   if (!slug) slug = 'session';
   const tmuxName = `ab-${slug}-` + String(Math.trunc(now() / 1000) % 100000);
@@ -1874,7 +1926,7 @@ function attach(job, label, cwd) { return launchInTmux(label, cwd, [Shell.claude
  *  marker…", with or without --fork-session). The CLI's own way is `--bg --resume <id>` (same job, same session id),
  *  then `claude attach`. */
 function resumeAsJob(sid, jobId, label, cwd, model, effort, bypass) {
-  if (ro(`resumeAsJob ${sid}`)) return null;
+  if (ro(`resumeAsJob ${sid}`, { name: label, cwd })) return null;
   setNoticeValue(L("'%@' 백그라운드 작업으로 다시 시작하는 중 (claude --bg --resume)…", label));
   (async () => {
     // a stopped job's record left in place makes the CLI start a COPY under a new id (verified); without the record
@@ -1919,7 +1971,7 @@ async function deleteWithTeammates(a, withTeammates) {
   await Promise.all(jobs);
 }
 async function deleteAgent(a) {
-  if (ro(`delete ${a.sessionId}`)) return;
+  if (ro(`delete ${a.sessionId}`, a)) return;
   // a CLI background job lives on in the CLI's own list (`claude agents`, its ← screen) until the CLI removes it:
   // stop, wait for the process, rm, and only then drop the board's records. In that order and in the background;
   // fired together, rm raced a still-running stop and the record stayed behind in one list but not the other.
@@ -1987,7 +2039,7 @@ async function deleteAgent(a) {
 }
 function forget(a) {
   if (a.state !== 'ended' || a.teamName == null) return;
-  if (ro(`forget ${a.sessionId}`)) return;
+  if (ro(`forget ${a.sessionId}`, a)) return;
   if (seen[a.teamName]) delete seen[a.teamName][a.sessionId];
   saveSeen(); refresh();
 }
@@ -2003,7 +2055,7 @@ function open(a) {
 // ── batch actions on selected cards ─────────────────────────────────────────────────────────────────────────────
 const selectedAgents = () => [...S.selection].map(agent).filter(Boolean);
 async function wakeSelected() {
-  if (ro('wakeSelected')) return;
+  if (ro('wakeSelected', selectedAgents())) return;
   let n = 0;
   for (const a of selectedAgents()) {
     if (!canResume(a)) continue;
@@ -2015,14 +2067,14 @@ async function wakeSelected() {
   S.selection.clear(); changed();
 }
 function quitSelected(mode) {
-  if (ro('quitSelected')) return;
+  if (ro('quitSelected', selectedAgents())) return;
   const targets = selectedAgents().filter(canQuit);
   for (const a of targets) quit(a, mode);
   setNoticeValue(mode === 'whenIdle' ? L('%@개 세션에 종료를 보냈습니다 (작업 중인 세션은 끝난 뒤 종료).', String(targets.length)) : L('%@개 세션에 종료를 보냈습니다.', String(targets.length)));
   S.selection.clear(); changed();
 }
 function archiveSelected() {
-  if (ro('archiveSelected')) return;
+  if (ro('archiveSelected', selectedAgents())) return;
   const targets = selectedAgents();
   for (const a of targets) archive(a, false);
   setNoticeValue(L('%@개 세션을 보관함으로 옮겼습니다.', String(targets.length)));
@@ -2082,6 +2134,7 @@ async function shutdownAll() {
 }
 /** Resume what the last quit switched off. */
 async function resumeSavedSessions() {
+  if (ro('resumeSavedSessions')) return;
   const list = readJSON(savedURL);
   if (!Array.isArray(list) || list.length === 0) return;
   try { fs.unlinkSync(savedURL); } catch { }
@@ -2121,7 +2174,7 @@ async function resumeSavedSessions() {
 // ── archive ───────────────────────────────────────────────────────────────────────────────────────────────────────
 /** Stops the session if running and hides it in the archive. Files stay; restorable. */
 function archive(a, withTeammates) {
-  if (ro(`archive ${a.sessionId}`)) return;
+  if (ro(`archive ${a.sessionId}`, a)) return;
   if (withTeammates) for (const w of teammates(a)) archive(w, false);
   if (a.jobId != null) cliJob(['stop', a.jobId]);        // stopped in the CLI too, or its agent view brings it back
   else if (canQuit(a)) quit(a, 'now');
@@ -2135,7 +2188,7 @@ function archive(a, withTeammates) {
   saveArchive(); refresh();
 }
 function restore(ids) {
-  if (ro('restore')) return;
+  if (ro('restore', ids.map((id) => S.archive[id] || null))) return;
   // the card comes back from the CLI's own files (the transcript, or the live process)
   for (const id of ids) if (S.archive[id]) { deleted.delete(id); delete S.archive[id]; }
   for (const id of ids) S.archiveSelection.delete(id);
@@ -2144,7 +2197,7 @@ function restore(ids) {
 }
 /** Permanent: the transcript and its folders are removed from disk. */
 async function purge(ids) {
-  if (ro('purge')) return;
+  if (ro('purge', ids.map((id) => S.archive[id] || null))) return;
   for (const id of ids) {
     const it = S.archive[id];
     if (!it) continue;
@@ -2173,7 +2226,7 @@ function agent(sid) {
 // ── terminal ──────────────────────────────────────────────────────────────────────────────────────────────────────
 /** A fresh login shell in its own background tmux session, shown inside the app. */
 async function newTerminal(cwd) {
-  if (ro('newTerminal')) return null;
+  if (ro('newTerminal', { cwd })) return null;
   const dir = cwd && exists(cwd) ? cwd : home;
   const name = 'ab-term-' + String(Math.trunc(now() / 1000) % 100000);
   // macOS: zsh, as Swift; Linux: the user's own login shell
@@ -2184,7 +2237,7 @@ async function newTerminal(cwd) {
 }
 async function closeTerminal(pane) {
   const s = (await Shell.tmux(['display-message', '-p', '-t', pane, '#{session_name}'])).out.trim();
-  if (s.startsWith('ab-term-') && !ro(`closeTerminal ${pane}`)) Shell.tmux(['kill-session', '-t', s]);
+  if (s.startsWith('ab-term-') && !ro(`closeTerminal ${pane}`, s)) Shell.tmux(['kill-session', '-t', s]);
 }
 /** `claude stop|rm <job>`: the CLI's own background-job management. */
 function cliJob(args) { if (!ro(`claude ${args.join(' ')}`)) Shell.run([Shell.claude, ...args], { timeout: 30 }); }
@@ -2198,7 +2251,7 @@ async function openTerminal(a) {
  *  window to `manual` size): with `window-size latest` the window follows the terminal while it is attached, and the
  *  app's own views stop resizing it for as long as a client is attached (TmuxResize / #{session_attached}). */
 async function attachTerminal(sess, pane) {
-  if (ro(`attachTerminal ${sess}`)) return { code: 1, err: 'readonly' };
+  if (ro(`attachTerminal ${sess}`, sess)) return { code: 1, err: 'readonly' };
   return terminalResult(() => platform().attachTerminal(sess, pane));
 }
 /** platform's terminal openers answer {code, out, err} (like shell.run). */

@@ -75,6 +75,8 @@ function bringForward(pid) {
 function enforceSingleInstance() {
   // (with BOARD_HOME the lock lives in that test home, not in ~/.agent-boost, so it is taken even then)
   if (process.env.AB_READONLY && !process.env.BOARD_HOME) { console.log('[readonly] app.lock (one board at a time) not taken'); return true; }
+  // AB_ONLY (sandbox tests beside the user's own board): never take over or terminate the running board
+  if (process.env.AB_ONLY) { console.log('[only] app.lock (one board at a time) not taken'); return true; }
   const platform = require('./platform');
   const built = builtAt();
   for (let attempt = 0; attempt < 2; attempt++) {

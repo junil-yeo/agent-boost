@@ -12,7 +12,7 @@ const COUNT = 3;   // at least three cards; more with the + button
 const file = process.env.AB_TODOS_FILE || path.join(os.homedir(), '.agent-boost', 'todos.json');
 let boards = null;
 
-const readonly = () => !!process.env.AB_READONLY;
+const readonly = () => !!(process.env.AB_READONLY || process.env.AB_ONLY);   // AB_ONLY (sandbox tests): ~/.agent-boost untouched too
 const newId = () => crypto.randomUUID().toUpperCase();     // Foundation's UUID encodes upper-case
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const trimAll = (s) => String(s).replace(/^[\s\u0085]+|[\s\u0085]+$/g, '');

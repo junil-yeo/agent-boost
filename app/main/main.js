@@ -5,6 +5,9 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 
+// perf runs keep their page settings (localStorage) and Chromium's single-instance lock apart from the daily app's
+if (process.env.AB_PERF && process.env.AB_PERF_USERDATA) app.setPath('userData', process.env.AB_PERF_USERDATA);
+
 const modules = {};
 /** Registers a module's exported functions as callable from the renderer: register('tmux', require('./tmux')). */
 function register(name, mod) { modules[name] = mod; }
@@ -52,9 +55,14 @@ function createWindow() {
     // close / minimise / zoom buttons sit at their standard place over the banner's top-left corner (the name block
     // starts below them). 'hidden' keeps that standard place, as SwiftUI does; the banner is the drag area (app.css).
     ...(isMac ? { titleBarStyle: 'hidden' } : { icon: iconPath, autoHideMenuBar: true }),
+    ...(process.env.AB_PERF ? { show: false } : {}),   // perf runs: shown without taking the focus (driver.js)
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: !process.env.AB_SNAPSHOT },
   });
-  win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  // AB_PERF=<scenario,…>: test/perf/driver.js measures the app (it may install page hooks before the first load) and
+  // prints its results as JSON on stdout; development only (test/perf/README in perf.js)
+  const load = () => win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  if (process.env.AB_PERF) require('../test/perf/driver.js').prepare(win, modules).then(load, (e) => { console.error(e); load(); });
+  else load();
   // links open in the system browser
   win.webContents.setWindowOpenHandler(({ url }) => { openOutside(url); return { action: 'deny' }; });
   // The window never leaves the app's own pages. A file dropped where no handler takes it makes Chromium navigate the
@@ -99,9 +107,9 @@ function createWindow() {
 
 module.exports = { register, send, get window() { return win; } };
 
-// snapshot runs: keep painting while the window is behind others (an occluded window stops drawing, and the capture
-// then showed an old frame or black)
-if (process.env.AB_SNAPSHOT) {
+// snapshot and perf runs: keep painting while the window is behind others (an occluded window stops drawing, and the
+// capture then showed an old frame or black)
+if (process.env.AB_SNAPSHOT || process.env.AB_PERF) {
   app.commandLine.appendSwitch('disable-renderer-backgrounding');
   app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
   app.commandLine.appendSwitch('disable-background-timer-throttling');

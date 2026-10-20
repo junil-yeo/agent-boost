@@ -114,7 +114,7 @@ async function check(live) {
     const raw = (await shell.tmux(['capture-pane', '-p', '-e', '-t', s.pane])).out;
     if (raw !== '' && !screen.hasInputBox(raw)) noBox.push(s.name);
   }
-  if (process.env.AB_READONLY) console.log(`[readonly] clicheck: remember CLI version ${nowV}`);
+  if (process.env.AB_READONLY || process.env.AB_ONLY) console.log(`[${process.env.AB_READONLY ? 'readonly' : 'only'}] clicheck: remember CLI version ${nowV} (not written)`);
   else { const s2 = l10n.readSettings(); s2[key] = nowV; l10n.writeSettings(s2); }
   const from = before ? `${before} → ` : '';
   require('./tmux').SendLog.note(`CLI 점검 ${from}${nowV}: 사라진 문구 ${gone.length}개 [${gone.join(', ')}], 입력창 못 찾음 [${noBox.join(', ')}]`);

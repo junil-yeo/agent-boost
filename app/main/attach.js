@@ -6,7 +6,8 @@ const path = require('path');
 const shell = require('./shell');
 
 // AB_READONLY (development on a real machine): attachments go to the temp folder so ~/.agent-boost stays untouched.
-const dir = process.env.AB_READONLY ? path.join(os.tmpdir(), 'agent-boost-attachments') : path.join(shell.home, '.agent-boost', 'attachments');
+// AB_ONLY (sandbox tests) likewise.
+const dir = process.env.AB_READONLY || process.env.AB_ONLY ? path.join(os.tmpdir(), 'agent-boost-attachments') : path.join(shell.home, '.agent-boost', 'attachments');
 
 function stamp() {
   const d = new Date(), p = (n) => String(n).padStart(2, '0');

@@ -127,12 +127,22 @@ function runSync(argv, opts = {}) {
   return { code: r.status, out: r.stdout || '', err: r.stderr || '' };
 }
 
+/** AB_ONLY=<prefix> (sandbox tests, only.js): a writing tmux command runs only when every target it names resolves to
+ *  a tmux session whose name contains the prefix. Logged and refused otherwise. */
+function onlyBlocked(args) {
+  const why = require('./only').tmuxRefusal(args);
+  if (why == null) return false;
+  console.log(`[only] refused tmux ${why} — ${args.join(' ').slice(0, 120)}`);
+  return true;
+}
 function tmux(args, timeout = 4) {
   if (tmuxBlocked(args)) { console.log(`[readonly] tmux ${args.join(' ').slice(0, 120)}`); return Promise.resolve({ code: 1, out: '', err: 'readonly' }); }
+  if (onlyBlocked(args)) return Promise.resolve({ code: 1, out: '', err: 'only: not a sandbox session' });
   return run([tmuxPath, '-u'].concat(args), { timeout });
 }
 function tmuxSync(args, timeout = 4) {
   if (tmuxBlocked(args)) { console.log(`[readonly] tmux ${args.join(' ').slice(0, 120)}`); return { code: 1, out: '', err: 'readonly' }; }
+  if (onlyBlocked(args)) return { code: 1, out: '', err: 'only: not a sandbox session' };
   return runSync([tmuxPath, '-u'].concat(args), { timeout });
 }
 

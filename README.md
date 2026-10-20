@@ -3,8 +3,7 @@
 Watch and drive teams of Claude Code agents from one window, on macOS and Linux.
 tmux is used only as an invisible engine underneath; you work in the app.
 
-One app, one codebase: an Electron app in `app/` for both systems. (The earlier SwiftUI version is kept in `Sources/`
-for reference while the Electron app takes over; it is no longer installed.)
+One app, one codebase: an Electron app in `app/` for both systems.
 
 ## Install
 
@@ -29,24 +28,15 @@ the menu above the clock.
 - Run from source: `cd app && npm install && npm start`. Tests: `npm test`.
 - Package the macOS app: `./build.sh` (seconds: no compile step), `./build.sh run` also restarts a running copy
   (sessions keep running). On Linux the installer runs the app from `~/.local/share/agent-boost/app`.
-- Layout: `app/main/` holds the logic (one module per former Swift file, same function names: `TmuxControl.send` →
-  `tmux.send`), `app/renderer/` the screens (Preact, no build step). Translations: `Resources/l10n` (+ `app/l10n-extra`).
+- Layout: `app/main/` holds the logic (one module per area: `tmux`, `screen`, `store`, `transcript` …),
+  `app/renderer/` the screens (Preact, no build step). Translations: `Resources/l10n` (+ `app/l10n-extra`).
 - `AB_READONLY=1 npm start` runs it without changing any session or file (for trying it next to a running copy).
 
-## Legacy SwiftUI version (reference)
+## First launch
 
-- Build: `./build-swift.sh` (development, fast) / `./build-swift.sh release` (optimized, for this Mac) /
-  `./build-swift.sh dist` (optimized, for distribution)
-- Requires macOS 15+, `tmux` and the `claude` CLI. Command Line Tools (Swift) only when building yourself.
-- Where the app looks for tools: `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/opt/local/bin`, then the
-  login shell's PATH. If they live elsewhere, point to them with `BOARD_TMUX` and `BOARD_CLAUDE`.
-- `./build-swift.sh dist` makes a universal binary for Intel and Apple Silicon (both compiled at the same time).
-
-### First launch on another Mac
-
-1. **Gatekeeper**: an app downloaded as a file has no developer signature, so macOS refuses to open it ("unidentified
-   developer" or "damaged"). Run `xattr -d com.apple.quarantine /path/to/AgentBoost.app`, or right-click > Open once.
-   The one-line installer above builds on your Mac and is not affected.
+1. **Gatekeeper** (macOS): an app downloaded as a file has no developer signature, so macOS refuses to open it
+   ("unidentified developer" or "damaged"). Run `xattr -d com.apple.quarantine /path/to/AgentBoost.app`, or right-click
+   > Open once. The one-line installer above packages the app on your Mac and is not affected.
 2. **tmux**: if it is missing, the notice bar at the top explains how to install it (`brew install tmux`). Starting,
    typing into and quitting sessions all go through tmux, so it is required.
 3. **Claude Code sign-in**: if Claude Code is installed but not signed in, the usage gauges show `OFF` with a "sign-in

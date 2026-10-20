@@ -27,7 +27,7 @@ const MODEL_CHOICES = [
   { id: 'claude-haiku-4-5', label: 'Haiku 4.5' },
 ];
 
-const readonly = () => !!process.env.AB_READONLY;
+const readonly = () => !!(process.env.AB_READONLY || process.env.AB_ONLY);   // AB_ONLY (sandbox tests): ~/.agent-boost untouched too
 const uuid = () => crypto.randomUUID().toUpperCase();
 
 function newSnapshot() {

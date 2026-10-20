@@ -14,7 +14,7 @@ applyAppearance(p.get('theme') || 'dark', true);
 const close = () => console.log('[dev] sheet closed');
 const agent = {
   sessionId: 'fixture-0001', name: '논문 그림 리뷰', model: 'claude-haiku-4-5', effort: 'high', state: 'busy', isLead: true,
-  teamName: 'paper', cwd: '/Users/Junil/Desktop/agent_bridge', tmuxPane: '%999',
+  teamName: 'paper', cwd: '/Users/Junil/Desktop/agent-boost', tmuxPane: '%999',
 };
 if (sheet === 'add' || sheet === 'resume') setFixture({ state: { teams: [{ name: 'paper', members: [agent] }], loose: [] } });
 try {
