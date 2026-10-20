@@ -1557,22 +1557,8 @@ function toggleRemote(a) {
 function sendSlash(cmd, pane, sid = null) {
   if (ro(`sendSlash ${pane} ${cmd}`, pane)) return;
   const touchesDefaults = cmd.startsWith('/model') || cmd.startsWith('/effort');
-  // The user's defaults as they were before the board's FIRST /model or /effort of a burst. A second command sent while
-  // the first one's restore window is still open (model, then effort, a few seconds apart) used to snapshot the file
-  // with the first command's change still in it, and its own restore then wrote that change back for good (found in an
-  // end-to-end test: the user's default model stayed switched). The Swift app has the same race.
-  let guard = null;
-  if (touchesDefaults) {
-    if (defaultsGuard && now() < defaultsGuard.until) guard = defaultsGuard;
-    else {
-      guard = { before: readDefaults(), raw: null, mode: null, until: 0 };
-      try { guard.raw = fs.readFileSync(settingsPath()); guard.mode = fs.statSync(settingsPath()).mode & 0o777; } catch { }
-      defaultsGuard = guard;
-    }
-    guard.until = now() + 9000;                              // the restore below runs 2.5 s and 8.5 s after the command
-  }
-  const before = guard ? guard.before : null;
-  const rawBefore = guard ? guard.raw : null;
+  // /model and /effort also become the defaults for new sessions (~/.claude/settings.json): the CLI's own behaviour,
+  // followed as is. The board used to put the old defaults back, which fought the CLI and once left them switched.
   Cache.markSent(pane, false);
   if (cmd.startsWith('/model')) Cache.expectModelConfirm(pane);
   if (sid != null) addEcho(cmd, sid, 20, !userInitiated);
@@ -1608,20 +1594,6 @@ function sendSlash(cmd, pane, sid = null) {
       }
     })();
   }
-  if (before == null) return;
-  (async () => {
-    for (const delay of [2.5, 6.0]) {                       // Claude writes shortly after the command
-      await sleep(delay * 1000);
-      // Only the default keys changed? Put the original bytes back, so the
-      // file keeps the user's exact formatting. Otherwise patch just those keys.
-      if (rawBefore != null && onlyDefaultsChanged(rawBefore)) {
-        let cur = null; try { cur = fs.readFileSync(settingsPath()); } catch { }
-        if (!cur || !cur.equals(rawBefore)) { try { const tmp = settingsPath() + '.agentboost.tmp'; fs.writeFileSync(tmp, rawBefore, guard.mode != null ? { mode: guard.mode } : undefined); keepMode(tmp, guard.mode); fs.renameSync(tmp, settingsPath()); } catch { } }
-      } else {
-        restoreDefaults(before, guard.mode);
-      }
-    }
-  })();
 }
 function onlyDefaultsChanged(raw) {
   let a, b;

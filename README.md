@@ -172,8 +172,8 @@ it reads are still in the new CLI and that every idle session's input box is sti
 
 ## Good to know
 
-- `/model` and `/effort` also change Claude's **global default**, so the app restores `settings.json` around the
-  change (verified byte-identical).
+- `/model` and `/effort` sent from the app behave exactly as in the CLI: they also become the defaults for new
+  sessions (Claude's `settings.json`). The New session window picks model and effort for each new session anyway.
 - Ending the team lead makes Claude **end the teammates too** and delete the team folder. The app keeps showing the
   ended team from its own memory.
 - Restarting an ended **teammate** opens it as a solo session, separate from the team.
