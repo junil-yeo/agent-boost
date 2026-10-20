@@ -1,0 +1,38 @@
+{
+  "경고": {
+    "en": "WARN",
+    "es": "ALERTA",
+    "ja": "警告",
+    "zh": "警告"
+  },
+  "계기 점검 중": {
+    "en": "Checking instruments",
+    "es": "Revisando instrumentos",
+    "ja": "計器点検中",
+    "zh": "仪表自检中"
+  },
+  "소모 추세에 따른 최종 예상 사용량 --": {
+    "en": "Projected at reset: --",
+    "es": "Previsto al reinicio: --",
+    "ja": "消費ペースに基づく最終予測使用量 --",
+    "zh": "按当前消耗趋势预计的最终用量 --"
+  },
+  "신호 없음": {
+    "en": "No signal",
+    "es": "Sin señal",
+    "ja": "信号なし",
+    "zh": "无信号"
+  },
+  "정상": {
+    "en": "NORMAL",
+    "es": "NORMAL",
+    "ja": "正常",
+    "zh": "正常"
+  },
+  "주의": {
+    "en": "CAUTION",
+    "es": "PRECAUCIÓN",
+    "ja": "注意",
+    "zh": "注意"
+  }
+}

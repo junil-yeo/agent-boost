@@ -1,9 +1,9 @@
 #!/bin/zsh
-# Agent Boost 빌드: swiftc 직접 호출 (Xcode 불필요, Command Line Tools만 있으면 됨)
+# Agent Boost build: calls swiftc directly (no Xcode needed, Command Line Tools are enough)
 set -e
 cd "$(dirname "$0")"
 APP="AgentBoost.app"; C="$APP/Contents"
-MODE="${1:-dev}"          # dev: 빠른 빌드 / release: -O 최적화, 이 Mac용 / dist: -O 최적화, Intel + Apple Silicon (배포용)
+MODE="${1:-dev}"          # dev: quick build / release: -O, for this Mac / dist: -O, Intel + Apple Silicon (for distribution)
 running() { pgrep -f "$PWD/$1/Contents/MacOS/$2\$" >/dev/null; }
 # the app used to be AgentBridge.app: quit it the way a rebuild does (sessions keep running), then remove it
 WAS_RUNNING=0
@@ -31,6 +31,7 @@ else
   swiftc $OPT -parse-as-library Sources/AgentBoost/*.swift -o "$C/MacOS/AgentBoost"
 fi
 cp Resources/AppIcon.icns "$C/Resources/AppIcon.icns"
+[ -d Resources/l10n ] && cp -R Resources/l10n "$C/Resources/l10n"     # translations (L10n.swift)
 cat > "$C/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -53,7 +54,7 @@ PLIST
 security unlock-keychain -p agentboard-local "$HOME/Library/Keychains/agentboard-sign.keychain-db" 2>/dev/null || true
 SIGN_ID=$(security find-identity -p codesigning 2>/dev/null | awk '/"AgentBoard Local Signing"/ {print $2; exit}')
 codesign --force --sign "${SIGN_ID:--}" "$APP" 2>/dev/null || codesign --force --sign - "$APP" 2>/dev/null || true
-echo "빌드 완료: $PWD/$APP"
+echo "Build finished: $PWD/$APP"
 # relaunch: macOS only brings a running copy forward, so a rebuilt app would never load.
 if [ "$MODE" != "dev" ] && { running "$APP" AgentBoost || [ $WAS_RUNNING = 1 ]; }; then
   if running "$APP" AgentBoost; then
@@ -69,6 +70,6 @@ if [ "$MODE" != "dev" ] && { running "$APP" AgentBoost || [ $WAS_RUNNING = 1 ]; 
     for i in $(seq 1 16); do running "$APP" AgentBoost && break 2; sleep 0.5; done
     sleep 1
   done
-  if running "$APP" AgentBoost; then echo "실행 중이던 앱을 새 빌드로 다시 열었습니다 (relaunch)"
-  else echo "경고: 앱을 다시 열지 못했습니다. 직접 실행하세요: open $PWD/$APP"; fi
+  if running "$APP" AgentBoost; then echo "Relaunched the running app with the new build"
+  else echo "Warning: could not reopen the app. Run: open $PWD/$APP"; fi
 fi

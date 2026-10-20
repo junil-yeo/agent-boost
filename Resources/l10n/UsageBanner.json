@@ -1,0 +1,194 @@
+{
+  " · 마지막 %@": {
+    "en": " · last %@",
+    "ja": " · 最終 %@",
+    "zh": " · 上次 %@",
+    "es": " · última %@"
+  },
+  "github.com/junil-yeo/agent_bridge — 브라우저에서 엽니다": {
+    "en": "github.com/junil-yeo/agent_bridge — opens in your browser",
+    "ja": "github.com/junil-yeo/agent_bridge — ブラウザで開きます",
+    "zh": "github.com/junil-yeo/agent_bridge — 在浏览器中打开",
+    "es": "github.com/junil-yeo/agent_bridge — se abre en el navegador"
+  },
+  "기간이 막 시작돼 아직 추세를 계산하지 않습니다": {
+    "en": "The period just started, so the trend isn't calculated yet",
+    "ja": "期間が始まったばかりのため、まだ傾向を計算していません",
+    "zh": "周期刚开始,尚未计算趋势",
+    "es": "El período acaba de empezar; aún no se calcula la tendencia"
+  },
+  "디스크 %@GB": {
+    "en": "Disk %@GB",
+    "ja": "ディスク %@GB",
+    "zh": "磁盘 %@GB",
+    "es": "Disco %@GB"
+  },
+  "디스크 …": {
+    "en": "Disk …",
+    "ja": "ディスク …",
+    "zh": "磁盘 …",
+    "es": "Disco …"
+  },
+  "로그인 필요": {
+    "en": "Login required",
+    "ja": "ログインが必要",
+    "zh": "需要登录",
+    "es": "Inicio de sesión requerido"
+  },
+  "사용 시작 전": {
+    "en": "Not started yet",
+    "ja": "使用開始前",
+    "zh": "尚未开始使用",
+    "es": "Sin uso todavía"
+  },
+  "사용량 대기 중": {
+    "en": "Waiting for usage",
+    "ja": "使用量を待機中",
+    "zh": "等待用量数据",
+    "es": "Esperando el uso"
+  },
+  "사용량 불러오는 중": {
+    "en": "Loading usage",
+    "ja": "使用量を読み込み中",
+    "zh": "正在加载用量",
+    "es": "Cargando uso"
+  },
+  "사용량·세션 새로고침 — 5분마다 자동 갱신": {
+    "en": "Refresh usage and sessions — auto-refreshes every 5 minutes",
+    "ja": "使用量・セッションを更新 — 5分ごとに自動更新",
+    "zh": "刷新用量和会话 — 每 5 分钟自动更新",
+    "es": "Actualizar uso y sesiones — se actualiza solo cada 5 minutos"
+  },
+  "사용량을 불러오지 못했습니다": {
+    "en": "Couldn't load usage",
+    "ja": "使用量を読み込めませんでした",
+    "zh": "无法加载用量",
+    "es": "No se pudo cargar el uso"
+  },
+  "소모 추세에 따른 최종 예상 사용량 %@%": {
+    "en": "Projected at reset: %@%",
+    "ja": "現在のペースでの最終予測使用量 %@%",
+    "zh": "按当前趋势预计最终用量 %@%",
+    "es": "Previsto al reinicio: %@%"
+  },
+  "소모 추세에 따른 최종 예상 사용량 계산 중": {
+    "en": "Projected at reset: calculating",
+    "ja": "最終予測使用量を計算中",
+    "zh": "正在计算预计最终用量",
+    "es": "Previsto al reinicio: calculando"
+  },
+  "시간 %@% 경과": {
+    "en": "%@% of time elapsed",
+    "ja": "時間 %@% 経過",
+    "zh": "时间已过 %@%",
+    "es": "%@% del tiempo transcurrido"
+  },
+  "시간과 비슷한 속도": {
+    "en": "Pace matches the time",
+    "ja": "時間とほぼ同じペース",
+    "zh": "速度与时间相当",
+    "es": "Ritmo similar al tiempo"
+  },
+  "시간보다 빠르게 쓰는 중 (+%@%p)": {
+    "en": "Using faster than time (+%@ pts)",
+    "ja": "時間より速いペースで使用中 (+%@pt)",
+    "zh": "用量快于时间 (+%@ 个百分点)",
+    "es": "Usando más rápido que el tiempo (+%@ pts)"
+  },
+  "알림 막대 꺼짐 — 누르면 알림과 지난 기록을 보여줍니다": {
+    "en": "Notification bar off — click to show notifications and past history",
+    "ja": "通知バー オフ — クリックで通知と履歴を表示します",
+    "zh": "通知栏已关闭 — 点击显示通知和历史记录",
+    "es": "Barra de avisos desactivada — haz clic para ver avisos e historial"
+  },
+  "알림 막대 켜짐 — 누르면 숨깁니다 (기록은 계속 쌓입니다)": {
+    "en": "Notification bar on — click to hide (history keeps recording)",
+    "ja": "通知バー オン — クリックで非表示 (履歴は記録され続けます)",
+    "zh": "通知栏已开启 — 点击隐藏 (历史记录继续保存)",
+    "es": "Barra de avisos activada — haz clic para ocultarla (el historial sigue guardándose)"
+  },
+  "여유 공간 (5초마다)\nRAM: 작업용 시스템 메모리 중 지금 쓸 수 있는 양 (비어 있음 + 비활성 + 회수 가능)\n디스크: 저장 공간 중 남은 용량": {
+    "en": "Free space (every 5 s)\nRAM: system memory available for work right now (free + inactive + purgeable)\nDisk: storage space remaining",
+    "ja": "空き容量 (5秒ごと)\nRAM: いま使用できるシステムメモリ (空き + 非アクティブ + 解放可能)\nディスク: ストレージの残り容量",
+    "zh": "可用空间 (每 5 秒)\nRAM: 当前可用的系统内存 (空闲 + 非活跃 + 可回收)\n磁盘: 剩余存储空间",
+    "es": "Espacio libre (cada 5 s)\nRAM: memoria del sistema disponible ahora (libre + inactiva + purgable)\nDisco: espacio de almacenamiento restante"
+  },
+  "여유 있음 (%@%p)": {
+    "en": "Ahead of pace (%@ pts)",
+    "ja": "余裕あり (%@pt)",
+    "zh": "有余量 (%@ 个百分点)",
+    "es": "Con margen (%@ pts)"
+  },
+  "이번 기간에 아직 쓴 양이 없습니다": {
+    "en": "Nothing used in this period yet",
+    "ja": "この期間はまだ使用していません",
+    "zh": "本周期尚未使用",
+    "es": "Aún no hay uso en este período"
+  },
+  "주간": {
+    "en": "Weekly",
+    "ja": "週間",
+    "zh": "每周",
+    "es": "Semanal"
+  },
+  "주간 사용량 추세 계산 전": {
+    "en": "Weekly usage trend not calculated yet",
+    "ja": "週間使用量の傾向は未計算",
+    "zh": "尚未计算每周用量趋势",
+    "es": "Tendencia de uso semanal aún sin calcular"
+  },
+  "주간 전체 추세: 초기화 때 %@% 예상": {
+    "en": "Weekly overall trend: %@% expected at reset",
+    "ja": "週間全体の傾向: リセット時に %@% の見込み",
+    "zh": "每周总体趋势: 重置时预计 %@%",
+    "es": "Tendencia semanal total: %@% previsto al reinicio"
+  },
+  "지금 속도대로면 초기화 때 %@%를 씁니다": {
+    "en": "At this pace you'll have used %@% by the reset",
+    "ja": "このペースだとリセット時に %@% を使用します",
+    "zh": "按当前速度,重置时将用掉 %@%",
+    "es": "A este ritmo usarás el %@% al reiniciarse"
+  },
+  "초기화 %@": {
+    "en": "Resets %@",
+    "ja": "リセット %@",
+    "zh": "重置 %@",
+    "es": "Se reinicia %@"
+  },
+  "초기화: %@": {
+    "en": "Resets: %@",
+    "ja": "リセット: %@",
+    "zh": "重置: %@",
+    "es": "Reinicio: %@"
+  },
+  "초기화: %@ · %@": {
+    "en": "Resets: %@ · %@",
+    "ja": "リセット: %@ · %@",
+    "zh": "重置: %@ · %@",
+    "es": "Reinicio: %@ · %@"
+  },
+  "터미널에서 claude 실행 후 로그인": {
+    "en": "Run claude in a terminal and log in",
+    "ja": "ターミナルで claude を実行してログイン",
+    "zh": "在终端运行 claude 并登录",
+    "es": "Ejecuta claude en una terminal e inicia sesión"
+  },
+  "페이블": {
+    "en": "Fable",
+    "ja": "Fable",
+    "zh": "Fable",
+    "es": "Fable"
+  },
+  "현재": {
+    "en": "Session",
+    "ja": "現在",
+    "zh": "当前",
+    "es": "Actual"
+  },
+  "현재 시각": {
+    "en": "Current time",
+    "ja": "現在時刻",
+    "zh": "当前时间",
+    "es": "Hora actual"
+  }
+}

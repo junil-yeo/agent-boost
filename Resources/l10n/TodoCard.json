@@ -1,0 +1,62 @@
+{
+  "과제": {
+    "en": "Tasks",
+    "ja": "タスク",
+    "zh": "任务",
+    "es": "Tareas"
+  },
+  "과제 %@": {
+    "en": "Task %@",
+    "ja": "タスク %@",
+    "zh": "任务 %@",
+    "es": "Tarea %@"
+  },
+  "과제 %@ 제목": {
+    "en": "Task %@ title",
+    "ja": "タスク %@ のタイトル",
+    "zh": "任务 %@ 标题",
+    "es": "Título de la tarea %@"
+  },
+  "과제 카드 추가": {
+    "en": "Add task card",
+    "ja": "タスクカードを追加",
+    "zh": "添加任务卡片",
+    "es": "Añadir tarjeta de tareas"
+  },
+  "삭제": {
+    "en": "Delete",
+    "ja": "削除",
+    "zh": "删除",
+    "es": "Eliminar"
+  },
+  "아직 항목이 없습니다": {
+    "en": "No items yet",
+    "ja": "まだ項目がありません",
+    "zh": "暂无项目",
+    "es": "Aún no hay elementos"
+  },
+  "완료 지우기": {
+    "en": "Clear completed",
+    "ja": "完了を削除",
+    "zh": "清除已完成",
+    "es": "Borrar completadas"
+  },
+  "이 과제 카드 삭제": {
+    "en": "Delete this task card",
+    "ja": "このタスクカードを削除",
+    "zh": "删除此任务卡片",
+    "es": "Eliminar esta tarjeta de tareas"
+  },
+  "클릭해서 할 일 추가": {
+    "en": "Click to add a to-do",
+    "ja": "クリックして ToDo を追加",
+    "zh": "点击添加待办",
+    "es": "Haz clic para añadir una tarea"
+  },
+  "항목 추가 후 Enter": {
+    "en": "Add an item, then press Enter",
+    "ja": "項目を入力して Enter",
+    "zh": "输入项目后按 Enter",
+    "es": "Escribe un elemento y pulsa Enter"
+  }
+}

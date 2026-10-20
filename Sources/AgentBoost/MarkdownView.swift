@@ -157,11 +157,11 @@ struct CopyOnHover: ViewModifier {
                         NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
                         copied = true; DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { copied = false }
                     } label: {
-                        Label(copied ? "복사됨" : "복사", systemImage: copied ? "checkmark" : "doc.on.doc").font(.caption)
+                        Label(copied ? L("복사됨") : L("복사"), systemImage: copied ? "checkmark" : "doc.on.doc").font(.caption)
                             .padding(.horizontal, 7).padding(.vertical, 3)
                             .background(RoundedRectangle(cornerRadius: 5).fill(Theme.panel))
                             .overlay(RoundedRectangle(cornerRadius: 5).stroke(Theme.lineHi))
-                    }.buttonStyle(.plain).padding(4).help("이 칸의 내용을 복사합니다")
+                    }.buttonStyle(.plain).padding(4).help(L("이 칸의 내용을 복사합니다"))
                 }
             }
             .onHover { hover = $0 }

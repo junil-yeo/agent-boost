@@ -65,7 +65,7 @@ struct Agent: Identifiable, Equatable {
     var requestedEffort: String?
 
     var displayModel: String {
-        guard let m = model else { return "모델 미확인" }
+        guard let m = model else { return L("모델 미확인") }
         if modelIsGuess { return Agent.pretty(m) + " ?" }
         return Agent.pretty(m)
     }
@@ -87,8 +87,8 @@ struct Agent: Identifiable, Equatable {
     /// Permission mode the CLI footer shows, in Korean ("기본" when the footer says nothing).
     var modeLabel: String {
         switch screen?.mode {
-        case "auto mode": "자동 모드"; case "accept edits": "편집 자동 허용"; case "plan mode": "계획 모드"; case "bypass permissions": "권한 확인 없음"
-        case let m?: m; case nil: "기본 모드"
+        case "auto mode": L("자동 모드"); case "accept edits": L("편집 자동 허용"); case "plan mode": L("계획 모드"); case "bypass permissions": L("권한 확인 없음")
+        case let m?: m; case nil: L("기본 모드")
         }
     }
 }
@@ -246,7 +246,7 @@ struct UsageMeter: Equatable, Identifiable {
     var remainingText: String {
         guard let r = resetDate else { return "" }
         let s = max(0, Int(r.timeIntervalSinceNow))
-        if s >= 86400 { return "\(s / 86400)일 \(s % 86400 / 3600)시간 남음" }
-        return "\(s / 3600)시간 \(s % 3600 / 60)분 남음"
+        if s >= 86400 { return L("%@일 %@시간 남음", String(s / 86400), String(s % 86400 / 3600)) }
+        return L("%@시간 %@분 남음", String(s / 3600), String(s % 3600 / 60))
     }
 }

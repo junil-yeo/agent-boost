@@ -59,8 +59,9 @@ struct AnnunciatorPanel<Key: View>: View {
                 let level = 2 - i
                 let c: Color = [Theme.errorTone, Theme.attention, Theme.normal][i]
                 let lit = test.map { $0 == 3 || $0 == i } ?? (on == level)
-                Text(["경고", "주의", "정상"][i])
+                Text([L("경고"), L("주의"), L("정상")][i])
                     .font(.system(size: 10, weight: .bold))
+                    .lineLimit(1).minimumScaleFactor(0.4).padding(.horizontal, 2)   // longer words (CAUTION, PRECAUCIÓN) shrink to fit
                     .foregroundStyle(lit ? Theme.dyn(0x000000, 0xFFFFFF).opacity(0.85) : c.opacity(0.35))
                     .frame(width: 40, height: 17)
                     .background(RoundedRectangle(cornerRadius: 3).fill(lit ? c : c.opacity(0.07)))
@@ -115,7 +116,7 @@ struct MeterSelfTest: View {
             }
             .frame(width: 62, height: 62)
             VStack(alignment: .leading, spacing: 5) {
-                Text(title ?? (failed ? "신호 없음" : "계기 점검 중")).font(.system(size: 11, weight: .semibold))
+                Text(title ?? (failed ? L("신호 없음") : L("계기 점검 중"))).font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(failed ? Theme.errorTone : Theme.busy)
                 Text(status).font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.textDim).lineLimit(2)
                 if !failed {   // the two value rows, still empty, filling as the needle sweeps
@@ -131,7 +132,7 @@ struct MeterSelfTest: View {
             }
             .frame(width: 92, alignment: .leading)
         }
-        Text(failed ? " " : "소모 추세에 따른 최종 예상 사용량 --").font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.textDim.opacity(0.6))
+        Text(failed ? " " : L("소모 추세에 따른 최종 예상 사용량 --")).font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.textDim.opacity(0.6))
             .lineLimit(1).fixedSize().frame(width: 168, alignment: .leading)
         }
         .padding(.horizontal, 8).padding(.vertical, 6)

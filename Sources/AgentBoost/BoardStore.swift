@@ -93,9 +93,9 @@ final class BoardStore: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if !FileManager.default.isExecutableFile(atPath: Shell.tmux) {
-                notice = "tmux를 찾을 수 없습니다 (\(Shell.tmux)). 세션 시작·입력·종료가 동작하지 않습니다. 설치: brew install tmux"
+                notice = L("tmux를 찾을 수 없습니다 (%@). 세션 시작·입력·종료가 동작하지 않습니다. 설치: brew install tmux", "\(Shell.tmux)")
             } else if !FileManager.default.isExecutableFile(atPath: Shell.claude) {
-                notice = "Claude Code CLI를 찾을 수 없습니다 (\(Shell.claude)). 설치: https://claude.ai/code 안내를 따르거나 터미널에서 npm install -g @anthropic-ai/claude-code"
+                notice = L("Claude Code CLI를 찾을 수 없습니다 (%@). 설치: https://claude.ai/code 안내를 따르거나 터미널에서 npm install -g @anthropic-ai/claude-code", "\(Shell.claude)")
             }
         }
         let args = ProcessInfo.processInfo.arguments
@@ -103,18 +103,20 @@ final class BoardStore: ObservableObject {
         if let i = args.firstIndex(of: "--agent"), i + 1 < args.count { selectedAgent = args[i + 1] }
         TmuxCache.onAutoConfirm = { [weak self] pane in DispatchQueue.main.async {
             guard let self, let a = (self.teams.flatMap(\.members) + self.loose).first(where: { $0.tmuxPane == pane }) else { return }
-            self.addEcho("모델 전환 확인창에 자동으로 Yes를 선택했습니다 (직접 고른 모델 변경)", sid: a.sessionId, ttl: 60, auto: true)
+            self.addEcho(L("모델 전환 확인창에 자동으로 Yes를 선택했습니다 (직접 고른 모델 변경)"), sid: a.sessionId, ttl: 60, auto: true)
         } }
         TmuxControl.onWarning = { [weak self] m in DispatchQueue.main.async { self?.notice = m } }
         TmuxControl.onLost = { [weak self] sid in DispatchQueue.main.async {
             guard let self else { return }
             self.bounce = Bounce(sid: sid, gen: self.bounce.gen + 1)
-            self.notice = "'\(self.agent(sid)?.name ?? "세션")'이(가) 메시지를 받지 않았습니다. 입력창에 되돌려 놓았으니 다시 보내 주세요."
+            self.notice = L("'%@'이(가) 메시지를 받지 않았습니다. 입력창에 되돌려 놓았으니 다시 보내 주세요.", self.agent(sid)?.name ?? L("세션"))
         } }
         TmuxControl.onDone = { [weak self] sid in self?.sending.remove(sid) }
         DispatchQueue.global().async { Shell.tmux(["set-environment", "-g", "PATH", Shell.path]) }
         BoardStore.shared = self
         CLICheck.start(self)
+        // conversation search reads every transcript once (~0.5 s); done ahead so the search window opens at once
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 15) { ConvoIndex.shared.refresh() }
         // the tmux cache must exist before the first refresh: otherwise every pane is unknown ("view only" flicker) and
         // resumeSavedSessions would judge liveness from an empty cache
         afterFirstRefresh = { [unowned self] in
@@ -236,7 +238,7 @@ final class BoardStore: ObservableObject {
             if let lead = (all.flatMap(\.members) + looseAgents).first(where: { $0.pid == panePid && $0.state == .idle }) {
                 pendingRespawn[tmux] = nil
                 addTeammates(specs, to: lead)
-                notice = "'\(lead.name)' 다시 시작 — 팀원 \(specs.count)명을 같은 이름·모델로 다시 만드는 중입니다 (Claude는 재개 시 팀원을 복원하지 않음)."
+                notice = L("'%@' 다시 시작 — 팀원 %@명을 같은 이름·모델로 다시 만드는 중입니다 (Claude는 재개 시 팀원을 복원하지 않음).", lead.name, String(specs.count))
             }
         }
         if teams != all { teams = all }
@@ -248,19 +250,19 @@ final class BoardStore: ObservableObject {
         if tick % 10 == 0 { saveSeen() }
         let live = all.flatMap(\.members) + looseAgents
         let busy = live.filter { $0.state == .busy }.count, waiting = live.filter { $0.state == .needsInput }.count
-        NSApp?.dockTile.badgeLabel = waiting > 0 ? "응답 \(waiting)" : (busy > 0 ? "\(busy)" : nil)
+        NSApp?.dockTile.badgeLabel = waiting > 0 ? L("응답 %@", String(waiting)) : (busy > 0 ? "\(busy)" : nil)
         for (sid, cmds) in pendingCommands {
             guard let a = agent(sid), a.state != .ended, let p = a.tmuxPane else { pendingCommands[sid] = nil; continue }
             if pendingSince[sid] == nil { pendingSince[sid] = Date() }
-            if a.state == .needsInput { if heldNotified.insert(sid).inserted { notice = "'\(a.name)' 에이전트가 질문에 답을 기다리는 중이라 \(cmds.first ?? "") 을(를) 대기시킵니다. 화면이 잘못 인식된 경우 '그래도 보내기'를 누르세요." } }
+            if a.state == .needsInput { if heldNotified.insert(sid).inserted { notice = L("'%@' 에이전트가 질문에 답을 기다리는 중이라 %@ 을(를) 대기시킵니다. 화면이 잘못 인식된 경우 '그래도 보내기'를 누르세요.", a.name, cmds.first ?? "") } }
             else { heldNotified.remove(sid) }
             // the pane shows a CLI list / picker, or someone types there from a terminal: anything sent now would go astray
             if let o = a.overlay {
-                if heldNotified.insert(sid + "|overlay").inserted { notice = "'\(a.name)'의 CLI가 \(Self.overlayName(o)) 화면이라 \(cmds.first ?? "") 을(를) 보류합니다. CLI에서 Esc로 대화로 돌아오면 보냅니다." }
+                if heldNotified.insert(sid + "|overlay").inserted { notice = L("'%@'의 CLI가 %@ 화면이라 %@ 을(를) 보류합니다. CLI에서 Esc로 대화로 돌아오면 보냅니다.", a.name, Self.overlayName(o), cmds.first ?? "") }
                 continue
             } else { heldNotified.remove(sid + "|overlay") }
             if TmuxCache.foreignTyped(p) {
-                if heldNotified.insert(sid + "|typed").inserted { notice = "'\(a.name)'의 CLI 입력창에 입력 중인 글이 있어 \(cmds.first ?? "") 을(를) 보류합니다 (터미널에서 같이 쓰는 중). 그 글을 보내거나 지우면 이어서 보냅니다." }
+                if heldNotified.insert(sid + "|typed").inserted { notice = L("'%@'의 CLI 입력창에 입력 중인 글이 있어 %@ 을(를) 보류합니다 (터미널에서 같이 쓰는 중). 그 글을 보내거나 지우면 이어서 보냅니다.", a.name, cmds.first ?? "") }
                 continue
             } else { heldNotified.remove(sid + "|typed") }
             let settled = TmuxCache.isSettled(p)
@@ -274,7 +276,7 @@ final class BoardStore: ObservableObject {
                 }
             }
             if unreachable.contains(p) {
-                notice = "'\(a.name)' 은(는) 이 tmux 서버에 없는 pane이라 제어할 수 없습니다 — 대기 중이던 \(cmds.first ?? "") 명령을 취소했습니다."
+                notice = L("'%@' 은(는) 이 tmux 서버에 없는 pane이라 제어할 수 없습니다 — 대기 중이던 %@ 명령을 취소했습니다.", a.name, cmds.first ?? "")
                 pendingCommands[sid] = nil; pendingSince[sid] = nil; continue
             }
             if !a.working, settled, let first = cmds.first {
@@ -359,11 +361,11 @@ final class BoardStore: ObservableObject {
     func forceSendPending(_ a: Agent) {
         guard let p = a.tmuxPane, let cmds = pendingCommands[a.sessionId], let first = cmds.first else { return }
         let alert = NSAlert()
-        alert.messageText = "'\(a.name)' 에 \(first) 을(를) 지금 보낼까요?"
-        alert.informativeText = "질문이나 권한 요청이 떠 있으면 Enter가 첫 번째 선택(허용)을 확정할 수 있습니다. 'Esc 후 보내기'는 먼저 Esc로 프롬프트를 닫습니다(거절로 처리될 수 있음)."
-        alert.addButton(withTitle: "취소")
-        alert.addButton(withTitle: "Esc 후 보내기")
-        alert.addButton(withTitle: "그대로 보내기")
+        alert.messageText = L("'%@' 에 %@ 을(를) 지금 보낼까요?", a.name, first)
+        alert.informativeText = L("질문이나 권한 요청이 떠 있으면 Enter가 첫 번째 선택(허용)을 확정할 수 있습니다. 'Esc 후 보내기'는 먼저 Esc로 프롬프트를 닫습니다(거절로 처리될 수 있음).")
+        alert.addButton(withTitle: L("취소"))
+        alert.addButton(withTitle: L("Esc 후 보내기"))
+        alert.addButton(withTitle: L("그대로 보내기"))
         let r = alert.runModal()
         guard r != .alertFirstButtonReturn else { return }
         if r == .alertSecondButtonReturn { TmuxControl.interrupt(p, settle: 0.6) }
@@ -419,7 +421,7 @@ final class BoardStore: ObservableObject {
                     if Date().timeIntervalSince(e.at) < 1800, !(queue ?? []).isEmpty { return false }
                     // never showed up: say so in the chat instead of letting it vanish
                     lostEchoes[a.sessionId, default: []].append(e)
-                    notice = "'\(a.name)'에 보낸 메시지가 CLI 기록에서 확인되지 않습니다. 세션 터미널(CLI 화면)에서 입력창에 남아 있는지 확인하세요."
+                    notice = L("'%@'에 보낸 메시지가 CLI 기록에서 확인되지 않습니다. 세션 터미널(CLI 화면)에서 입력창에 남아 있는지 확인하세요.", a.name)
                     return true
                 }
                 echoes[a.sessionId] = pend.isEmpty ? nil : pend
@@ -450,7 +452,7 @@ final class BoardStore: ObservableObject {
                 }
             }
             for e in lostEchoes[a.sessionId] ?? [] {
-                entries.append(ChatEntry(id: e.id + "-lost", role: .system, text: "⚠ 전달 확인 안 됨 — " + e.text, toolName: "stderr", time: e.at))
+                entries.append(ChatEntry(id: e.id + "-lost", role: .system, text: L("⚠ 전달 확인 안 됨 — %@", e.text), toolName: "stderr", time: e.at))
             }
             for e in echoes[a.sessionId] ?? [] {
                 entries.append(e.auto ? ChatEntry(id: e.id, role: .system, text: e.text, toolName: "auto", time: e.at) : ChatEntry(id: e.id, role: .user, text: e.text, toolName: "전송 중", time: e.at))
@@ -529,7 +531,7 @@ final class BoardStore: ObservableObject {
         attachScan[pid] = (found, tick)
         return found
     }
-    static func overlayName(_ o: String) -> String { o == "agents" ? "세션 목록(← agents)" : o == "resume" ? "대화 선택(/resume)" : o }
+    static func overlayName(_ o: String) -> String { o == "agents" ? L("세션 목록(← agents)") : o == "resume" ? L("대화 선택(/resume)") : o }
 
     private var transcriptScan: (tick: Int, list: [(sid: String, path: String)]) = (-100, [])
     private static let probeProject = probeDir.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ".", with: "-")
@@ -897,12 +899,12 @@ final class BoardStore: ObservableObject {
     @Published var pulled = Pulled(sid: "", gen: 0, texts: [])
     func pullQueue(_ a: Agent) {
         guard let p = a.tmuxPane, let path = a.transcriptPath else { return }
-        if TmuxCache.foreignTyped(p) { notice = "'\(a.name)'의 CLI 입력창에 글이 있어 대기 메시지를 꺼내지 않았습니다. 그 글을 보내거나 지운 뒤 다시 시도하세요."; return }
+        if TmuxCache.foreignTyped(p) { notice = L("'%@'의 CLI 입력창에 글이 있어 대기 메시지를 꺼내지 않았습니다. 그 글을 보내거나 지운 뒤 다시 시도하세요.", a.name); return }
         let texts = Self.queuedTexts(path)
         guard !texts.isEmpty else { return }
         TmuxControl.pullQueue(p, sid: a.sessionId) { [weak self] ok in
             guard let self else { return }
-            guard ok else { self.notice = "대기 메시지를 꺼내지 못했습니다. 이미 처리됐을 수 있습니다."; return }
+            guard ok else { self.notice = L("대기 메시지를 꺼내지 못했습니다. 이미 처리됐을 수 있습니다."); return }
             self.echoes[a.sessionId]?.removeAll { texts.contains($0.text) }
             if var c = self.chat[a.sessionId] { c.removeAll { $0.toolName == "전송 중" && texts.contains($0.text) }; self.chat[a.sessionId] = c }
             self.pulled = Pulled(sid: a.sessionId, gen: self.pulled.gen + 1, texts: texts)
@@ -921,12 +923,12 @@ final class BoardStore: ObservableObject {
         return r
     }
     private func sendChecked(_ text: String, to a: Agent) -> Bool {
-        guard let p = a.tmuxPane, a.state != .ended else { notice = "'\(a.name)'은(는) 종료됐거나 tmux 화면이 없는 세션이라 보낼 수 없습니다."; return false }
-        if let o = a.overlay { notice = "'\(a.name)'의 CLI가 \(Self.overlayName(o)) 화면이라 보낼 수 없습니다. CLI에서 Esc를 눌러 대화로 돌아온 뒤 다시 보내세요."; return false }
+        guard let p = a.tmuxPane, a.state != .ended else { notice = L("'%@'은(는) 종료됐거나 tmux 화면이 없는 세션이라 보낼 수 없습니다.", a.name); return false }
+        if let o = a.overlay { notice = L("'%@'의 CLI가 %@ 화면이라 보낼 수 없습니다. CLI에서 Esc를 눌러 대화로 돌아온 뒤 다시 보내세요.", a.name, Self.overlayName(o)); return false }
         if a.state == .needsInput, a.prompt != nil {
-            notice = "'\(a.name)'의 CLI가 질문에 대한 답을 기다리는 중이라 보내지 않았습니다. 질문 카드에서 먼저 답하거나 Esc로 취소한 뒤 다시 보내세요."; return false
+            notice = L("'%@'의 CLI가 질문에 대한 답을 기다리는 중이라 보내지 않았습니다. 질문 카드에서 먼저 답하거나 Esc로 취소한 뒤 다시 보내세요.", a.name); return false
         }
-        if TmuxCache.foreignTyped(p) { notice = "'\(a.name)'의 CLI 입력창에 입력 중인 글이 있어 보내지 않았습니다 (터미널에서 같이 쓰는 중). 그 글을 보내거나 지운 뒤 다시 시도하세요."; return false }
+        if TmuxCache.foreignTyped(p) { notice = L("'%@'의 CLI 입력창에 입력 중인 글이 있어 보내지 않았습니다 (터미널에서 같이 쓰는 중). 그 글을 보내거나 지운 뒤 다시 시도하세요.", a.name); return false }
         lastSentAt = Date()
         if text.hasPrefix("/model") { TmuxCache.expectModelConfirm(p) }     // typed by the user: a "Switch model?" window is theirs too
         addEcho(text, sid: a.sessionId, ttl: 90)
@@ -949,12 +951,12 @@ final class BoardStore: ObservableObject {
     func pushQueue(_ a: Agent) {
         guard let p = a.tmuxPane else { return }
         TmuxControl.queue(p) {
-            TmuxControl.keys(["-t", p, "Escape"], what: "중단(Esc)")
+            TmuxControl.keys(["-t", p, "Escape"], what: L("중단(Esc)"))
             usleep(900_000)
             let box = Shell.tmux(["capture-pane", "-p", "-t", p, "-S", "-6"]).out
             // only press Enter when the box holds text (a "❯ " row with something after it)
             if box.split(separator: "\n").contains(where: { $0.trimmingCharacters(in: .whitespaces).hasPrefix("❯") && $0.trimmingCharacters(in: .whitespaces).count > 2 }) {
-                TmuxControl.keys(["-t", p, "Enter"], what: "대기열 전송(Enter)")
+                TmuxControl.keys(["-t", p, "Enter"], what: L("대기열 전송(Enter)"))
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.refreshSoon() }
@@ -962,7 +964,7 @@ final class BoardStore: ObservableObject {
     /// Shift+Tab in the CLI: default → accept edits → plan → … The footer shows the new mode on the next capture.
     func cycleMode(_ a: Agent) {
         guard let p = a.tmuxPane, a.state != .ended else { return }
-        TmuxControl.queue(p) { TmuxControl.keys(["-t", p, "BTab"], what: "모드 전환(Shift+Tab)") }
+        TmuxControl.queue(p) { TmuxControl.keys(["-t", p, "BTab"], what: L("모드 전환(Shift+Tab)")) }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in self?.refreshSoon() }
     }
     /// Live + idle: /rename now. Live + busy: queued until idle. Ended: written to
@@ -971,7 +973,7 @@ final class BoardStore: ObservableObject {
         let name = raw.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty, name != a.name else { return }
         if let host = externalHost(a), a.state == .ended || a.tmuxPane == nil {
-            notice = "'\(a.name)'은(는) \(host)에서 만든 대화라 이름은 \(host)에서 바꿔 주세요. 앱이 기록 파일에 쓰면 \(host)가 이 세션을 거부합니다."; return
+            notice = L("'%@'은(는) %@에서 만든 대화라 이름은 %@에서 바꿔 주세요. 앱이 기록 파일에 쓰면 %@가 이 세션을 거부합니다.", a.name, host, host, host); return
         }
         if a.state == .ended {
             writeTitle(name, for: a)
@@ -979,10 +981,10 @@ final class BoardStore: ObservableObject {
             // running, but no way to type into it: store the title in its transcript;
             // Claude picks it up the next time the session is opened
             writeTitle(name, for: a)
-            notice = "'\(a.name)'은(는) 입력할 수 없는 세션이라 이름을 기록에 저장했습니다. 다음에 다시 시작할 때부터 '\(name)'(으)로 표시됩니다."
+            notice = L("'%@'은(는) 입력할 수 없는 세션이라 이름을 기록에 저장했습니다. 다음에 다시 시작할 때부터 '%@'(으)로 표시됩니다.", a.name, name)
         } else if a.working {
             pendingRenames[a.sessionId] = name
-            notice = "'\(a.name)' 작업 중 — 대기 상태가 되면 이름을 바꿉니다."
+            notice = L("'%@' 작업 중 — 대기 상태가 되면 이름을 바꿉니다.", a.name)
         } else if let p = a.tmuxPane {
             TmuxControl.rename(name, pane: p)
         }
@@ -991,7 +993,7 @@ final class BoardStore: ObservableObject {
     }
     private func writeTitle(_ name: String, for a: Agent) {
         guard let path = a.transcriptPath ?? transcript(for: a.sessionId),
-              let fh = FileHandle(forWritingAtPath: path) else { notice = "대화 기록 파일을 찾지 못해 이름을 저장하지 못했습니다."; return }
+              let fh = FileHandle(forWritingAtPath: path) else { notice = L("대화 기록 파일을 찾지 못해 이름을 저장하지 못했습니다."); return }
         let rec: [String: Any] = ["type": "custom-title", "customTitle": name, "sessionId": a.sessionId]
         guard var line = try? JSONSerialization.data(withJSONObject: rec) else { return }
         line.append(0x0A)
@@ -1018,7 +1020,7 @@ final class BoardStore: ObservableObject {
                 switch e {
                 case "cli", "sdk-cli": h = nil
                 case "claude-vscode": h = "VS Code"
-                case "claude-desktop": h = "Claude 데스크톱 앱"
+                case "claude-desktop": h = L("Claude 데스크톱 앱")
                 default: h = String(e)
                 }
             }
@@ -1064,9 +1066,9 @@ final class BoardStore: ObservableObject {
 
     /// Slash command now if idle, otherwise queued until the agent is idle.
     func command(_ cmd: String, for a: Agent) {
-        guard a.state != .ended, let p = a.tmuxPane else { notice = "tmux pane이 없거나 종료된 세션이라 변경할 수 없습니다."; return }
+        guard a.state != .ended, let p = a.tmuxPane else { notice = L("tmux pane이 없거나 종료된 세션이라 변경할 수 없습니다."); return }
         if !a.working && TmuxCache.isSettled(p) && (pendingCommands[a.sessionId] ?? []).isEmpty { sendSlash(cmd, to: p, sid: a.sessionId) }
-        else { pendingCommands[a.sessionId, default: []].append(cmd); notice = "'\(a.name)' 작업 중 — 대기 상태가 되면 \(cmd) 을(를) 보냅니다." }
+        else { pendingCommands[a.sessionId, default: []].append(cmd); notice = L("'%@' 작업 중 — 대기 상태가 되면 %@ 을(를) 보냅니다.", a.name, cmd) }
         refresh()
     }
     /// `/model` and `/effort` also overwrite the user's defaults for new sessions
@@ -1078,8 +1080,8 @@ final class BoardStore: ObservableObject {
     @Published var rcPending: Set<String> = []
     func toggleRemote(_ a: Agent) {
         guard let pane = a.tmuxPane, let on = a.remoteControl, !rcPending.contains(a.sessionId) else {
-            notice = "'\(a.name)'는 앱이 조작할 수 있는 터미널(tmux) 세션이 아니라 Remote Control을 바꿀 수 없습니다."; return }
-        guard !a.working else { notice = "'\(a.name)'가 작업 중입니다. 끝난 뒤 다시 눌러 주세요."; return }
+            notice = L("'%@'는 앱이 조작할 수 있는 터미널(tmux) 세션이 아니라 Remote Control을 바꿀 수 없습니다.", a.name); return }
+        guard !a.working else { notice = L("'%@'가 작업 중입니다. 끝난 뒤 다시 눌러 주세요.", a.name); return }
         rcPending.insert(a.sessionId)
         TmuxControl.command("/remote-control", to: pane)
         Task { @MainActor in
@@ -1091,7 +1093,7 @@ final class BoardStore: ObservableObject {
                     let scr = await TmuxControl.exec(pane, ["capture-pane", "-p", "-t", pane]).out
                     guard scr.contains("Disconnect this session") else { continue }
                     if scr.split(separator: "\n").contains(where: { $0.contains("❯") && $0.contains("Disconnect this session") }) {
-                        if (await TmuxControl.exec(pane, ["send-keys", "-t", pane, "Enter"])).code != 0 { self.notice = "원격 제어 메뉴에 Enter를 보내지 못했습니다." }; picked = true; break
+                        if (await TmuxControl.exec(pane, ["send-keys", "-t", pane, "Enter"])).code != 0 { self.notice = L("원격 제어 메뉴에 Enter를 보내지 못했습니다.") }; picked = true; break
                     }
                     _ = await TmuxControl.exec(pane, ["send-keys", "-t", pane, "Up"])
                 }
@@ -1101,10 +1103,10 @@ final class BoardStore: ObservableObject {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 self.refresh()
                 if let now = self.agent(a.sessionId)?.remoteControl, now != on {
-                    self.notice = "'\(a.name)' Remote Control " + (now ? "켜짐 — 휴대폰·claude.ai/code에서 이어서 볼 수 있습니다." : "꺼짐 — 웹 목록에 더 이상 나타나지 않습니다."); return
+                    self.notice = now ? L("'%@' Remote Control 켜짐 — 휴대폰·claude.ai/code에서 이어서 볼 수 있습니다.", a.name) : L("'%@' Remote Control 꺼짐 — 웹 목록에 더 이상 나타나지 않습니다.", a.name); return
                 }
             }
-            self.notice = "'\(a.name)' Remote Control 전환을 확인하지 못했습니다. 세션 터미널을 확인해 주세요."
+            self.notice = L("'%@' Remote Control 전환을 확인하지 못했습니다. 세션 터미널을 확인해 주세요.", a.name)
         }
     }
 
@@ -1195,7 +1197,7 @@ final class BoardStore: ObservableObject {
         guard let pid = a.pid, a.state != .ended else { return }
         if a.working && mode == .whenIdle {
             pendingCommands[a.sessionId, default: []].append("/exit")
-            notice = "'\(a.name)' 작업이 끝나면 종료합니다."  // queued /exit
+            notice = L("'%@' 작업이 끝나면 종료합니다.", a.name)  // queued /exit
             refresh(); return
         }
         if a.isBackgroundJob, let job = a.jobId {
@@ -1204,25 +1206,25 @@ final class BoardStore: ObservableObject {
             // the agents screen.
             if let pane = a.tmuxPane { Self.closeViewer(pane, pid: a.viewerPid) }
             stopJob(job, name: a.name, pid: pid)
-            notice = "'\(a.name)' 백그라운드 작업을 멈춥니다 (claude stop \(job))." + (a.tmuxPane != nil ? " CLI 화면은 닫습니다." : "")
+            notice = L("'%@' 백그라운드 작업을 멈춥니다 (claude stop %@).", a.name, job) + (a.tmuxPane != nil ? L(" CLI 화면은 닫습니다.") : "")
             return
         }
         guard let pane = a.tmuxPane else {
             // no terminal to type /exit into: stop the process for real
             kill(pid_t(pid), SIGTERM)
             exitWatchdog(pid: pid, name: a.name, escalate: true)
-            notice = "'\(a.name)'에 종료 신호(SIGTERM)를 보냈습니다." + (a.entrypoint == "claude-desktop" ? " 데스크톱 앱의 해당 대화가 끊깁니다." : "")
+            notice = L("'%@'에 종료 신호(SIGTERM)를 보냈습니다.", a.name) + (a.entrypoint == "claude-desktop" ? L(" 데스크톱 앱의 해당 대화가 끊깁니다.") : "")
             return
         }
         if a.parkedJobId != nil {                              // a viewer whose job is gone: /exit only returns to the agents screen
             Self.closeViewer(pane, pid: pid)
-            notice = "'\(a.name)' CLI 화면을 닫습니다 (대화는 백그라운드 작업으로 옮겨져 있었습니다)."
+            notice = L("'%@' CLI 화면을 닫습니다 (대화는 백그라운드 작업으로 옮겨져 있었습니다).", a.name)
             return
         }
         if a.overlay != nil || a.working { TmuxControl.interrupt(pane, settle: 0.6) }   // leave the list / picker, or stop the turn, before /exit
         TmuxControl.command("/exit", to: pane)
         exitWatchdog(pid: pid, name: a.name)
-        notice = "'\(a.name)'에 /exit 을 보냈습니다."
+        notice = L("'%@'에 /exit 을 보냈습니다.", a.name)
     }
     /// ctrl+c twice: how the CLI quits an interactive viewer of a background job (its /exit only returns to the agents screen).
     static func closeViewer(_ pane: String, pid: Int?) {
@@ -1230,8 +1232,8 @@ final class BoardStore: ObservableObject {
         // the presses switch screens instead), so the viewer process is then ended by signal. It holds no conversation
         // state — that lives in the job daemon, which is untouched.
         TmuxControl.queue(pane) {
-            TmuxControl.keys(["-t", pane, "C-c"], what: "CLI 화면 닫기(ctrl+c)"); usleep(600_000)
-            TmuxControl.keys(["-t", pane, "C-c"], what: "CLI 화면 닫기(ctrl+c)")
+            TmuxControl.keys(["-t", pane, "C-c"], what: L("CLI 화면 닫기(ctrl+c)")); usleep(600_000)
+            TmuxControl.keys(["-t", pane, "C-c"], what: L("CLI 화면 닫기(ctrl+c)"))
             guard let pid else { return }
             for _ in 0..<12 where kill(pid_t(pid), 0) == 0 { usleep(250_000) }
             if kill(pid_t(pid), 0) == 0 { kill(pid_t(pid), SIGTERM) }
@@ -1248,8 +1250,8 @@ final class BoardStore: ObservableObject {
             if alive { kill(pid_t(pid), SIGTERM) }
             DispatchQueue.main.async {
                 guard let self else { return }
-                if r.code != 0 { self.notice = "'\(name)' claude stop \(job) 실패: \((r.err.isEmpty ? r.out : r.err).trimmingCharacters(in: .whitespacesAndNewlines).prefix(200))" }
-                else if alive { self.notice = "'\(name)' claude stop 후에도 프로세스가 남아 SIGTERM을 보냈습니다." }
+                if r.code != 0 { self.notice = L("'%@' claude stop %@ 실패: %@", name, job, String((r.err.isEmpty ? r.out : r.err).trimmingCharacters(in: .whitespacesAndNewlines).prefix(200))) }
+                else if alive { self.notice = L("'%@' claude stop 후에도 프로세스가 남아 SIGTERM을 보냈습니다.", name) }
                 self.refreshSoon()
             }
         }
@@ -1259,7 +1261,7 @@ final class BoardStore: ObservableObject {
             try? await Task.sleep(nanoseconds: 30_000_000_000)
             if kill(pid_t(pid), 0) == 0 {
                 kill(pid_t(pid), escalate ? SIGKILL : SIGTERM)
-                self.notice = "'\(name)'이(가) 30초 안에 끝나지 않아 강제 종료(\(escalate ? "SIGKILL" : "SIGTERM"))했습니다."
+                self.notice = L("'%@'이(가) 30초 안에 끝나지 않아 강제 종료(%@)했습니다.", name, escalate ? "SIGKILL" : "SIGTERM")
             }
             self.refresh()
         }
@@ -1280,7 +1282,7 @@ final class BoardStore: ObservableObject {
             for spec in c.specs where (c.results[spec.name] ?? .waiting) == .waiting {
                 if let m = mates.first(where: { $0.name == spec.name && $0.state != .ended }) {
                     var diff: [String] = []
-                    if !Self.modelMatches(spec.model, m.model) { diff.append("모델 \(m.model ?? "?")") }
+                    if !Self.modelMatches(spec.model, m.model) { diff.append(L("모델 %@", m.model ?? "?")) }
                     if let e = m.effort, e != spec.effort.rawValue { diff.append("effort \(e)") }
                     c.results[spec.name] = diff.isEmpty ? .ok : .mismatch(diff.joined(separator: ", "))
                 } else if let why = lead.flatMap({ Self.leadReportedFailure($0, since: c.started) }) {
@@ -1347,9 +1349,9 @@ final class BoardStore: ObservableObject {
     }
     func addTeammates(_ specs: [TeammateSpec], to a: Agent) {
         let valid = specs.filter { $0.nameIsValid }
-        if valid.count < specs.filter({ !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }).count { notice = "팀원 이름은 영문·숫자·_·- 만 쓸 수 있습니다 (Claude의 Agent 도구 제한). 잘못된 이름은 건너뛰었습니다." }
+        if valid.count < specs.filter({ !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }).count { notice = L("팀원 이름은 영문·숫자·_·- 만 쓸 수 있습니다 (Claude의 Agent 도구 제한). 잘못된 이름은 건너뛰었습니다.") }
         guard !valid.isEmpty else { return }
-        guard a.state != .ended, a.tmuxPane != nil else { notice = "tmux pane에서 실행 중인 세션에만 팀원을 추가할 수 있습니다."; return }
+        guard a.state != .ended, a.tmuxPane != nil else { notice = L("tmux pane에서 실행 중인 세션에만 팀원을 추가할 수 있습니다."); return }
         send(Self.teammateInstruction(valid), to: a)
         if let p = a.tmuxPane { startSpawnCheck(leadPane: p, specs: valid) }
         notice = nil
@@ -1359,13 +1361,13 @@ final class BoardStore: ObservableObject {
     @discardableResult
     func createSession(name: String, cwd: String, model: ModelChoice, effort: EffortChoice, teammates: [TeammateSpec], task: String, bypass: Bool = false) -> String? {
         let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !clean.isEmpty else { notice = "이름을 입력하세요."; return nil }
+        guard !clean.isEmpty else { notice = L("이름을 입력하세요."); return nil }
         var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: cwd, isDirectory: &isDir), isDir.boolValue else { notice = "작업 폴더가 없습니다: \(cwd)"; return nil }
+        guard FileManager.default.fileExists(atPath: cwd, isDirectory: &isDir), isDir.boolValue else { notice = L("작업 폴더가 없습니다: %@", cwd); return nil }
         var prompt = ""
         let team = teammates.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
         if !team.isEmpty { prompt += Self.teammateInstruction(team) }
-        if !task.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { prompt += (prompt.isEmpty ? "" : "\n") + "작업: " + task }
+        if !task.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { prompt += (prompt.isEmpty ? "" : "\n") + L("작업: %@", task) }
         var argv = [Shell.claude, "-n", clean, "--model", model.rawValue, "--effort", effort.rawValue]
         if bypass { argv.append("--dangerously-skip-permissions") }
         if !prompt.isEmpty { argv.append(prompt) }
@@ -1373,19 +1375,19 @@ final class BoardStore: ObservableObject {
         if !team.isEmpty, let pane = Shell.tmux(["list-panes", "-t", tmuxName, "-F", "#{pane_id}"]).out.split(separator: "\n").first {
             startSpawnCheck(leadPane: String(pane), specs: team)
         }
-        notice = "새 세션 '\(clean)' 시작 (tmux: \(tmuxName))" + (team.isEmpty ? "" : " — 팀원 \(team.count)명 생성 지시 포함")
+        notice = L("새 세션 '%@' 시작 (tmux: %@)", clean, tmuxName) + (team.isEmpty ? "" : L(" — 팀원 %@명 생성 지시 포함", String(team.count)))
         refresh(); refreshSoon()
         return tmuxName
     }
     /// `claude update` in the background; running sessions keep their version until restarted.
     func updateClaude() {
-        notice = "Claude Code 업데이트 확인 중…"
+        notice = L("Claude Code 업데이트 확인 중…")
         DispatchQueue.global(qos: .utility).async {
             let r = Shell.run([Shell.claude, "update"], timeout: 300)
             let last = r.out.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }.last ?? ""
             DispatchQueue.main.async {
-                self.notice = r.code == 0 ? "Claude Code 업데이트: \(last) — 실행 중인 세션은 다시 시작해야 새 버전을 씁니다."
-                                          : "Claude Code 업데이트 실패: \(last)"
+                self.notice = r.code == 0 ? L("Claude Code 업데이트: %@ — 실행 중인 세션은 다시 시작해야 새 버전을 씁니다.", last)
+                                          : L("Claude Code 업데이트 실패: %@", last)
             }
         }
     }
@@ -1394,7 +1396,7 @@ final class BoardStore: ObservableObject {
         let bypass = UserDefaults.standard.object(forKey: "new.bypass") as? Bool ?? true
         _ = createSession(name: "Memory Manager", cwd: Shell.home, model: .sonnet, effort: .low, teammates: [], task: Self.diskManagerPrompt, bypass: bypass)
     }
-    static let diskManagerPrompt = """
+    static var diskManagerPrompt: String { L("""
     너는 이 Mac의 디스크 관리자다. 지금은 분석하고 정리 방법을 제안만 한다. 내가 승인하기 전에는 아무것도 지우거나 옮기지 마라.
     아래를 조사해라. 오래 걸리는 du는 깊이를 제한하고, 권한 오류는 건너뛴다.
     1. 디스크 전체 용량과 여유 공간 (df -h /).
@@ -1405,7 +1407,7 @@ final class BoardStore: ObservableObject {
     6. 휴지통 크기와 로컬 Time Machine 스냅샷 (tmutil listlocalsnapshots /).
     결과는 "항목 · 크기 · 마지막 사용 · 판단(안전/확인 필요/위험) · 정리 방법(명령)" 표로 정리하고, 확보 가능한 용량 합계와 추천 순서를 제안해라.
     iCloud 동기화 폴더(~/Library/Mobile Documents), 문서·사진 원본, 연구 자료(~/Desktop/Research)는 정리 대상으로 제안하지 마라.
-    """
+    """) }
     private func trackLaunches(knownPids: Set<Int>, usedPanes: Set<String>) {
         guard !launches.isEmpty else { return }
         var next: [Launch] = []
@@ -1413,7 +1415,7 @@ final class BoardStore: ObservableObject {
             let r = Shell.tmux(["list-panes", "-t", l.tmuxName, "-F", "#{pane_pid}\u{1f}#{pane_dead}\u{1f}#{pane_id}"])
             let f = r.out.split(separator: "\n").first?.split(separator: "\u{1f}").map(String.init) ?? []
             guard r.code == 0, f.count == 3, let pid = Int(f[0]) else {
-                notice = "'\(l.name)' 세션이 시작 전에 종료되었습니다."
+                notice = L("'%@' 세션이 시작 전에 종료되었습니다.", l.name)
                 continue                                   // gone: drop it
             }
             if f[1] == "1" {                               // ended before registering: its last words are still on the pane (remain-on-exit)
@@ -1442,9 +1444,9 @@ final class BoardStore: ObservableObject {
     }
     /// A launch stuck on the CLI's first-run flow: hand its tmux window to the Terminal so the person can finish there.
     func openLaunchTerminal(_ l: Launch) {
-        guard let pane = Shell.tmux(["list-panes", "-t", l.tmuxName, "-F", "#{pane_id}"]).out.split(separator: "\n").first else { notice = "'\(l.name)' 세션 창을 찾지 못했습니다."; return }
+        guard let pane = Shell.tmux(["list-panes", "-t", l.tmuxName, "-F", "#{pane_id}"]).out.split(separator: "\n").first else { notice = L("'%@' 세션 창을 찾지 못했습니다.", l.name); return }
         let r = attachTerminal(session: l.tmuxName, pane: String(pane))
-        notice = r.code == 0 ? "터미널에서 '\(l.name)'을(를) 열었습니다. 설정과 로그인을 마치면 여기에 나타납니다." : "터미널을 열지 못했습니다: \(r.err.prefix(120))"
+        notice = r.code == 0 ? L("터미널에서 '%@'을(를) 열었습니다. 설정과 로그인을 마치면 여기에 나타납니다.", l.name) : L("터미널을 열지 못했습니다: %@", String(r.err.prefix(120)))
     }
     /// The CLI quit before registering: act on the refusals it is known to print, show any other.
     private func launchFailed(_ l: Launch, screen: String) {
@@ -1452,30 +1454,30 @@ final class BoardStore: ObservableObject {
         if let r = l.resume {
             if let m = tail.range(of: #"running in the background \(([0-9a-f]{8})\)"#, options: .regularExpression) {
                 let id = String(tail[m].dropLast().suffix(8))
-                notice = "'\(l.name)'은(는) 이미 CLI 백그라운드 작업 \(id)(으)로 실행 중입니다. 새로 띄우지 않고 그 화면을 붙입니다 (claude attach)."
+                notice = L("'%@'은(는) 이미 CLI 백그라운드 작업 %@(으)로 실행 중입니다. 새로 띄우지 않고 그 화면을 붙입니다 (claude attach).", l.name, "\(id)")
                 attach(job: id, label: l.name, cwd: l.cwd); return
             }
             if tail.contains("No deferred tool marker") {
-                notice = "'\(l.name)'은(는) CLI 백그라운드 작업의 대화라 --resume으로 열리지 않습니다. CLI 방식대로 --bg --resume으로 이어서 엽니다."
+                notice = L("'%@'은(는) CLI 백그라운드 작업의 대화라 --resume으로 열리지 않습니다. CLI 방식대로 --bg --resume으로 이어서 엽니다.", l.name)
                 _ = resumeAsJob(sid: r.sid, jobId: nil, label: l.name, cwd: l.cwd, model: r.model, effort: r.effort, bypass: r.bypass); return
             }
         }
-        notice = "'\(l.name)' 세션이 시작 전에 종료되었습니다: \(tail.prefix(240))"
+        notice = L("'%@' 세션이 시작 전에 종료되었습니다: %@", l.name, String(tail.prefix(240)))
     }
     /// The person's answer to Claude Code's own folder-trust prompt.
     func trustFolder(_ l: Launch) {
         let n = l.tmuxName
         TmuxControl.queue(n) {
-            guard TmuxControl.keys(["-t", n, "Down"], what: "폴더 신뢰 선택(↓)") else { return }
+            guard TmuxControl.keys(["-t", n, "Down"], what: L("폴더 신뢰 선택(↓)")) else { return }
             usleep(150_000)
-            TmuxControl.keys(["-t", n, "Enter"], what: "폴더 신뢰 확인(Enter)")
+            TmuxControl.keys(["-t", n, "Enter"], what: L("폴더 신뢰 확인(Enter)"))
         }
-        notice = "'\(l.cwd)' 폴더를 신뢰하고 '\(l.name)'을(를) 시작합니다."
+        notice = L("'%@' 폴더를 신뢰하고 '%@'을(를) 시작합니다.", l.cwd, l.name)
     }
     func cancelLaunch(_ l: Launch) {
         Shell.tmux(["kill-session", "-t", l.tmuxName])
         launches.removeAll { $0.id == l.id }
-        notice = "'\(l.name)' 시작을 취소했습니다."
+        notice = L("'%@' 시작을 취소했습니다.", l.name)
     }
     private func launchInTmux(label: String, cwd: String, argv: [String], attachJob: String? = nil, resume: Launch.ResumeArgs? = nil) -> String? {
         var slug = String(label.unicodeScalars.map { CharacterSet.alphanumerics.contains($0) && $0.isASCII ? Character($0) : "-" }).prefix(24).trimmingCharacters(in: CharacterSet(charactersIn: "-"))
@@ -1487,7 +1489,7 @@ final class BoardStore: ObservableObject {
         if UserDefaults.standard.object(forKey: "ui.cliSuggest") as? Bool ?? true { cmd = "env CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=1 " + cmd }
         let r = Shell.tmux(["new-session", "-d", "-s", tmuxName, "-x", "220", "-y", "60", "-c", cwd, "-e", "PATH=\(Shell.path)", cmd])
         Shell.tmux(["set-environment", "-g", "PATH", Shell.path])
-        if r.code != 0 { notice = "세션 시작 실패: \(r.err.prefix(160))"; return nil }
+        if r.code != 0 { notice = L("세션 시작 실패: %@", String(r.err.prefix(160))); return nil }
         Shell.tmux(["set-option", "-w", "-t", tmuxName, "remain-on-exit", "on"])   // a refusal printed before the CLI registers stays readable (trackLaunches)
         var l = Launch(tmuxName: tmuxName, name: label, cwd: cwd); l.attachJob = attachJob; l.resume = resume
         launches.append(l)
@@ -1509,23 +1511,23 @@ final class BoardStore: ObservableObject {
     /// defaults are untouched. Never a copy unless asked (`fork`): one conversation is one session id, in the CLI and here.
     @discardableResult
     func resume(_ a: Agent, model: ModelChoice, effort: EffortChoice, bypass: Bool = false, fork: Bool = false) -> String? {
-        guard canResume(a) else { notice = "대화 기록이 없어 다시 시작할 수 없습니다."; return nil }
+        guard canResume(a) else { notice = L("대화 기록이 없어 다시 시작할 수 없습니다."); return nil }
         guard let cwd = workingDirectory(of: a), FileManager.default.fileExists(atPath: cwd) else {
-            notice = "원래 작업 폴더를 찾을 수 없습니다."; return nil
+            notice = L("원래 작업 폴더를 찾을 수 없습니다."); return nil
         }
         let sid = conversationId(a)
         // one conversation, one process: a second `claude --resume` of a running one is refused by the CLI (or, with
         // --fork-session, becomes a copy under a new id) — so it is never started from here by itself
-        if let live = agent(sid), live.state != .ended { notice = "'\(live.name)'은(는) 이미 실행 중입니다. 그 세션을 엽니다."; open(live); return nil }
+        if let live = agent(sid), live.state != .ended { notice = L("'%@'은(는) 이미 실행 중입니다. 그 세션을 엽니다.", live.name); open(live); return nil }
         if let job = runningJob(for: sid) {
-            notice = "'\(a.name)'은(는) CLI 백그라운드 작업 \(job.id)(으)로 실행 중입니다. 새로 띄우지 않고 그 화면을 붙입니다 (claude attach)."
+            notice = L("'%@'은(는) CLI 백그라운드 작업 %@(으)로 실행 중입니다. 새로 띄우지 않고 그 화면을 붙입니다 (claude attach).", a.name, "\(job.id)")
             return attach(job: job.id, label: a.name, cwd: cwd)
         }
         if let job = jobRecord(for: sid) { return resumeAsJob(sid: sid, jobId: job.id, label: a.name, cwd: cwd, model: model, effort: effort, bypass: bypass) }
         let argv = [Shell.claude, "--resume", sid] + (fork ? ["--fork-session"] : []) + ["--model", model.rawValue, "--effort", effort.rawValue] + (bypass ? ["--dangerously-skip-permissions"] : [])
         guard let t = launchInTmux(label: a.name, cwd: cwd, argv: argv, resume: Launch.ResumeArgs(sid: sid, model: model, effort: effort, bypass: bypass)) else { return nil }
         deleted.remove(sid)
-        notice = "'\(a.name)' 다시 시작 (tmux: \(t))" + (fork ? " — 복사본(새 세션 ID)으로 분기합니다. 원본 대화는 그대로 남습니다." : "") + (a.teamName != nil && !a.isLead ? " — 팀원 세션은 팀과 분리된 개별 세션으로 열립니다." : "")
+        notice = L("'%@' 다시 시작 (tmux: %@)", a.name, t) + (fork ? L(" — 복사본(새 세션 ID)으로 분기합니다. 원본 대화는 그대로 남습니다.") : "") + (a.teamName != nil && !a.isLead ? L(" — 팀원 세션은 팀과 분리된 개별 세션으로 열립니다.") : "")
         return t
     }
     /// The id of the conversation behind a card: its transcript's name, else the card's own id.
@@ -1548,7 +1550,7 @@ final class BoardStore: ObservableObject {
     /// marker…", with or without --fork-session). The CLI's own way is `--bg --resume <id>` (same job, same session id),
     /// then `claude attach`.
     private func resumeAsJob(sid: String, jobId: String?, label: String, cwd: String, model: ModelChoice, effort: EffortChoice, bypass: Bool) -> String? {
-        notice = "'\(label)' 백그라운드 작업으로 다시 시작하는 중 (claude --bg --resume)…"
+        notice = L("'%@' 백그라운드 작업으로 다시 시작하는 중 (claude --bg --resume)…", label)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             // a stopped job's record left in place makes the CLI start a COPY under a new id (verified); without the record
             // it continues under the same id. The record is only the CLI's list entry: the transcript stays.
@@ -1563,11 +1565,11 @@ final class BoardStore: ObservableObject {
             DispatchQueue.main.async {
                 guard let self else { return }
                 guard r.code == 0, let id else {
-                    self.notice = "'\(label)' 다시 시작 실패 — claude --bg --resume: \(text.trimmingCharacters(in: .whitespacesAndNewlines).suffix(220))"; return
+                    self.notice = L("'%@' 다시 시작 실패 — claude --bg --resume: %@", label, String(text.trimmingCharacters(in: .whitespacesAndNewlines).suffix(220))); return
                 }
                 self.attach(job: id, label: label, cwd: cwd)
-                self.notice = "'\(label)' CLI 백그라운드 작업 \(id)(으)로 이어서 열었습니다 (claude --bg --resume + attach)."
-                    + ((got != nil && got != sid) ? " ⚠️ CLI가 같은 ID로 잇지 않고 복사본(\(got!.prefix(8)))을 만들었습니다. 원본 기록은 그대로 남아 있습니다." : "")
+                self.notice = L("'%@' CLI 백그라운드 작업 %@(으)로 이어서 열었습니다 (claude --bg --resume + attach).", label, "\(id)")
+                    + ((got != nil && got != sid) ? L(" ⚠️ CLI가 같은 ID로 잇지 않고 복사본(%@)을 만들었습니다. 원본 기록은 그대로 남아 있습니다.", String(got!.prefix(8))) : "")
                 if let got, got != sid, self.jobNames[id] == nil { self.jobNames[id] = label }
                 self.refreshSoon()
             }
@@ -1595,7 +1597,7 @@ final class BoardStore: ObservableObject {
         if let job = a.jobId {
             guard jobRemoving.insert(job).inserted else { return }
             let pid = a.state != .ended ? a.pid : nil
-            notice = "'\(a.name)' 백그라운드 작업을 CLI 목록에서 지우는 중…"
+            notice = L("'%@' 백그라운드 작업을 CLI 목록에서 지우는 중…", a.name)
             DispatchQueue.global(qos: .utility).async { [weak self] in
                 if let pid {
                     _ = Shell.run([Shell.claude, "stop", job], timeout: 60)
@@ -1609,7 +1611,7 @@ final class BoardStore: ObservableObject {
                     guard r.code == 0 else {
                         // the job stays in both lists, and the CLI's reason is shown (an unpushed worktree, for example)
                         let why = (r.err.isEmpty ? r.out : r.err).trimmingCharacters(in: .whitespacesAndNewlines)
-                        self.notice = "'\(a.name)' 삭제 실패 — claude rm \(job): \(why.prefix(220))"
+                        self.notice = L("'%@' 삭제 실패 — claude rm %@: %@", a.name, "\(job)", String(why.prefix(220)))
                         self.refresh(); return
                     }
                     var e = a; e.state = .ended; e.jobId = nil; e.pid = nil
@@ -1633,7 +1635,7 @@ final class BoardStore: ObservableObject {
         let fm = FileManager.default
         if let path = a.transcriptPath ?? transcript(for: a.sessionId) {
             // to the Trash (recoverable); plain removal only when the Trash refuses
-            if (try? fm.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: nil)) != nil || (try? fm.removeItem(atPath: path)) != nil { trashed.append("대화 기록") }
+            if (try? fm.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: nil)) != nil || (try? fm.removeItem(atPath: path)) != nil { trashed.append(L("대화 기록")) }
             let sub = (path as NSString).deletingPathExtension   // subagent folder, if any
             if fm.fileExists(atPath: sub), (try? fm.trashItem(at: URL(fileURLWithPath: sub), resultingItemURL: nil)) == nil { try? fm.removeItem(atPath: sub) }
         }
@@ -1644,7 +1646,7 @@ final class BoardStore: ObservableObject {
             if a.isLead, othersEnded {
                 for dir in ["teams", "tasks"] {
                     let p = Shell.home + "/.claude/\(dir)/\(t)"
-                    if fm.fileExists(atPath: p), (try? fm.removeItem(atPath: p)) != nil { trashed.append("팀 \(dir) 폴더") }
+                    if fm.fileExists(atPath: p), (try? fm.removeItem(atPath: p)) != nil { trashed.append(L("팀 %@ 폴더", dir)) }
                 }
                 seen[t] = nil
             }
@@ -1656,7 +1658,7 @@ final class BoardStore: ObservableObject {
         transcriptScan.tick = -100                          // the file list changed: rescan now
         chat[a.sessionId] = nil
         if selectedAgent == a.sessionId { selectedAgent = nil }
-        notice = "'\(a.name)' 삭제: " + (trashed.isEmpty ? "옮길 파일 없음" : trashed.joined(separator: ", ") + "을 휴지통으로 이동")
+        notice = L("'%@' 삭제: %@", a.name, trashed.isEmpty ? L("옮길 파일 없음") : L("%@을 휴지통으로 이동", trashed.joined(separator: ", ")))
         refresh()
     }
     func forget(_ a: Agent) {
@@ -1679,19 +1681,19 @@ final class BoardStore: ObservableObject {
             let e = EffortChoice(rawValue: a.effort ?? "") ?? .low
             if resume(a, model: m, effort: e) != nil { n += 1 }
         }
-        notice = "\(n)개 세션을 다시 시작했습니다."
+        notice = L("%@개 세션을 다시 시작했습니다.", String(n))
         selection.removeAll()
     }
     func quitSelected(mode: QuitMode) {
         let targets = selectedAgents.filter { canQuit($0) }
         for a in targets { quit(a, mode: mode) }
-        notice = "\(targets.count)개 세션에 종료를 보냈습니다" + (mode == .whenIdle ? " (작업 중인 세션은 끝난 뒤 종료)." : ".")
+        notice = mode == .whenIdle ? L("%@개 세션에 종료를 보냈습니다 (작업 중인 세션은 끝난 뒤 종료).", String(targets.count)) : L("%@개 세션에 종료를 보냈습니다.", String(targets.count))
         selection.removeAll()
     }
     func archiveSelected() {
         let targets = selectedAgents
         for a in targets { archive(a, withTeammates: false) }
-        notice = "\(targets.count)개 세션을 보관함으로 옮겼습니다."
+        notice = L("%@개 세션을 보관함으로 옮겼습니다.", String(targets.count))
         selection.removeAll()
     }
 
@@ -1730,7 +1732,7 @@ final class BoardStore: ObservableObject {
         var problems: [String] = []
         for j in jobsToStop {
             let r = await Task.detached { Shell.run([Shell.claude, "stop", j.job], timeout: 60) }.value
-            if r.code != 0 { problems.append("'\(j.name)': claude stop \(j.job) 실패 — \((r.err.isEmpty ? r.out : r.err).trimmingCharacters(in: .whitespacesAndNewlines).prefix(160))") }
+            if r.code != 0 { problems.append(L("'%@': claude stop %@ 실패 — %@", j.name, j.job, String((r.err.isEmpty ? r.out : r.err).trimmingCharacters(in: .whitespacesAndNewlines).prefix(160)))) }
         }
         let pids = live.compactMap(\.pid) + live.compactMap(\.viewerPid)
         for _ in 0..<60 {                                       // up to 30 s
@@ -1740,7 +1742,7 @@ final class BoardStore: ObservableObject {
         for a in live {
             for p in [a.pid, a.viewerPid].compactMap({ $0 }) where kill(pid_t(p), 0) == 0 {
                 kill(pid_t(p), SIGTERM)
-                problems.append("'\(a.name)' (pid \(p)): 30초 안에 끝나지 않아 SIGTERM으로 강제 종료했습니다.")
+                problems.append(L("'%@' (pid %@): 30초 안에 끝나지 않아 SIGTERM으로 강제 종료했습니다.", a.name, String(p)))
             }
         }
         return problems
@@ -1775,7 +1777,7 @@ final class BoardStore: ObservableObject {
                 }
             }
         }
-        notice = "지난번 종료 때 끈 세션 \(n)개를 다시 시작했습니다."
+        notice = L("지난번 종료 때 끈 세션 %@개를 다시 시작했습니다.", String(n))
     }
 
     // MARK: archive
@@ -1797,7 +1799,7 @@ final class BoardStore: ObservableObject {
         for id in ids where archive[id] != nil { deleted.remove(id); archive[id] = nil }
         archiveSelection.subtract(ids)
         saveArchive(); saveSeen(); refresh()
-        notice = "\(ids.count)개 세션을 보관함에서 복원했습니다."
+        notice = L("%@개 세션을 보관함에서 복원했습니다.", String(ids.count))
     }
     /// Permanent: the transcript and its folders are removed from disk.
     func purge(_ ids: Set<String>) {
@@ -1810,7 +1812,7 @@ final class BoardStore: ObservableObject {
         }
         archiveSelection.subtract(ids)
         saveArchive(); refresh()
-        notice = "\(ids.count)개 세션을 영구 삭제했습니다."
+        notice = L("%@개 세션을 영구 삭제했습니다.", String(ids.count))
     }
     private func saveArchive() {
         try? FileManager.default.createDirectory(at: archiveURL.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -1828,7 +1830,7 @@ final class BoardStore: ObservableObject {
         let dir = cwd.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil } ?? Shell.home
         let name = "ab-term-" + String(Int(Date().timeIntervalSince1970) % 100000)
         let r = Shell.tmux(["new-session", "-d", "-s", name, "-x", "120", "-y", "40", "-c", dir, "-e", "PATH=\(Shell.path)", "/bin/zsh -l"])
-        guard r.code == 0 else { notice = "새 터미널을 열지 못했습니다: \(r.err.prefix(120))"; return nil }
+        guard r.code == 0 else { notice = L("새 터미널을 열지 못했습니다: %@", String(r.err.prefix(120))); return nil }
         return Shell.tmux(["list-panes", "-t", name, "-F", "#{pane_id}"]).out.split(separator: "\n").first.map(String.init)
     }
     func closeTerminal(pane: String) {
@@ -1841,9 +1843,9 @@ final class BoardStore: ObservableObject {
     }
     /// Opens Terminal attached to the session's tmux session, with its pane selected.
     func openTerminal(_ a: Agent) {
-        guard let sess = a.tmuxSession, let pane = a.tmuxPane else { notice = "이 세션은 tmux 안에서 실행되고 있지 않아 터미널로 열 수 없습니다."; return }
+        guard let sess = a.tmuxSession, let pane = a.tmuxPane else { notice = L("이 세션은 tmux 안에서 실행되고 있지 않아 터미널로 열 수 없습니다."); return }
         let r = attachTerminal(session: sess, pane: pane)
-        notice = r.code == 0 ? "터미널에서 '\(a.name)'의 tmux 세션을 열었습니다. 닫을 때는 창만 닫으면 되고(세션은 계속 실행), 터미널에서 입력한 것도 여기에 반영됩니다." : "터미널을 열지 못했습니다: \(r.err.prefix(120))"
+        notice = r.code == 0 ? L("터미널에서 '%@'의 tmux 세션을 열었습니다. 닫을 때는 창만 닫으면 되고(세션은 계속 실행), 터미널에서 입력한 것도 여기에 반영됩니다.", a.name) : L("터미널을 열지 못했습니다: %@", String(r.err.prefix(120)))
     }
     private static func q(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'" }
     /// The default Terminal app attached to a tmux session, on `pane`'s window. No `resize-window` here (it would pin the
@@ -1862,16 +1864,16 @@ final class BoardStore: ObservableObject {
     @discardableResult
     func openExternal(pane: String, title: String) -> Bool {
         let sess = Shell.tmux(["display-message", "-p", "-t", pane, "#{session_name}"]).out.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !sess.isEmpty else { notice = "터미널 '\(title)'을(를) 찾지 못했습니다."; return false }
+        guard !sess.isEmpty else { notice = L("터미널 '%@'을(를) 찾지 못했습니다.", title); return false }
         let r = attachTerminal(session: sess, pane: pane)
-        notice = r.code == 0 ? "'\(title)'을(를) 터미널 앱으로 내보냈습니다." + (sess.hasPrefix("ab-term-") ? " 셸을 끝내려면 그 창에서 exit 하세요." : "") : "터미널을 열지 못했습니다: \(r.err.prefix(120))"
+        notice = r.code == 0 ? L("'%@'을(를) 터미널 앱으로 내보냈습니다.", title) + (sess.hasPrefix("ab-term-") ? L(" 셸을 끝내려면 그 창에서 exit 하세요.") : "") : L("터미널을 열지 못했습니다: %@", String(r.err.prefix(120)))
         return r.code == 0
     }
     /// A plain shell in the default Terminal app, outside tmux and outside the app.
     func openExternalShell(cwd: String?) {
         let d = cwd.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil } ?? Shell.home
         let r = Shell.run(["/usr/bin/open", "-a", "Terminal", d], timeout: 10)
-        if r.code != 0 { notice = "터미널을 열지 못했습니다: \(r.err.prefix(120))" }
+        if r.code != 0 { notice = L("터미널을 열지 못했습니다: %@", String(r.err.prefix(120))) }
     }
 
     // MARK: housekeeping
@@ -1888,7 +1890,7 @@ final class BoardStore: ObservableObject {
             seen[t.name] = nil; n += 1
         }
         saveSeen(); refresh()
-        if !silent { notice = "기록 없는 팀 \(n)개를 정리했습니다. 팀 폴더는 휴지통으로 옮겼습니다." }
+        if !silent { notice = L("기록 없는 팀 %@개를 정리했습니다. 팀 폴더는 휴지통으로 옮겼습니다.", String(n)) }
     }
 
     // MARK: usage
@@ -1915,12 +1917,12 @@ final class BoardStore: ObservableObject {
             // no usage lines: a CLI that is not logged in prints only a cost summary (exit 0, empty stderr), so ask it
             let login = await Task.detached { Self.loginStatus() }.value
             loggedOut = login == false
-            usageError = login == false ? Self.loginHint : (r.err.isEmpty ? "사용량 출력을 읽지 못함" : String(r.err.prefix(160)))
+            usageError = login == false ? Self.loginHint : (r.err.isEmpty ? L("사용량 출력을 읽지 못함") : String(r.err.prefix(160)))
             if login == false, !loginNoticed { loginNoticed = true; notice = Self.loginHint }
         } else { meters = parsed; usageUpdated = Date(); usageError = nil; loggedOut = false }
         usageBusy = false
     }
-    static let loginHint = "Claude Code에 로그인되어 있지 않습니다. 터미널에서 claude 를 한 번 실행해 로그인하면 사용량과 세션이 동작합니다."
+    static var loginHint: String { L("Claude Code에 로그인되어 있지 않습니다. 터미널에서 claude 를 한 번 실행해 로그인하면 사용량과 세션이 동작합니다.") }
     private var loginNoticed = false
     /// `claude auth status` → {"loggedIn": true|false, …}. nil: the CLI did not answer (missing, old version, timeout).
     nonisolated static func loginStatus() -> Bool? {

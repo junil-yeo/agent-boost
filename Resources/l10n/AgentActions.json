@@ -1,0 +1,176 @@
+{
+  "'%@' 세션을 보관할까요?": {
+    "en": "Archive the session '%@'?",
+    "ja": "セッション '%@' をアーカイブしますか?",
+    "zh": "要归档会话 '%@' 吗?",
+    "es": "¿Archivar la sesión '%@'?"
+  },
+  "'%@' 종료": {
+    "en": "Quit '%@'",
+    "ja": "'%@' を終了",
+    "zh": "结束 '%@'",
+    "es": "Salir de '%@'"
+  },
+  "/exit 을 입력해 실제로 종료합니다.": {
+    "en": "Types /exit to actually quit it.",
+    "ja": "/exit を入力して実際に終了します。",
+    "zh": "输入 /exit 真正结束它。",
+    "es": "Escribe /exit para cerrarla de verdad."
+  },
+  "CLI 백그라운드 작업입니다. claude stop %@(으)로 멈추고 목록(claude agents)에는 남습니다.": {
+    "en": "This is a CLI background job. It is stopped with claude stop %@ and stays in the list (claude agents).",
+    "ja": "CLI のバックグラウンドジョブです。claude stop %@ で停止し、一覧 (claude agents) には残ります。",
+    "zh": "这是 CLI 后台任务。将用 claude stop %@ 停止,并保留在列表 (claude agents) 中。",
+    "es": "Es un trabajo en segundo plano de la CLI. Se detiene con claude stop %@ y permanece en la lista (claude agents)."
+  },
+  "CLI 백그라운드 작업입니다. claude stop %@(으)로 멈추고, 붙어 있는 CLI 화면은 ctrl+c 두 번으로 닫습니다.": {
+    "en": "This is a CLI background job. It is stopped with claude stop %@, and the attached CLI screen is closed with ctrl+c twice.",
+    "ja": "CLI のバックグラウンドジョブです。claude stop %@ で停止し、接続中の CLI 画面は ctrl+c を2回押して閉じます。",
+    "zh": "这是 CLI 后台任务。将用 claude stop %@ 停止,并按两次 ctrl+c 关闭附加的 CLI 界面。",
+    "es": "Es un trabajo en segundo plano de la CLI. Se detiene con claude stop %@ y la pantalla de la CLI adjunta se cierra con ctrl+c dos veces."
+  },
+  "CLI가 %@ 화면이라 Esc로 돌아간 뒤 /exit 을 보냅니다.": {
+    "en": "The CLI is on the %@ screen, so Esc returns first, then /exit is sent.",
+    "ja": "CLI が %@ 画面のため、Esc で戻ってから /exit を送信します。",
+    "zh": "CLI 正处于 %@ 界面,将先按 Esc 返回再发送 /exit。",
+    "es": "La CLI está en la pantalla %@, así que primero vuelve con Esc y luego envía /exit."
+  },
+  "⚠️ Claude 데스크톱 앱의 대화입니다. 끄면 데스크톱 앱의 해당 대화가 끊기고, 데스크톱 앱이 다음 메시지 때 다시 띄울 수 있습니다.": {
+    "en": "⚠️ This is a Claude desktop app conversation. Quitting disconnects it in the desktop app, which may start it again on the next message.",
+    "ja": "⚠️ Claude デスクトップアプリの会話です。終了するとデスクトップアプリの該当の会話が切断され、次のメッセージ時にデスクトップアプリが再起動する場合があります。",
+    "zh": "⚠️ 这是 Claude 桌面应用的对话。结束后桌面应用中的该对话会断开,桌面应用可能在下一条消息时重新启动它。",
+    "es": "⚠️ Es una conversación de la app de escritorio de Claude. Al cerrarla se desconecta en la app de escritorio, que puede volver a abrirla con el siguiente mensaje."
+  },
+  "대화 기록은 남고, 나중에 다시 시작할 수 있습니다.": {
+    "en": "The conversation history is kept, and you can restart it later.",
+    "ja": "会話履歴は残り、後で再開できます。",
+    "zh": "对话记录会保留,之后可以重新启动。",
+    "es": "El historial de la conversación se conserva y puedes reanudarla más tarde."
+  },
+  "먼저 /exit 으로 종료합니다.": {
+    "en": "It is quit with /exit first.",
+    "ja": "まず /exit で終了します。",
+    "zh": "先用 /exit 结束。",
+    "es": "Primero se cierra con /exit."
+  },
+  "변경": {
+    "en": "Rename",
+    "ja": "変更",
+    "zh": "更改",
+    "es": "Cambiar"
+  },
+  "보관": {
+    "en": "Archive",
+    "ja": "アーカイブ",
+    "zh": "归档",
+    "es": "Archivar"
+  },
+  "보드에서 숨기고 보관함으로 옮깁니다. 파일은 그대로 두므로 보관함에서 복원하거나, 거기서 영구 삭제할 수 있습니다.": {
+    "en": "Hides it from the board and moves it to the archive. Files are left as they are, so you can restore it from the archive or delete it permanently there.",
+    "ja": "ボードから隠してアーカイブに移動します。ファイルはそのまま残るため、アーカイブから復元するか、そこで完全に削除できます。",
+    "zh": "从看板中隐藏并移入归档。文件保持不变,可以从归档中恢复,或在那里永久删除。",
+    "es": "Se oculta del tablero y se mueve al archivo. Los archivos se conservan, así que puedes restaurarla desde el archivo o eliminarla allí de forma permanente."
+  },
+  "새 이름": {
+    "en": "New name",
+    "ja": "新しい名前",
+    "zh": "新名称",
+    "es": "Nuevo nombre"
+  },
+  "에이전트에 /rename을 보냅니다.": {
+    "en": "Sends /rename to the agent.",
+    "ja": "エージェントに /rename を送信します。",
+    "zh": "将向代理发送 /rename。",
+    "es": "Se enviará /rename al agente."
+  },
+  "이 세션에는 입력할 수 없어 이름을 기록에 저장합니다. 다음에 다시 시작할 때부터 적용됩니다.": {
+    "en": "This session can't take input, so the name is saved to its history. It applies from the next restart.",
+    "ja": "このセッションには入力できないため、名前を履歴に保存します。次回の再開時から適用されます。",
+    "zh": "无法向此会话输入,因此名称将保存到记录中。下次重新启动时生效。",
+    "es": "Esta sesión no admite entrada, así que el nombre se guarda en el historial. Se aplicará desde el próximo reinicio."
+  },
+  "이름 변경": {
+    "en": "Rename",
+    "ja": "名前を変更",
+    "zh": "重命名",
+    "es": "Renombrar"
+  },
+  "입력을 기다리는 중입니다. 응답 후 /rename을 보냅니다.": {
+    "en": "It is waiting for input. /rename is sent after you answer.",
+    "ja": "入力待ちです。回答後に /rename を送信します。",
+    "zh": "正在等待输入。回答后将发送 /rename。",
+    "es": "Está esperando una respuesta. Se enviará /rename después de responder."
+  },
+  "입력할 수 없는 세션이라 종료 신호(SIGTERM)로 프로세스를 실제로 끕니다.": {
+    "en": "This session can't take input, so its process is actually stopped with a termination signal (SIGTERM).",
+    "ja": "入力できないセッションのため、終了シグナル (SIGTERM) でプロセスを実際に停止します。",
+    "zh": "此会话无法输入,将用终止信号 (SIGTERM) 真正结束进程。",
+    "es": "Esta sesión no admite entrada, así que su proceso se detiene de verdad con una señal de terminación (SIGTERM)."
+  },
+  "작업 끝나면 종료": {
+    "en": "Quit when the work finishes",
+    "ja": "作業が終わったら終了",
+    "zh": "工作结束后退出",
+    "es": "Salir al terminar el trabajo"
+  },
+  "작업 중입니다.": {
+    "en": "It is working.",
+    "ja": "作業中です。",
+    "zh": "正在工作。",
+    "es": "Está trabajando."
+  },
+  "작업 중입니다. 대기 상태가 되면 /rename을 보냅니다.": {
+    "en": "It is working. /rename is sent once it is idle.",
+    "ja": "作業中です。待機状態になったら /rename を送信します。",
+    "zh": "正在工作。空闲后将发送 /rename。",
+    "es": "Está trabajando. Se enviará /rename cuando quede inactivo."
+  },
+  "종료": {
+    "en": "Quit",
+    "ja": "終了",
+    "zh": "退出",
+    "es": "Salir"
+  },
+  "종료된 세션입니다. 대화 기록에 이름을 저장하므로 나중에 이어서 열어도 유지됩니다.": {
+    "en": "This session has ended. The name is saved in the conversation history, so it is kept when you resume it later.",
+    "ja": "終了したセッションです。名前を会話履歴に保存するため、後で再開しても維持されます。",
+    "zh": "此会话已结束。名称会保存到对话记录中,之后继续打开时也会保留。",
+    "es": "Esta sesión ha terminado. El nombre se guarda en el historial de la conversación, así que se conserva al reanudarla más tarde."
+  },
+  "종료하고 보관": {
+    "en": "Quit and archive",
+    "ja": "終了してアーカイブ",
+    "zh": "退出并归档",
+    "es": "Salir y archivar"
+  },
+  "지금 종료 (작업 중단)": {
+    "en": "Quit now (interrupt work)",
+    "ja": "今すぐ終了 (作業を中断)",
+    "zh": "立即退出 (中断工作)",
+    "es": "Salir ahora (interrumpir el trabajo)"
+  },
+  "취소": {
+    "en": "Cancel",
+    "ja": "キャンセル",
+    "zh": "取消",
+    "es": "Cancelar"
+  },
+  "팀 주소(%@)는 바뀌지 않습니다.": {
+    "en": "The team address (%@) does not change.",
+    "ja": "チームアドレス (%@) は変わりません。",
+    "zh": "团队地址 (%@) 不会改变。",
+    "es": "La dirección del equipo (%@) no cambia."
+  },
+  "팀원 %@명도 함께 보관": {
+    "en": "Also archive %@ teammate(s)",
+    "ja": "チームメイト %@ 人も一緒にアーカイブ",
+    "zh": "同时归档 %@ 名队员",
+    "es": "Archivar también %@ compañero(s) de equipo"
+  },
+  "팀원은 팀장 없이 계속 실행됩니다.": {
+    "en": "Teammates keep running without the team lead.",
+    "ja": "チームメイトはチームリーダーなしで動き続けます。",
+    "zh": "队员将在没有组长的情况下继续运行。",
+    "es": "Los compañeros de equipo seguirán ejecutándose sin el líder del equipo."
+  }
+}

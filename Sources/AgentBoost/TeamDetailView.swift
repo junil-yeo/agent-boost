@@ -20,20 +20,20 @@ struct TeamDetailView: View {
             List(selection: $sel) {
                 if isLoose {
                     let live = team.members.filter { $0.state != .ended }, done = team.members.filter { $0.state == .ended }
-                    Section("실행 중 \(live.count)") { ForEach(live) { a in MemberRow(agent: a).tag(a.sessionId) } }
-                    if !done.isEmpty { Section("종료됨 \(done.count) — 다시 시작 가능") { ForEach(done) { a in MemberRow(agent: a).tag(a.sessionId) } } }
+                    Section(L("실행 중 %@", String(live.count))) { ForEach(live) { a in MemberRow(agent: a).tag(a.sessionId) } }
+                    if !done.isEmpty { Section(L("종료됨 %@ — 다시 시작 가능", String(done.count))) { ForEach(done) { a in MemberRow(agent: a).tag(a.sessionId) } } }
                 } else {
-                    if let lead = team.lead { Section("팀장") { MemberRow(agent: lead).tag(lead.sessionId) } }
-                    Section("팀원 \(team.workers.count)명") {
+                    if let lead = team.lead { Section(L("팀장")) { MemberRow(agent: lead).tag(lead.sessionId) } }
+                    Section(L("팀원 %@명", String(team.workers.count))) {
                         ForEach(team.workers) { a in
                             MemberRow(agent: a).tag(a.sessionId)
                                 // every click toggles the teammate beside the lead (List selection does not report a click on the selected row)
                                 .simultaneousGesture(TapGesture().onEnded { toggleSlot(a.sessionId) })
                                 .overlay(alignment: .leading) { if slots.contains(a.sessionId) { Rectangle().fill(Theme.accent).frame(width: 3).offset(x: -8) } }
-                                .help(slots.contains(a.sessionId) ? "다시 누르면 분할 화면에서 뺍니다" : "누르면 팀장 옆에 나란히 엽니다")
+                                .help(slots.contains(a.sessionId) ? L("다시 누르면 분할 화면에서 뺍니다") : L("누르면 팀장 옆에 나란히 엽니다"))
                         }
                         if let lead = team.lead, store.canControl(lead) {
-                            Button { addingToLead = true } label: { Label("팀원 추가…", systemImage: "person.badge.plus").foregroundStyle(Theme.accent) }.buttonStyle(.icon)
+                            Button { addingToLead = true } label: { Label(L("팀원 추가…"), systemImage: "person.badge.plus").foregroundStyle(Theme.accent) }.buttonStyle(.icon)
                         }
                     }
                 }
@@ -112,23 +112,23 @@ struct TeamDetailView: View {
     }
     @ViewBuilder private var emptyState: some View {
         if isLoose {
-            ContentUnavailableView("개별 세션이 없습니다", systemImage: "person", description: Text("+ 새 세션으로 시작할 수 있습니다."))
+            ContentUnavailableView(L("개별 세션이 없습니다"), systemImage: "person", description: Text(L("+ 새 세션으로 시작할 수 있습니다.")))
         } else if let lead = team.lead, store.canControl(lead) {
             VStack(spacing: 12) {
                 Image(systemName: "person.3").font(.system(size: 40)).foregroundStyle(.secondary)
-                Text("아직 팀원이 없습니다").font(.title3)
-                Text("팀장 '\(lead.name)'이(가) 팀원을 만듭니다. 이름·역할·모델·effort를 정해 주세요.").font(.callout).foregroundStyle(.secondary)
-                Button { addingToLead = true } label: { Label("팀원 추가", systemImage: "person.badge.plus") }.buttonStyle(.raisedProminent)
+                Text(L("아직 팀원이 없습니다")).font(.title3)
+                Text(L("팀장 '%@'이(가) 팀원을 만듭니다. 이름·역할·모델·effort를 정해 주세요.", lead.name)).font(.callout).foregroundStyle(.secondary)
+                Button { addingToLead = true } label: { Label(L("팀원 추가"), systemImage: "person.badge.plus") }.buttonStyle(.raisedProminent)
             }
         } else if let lead = team.lead, store.canResume(lead) {
             VStack(spacing: 12) {
                 Image(systemName: "moon.zzz").font(.system(size: 40)).foregroundStyle(.secondary)
-                Text("팀장이 종료된 팀입니다").font(.title3)
-                Text("팀장을 다시 시작하면 대화를 이어가고 팀원도 새로 만들 수 있습니다.").font(.callout).foregroundStyle(.secondary)
-                Button("팀장 선택") { store.selectedAgent = lead.sessionId }.buttonStyle(.raisedProminent)
+                Text(L("팀장이 종료된 팀입니다")).font(.title3)
+                Text(L("팀장을 다시 시작하면 대화를 이어가고 팀원도 새로 만들 수 있습니다.")).font(.callout).foregroundStyle(.secondary)
+                Button(L("팀장 선택")) { store.selectedAgent = lead.sessionId }.buttonStyle(.raisedProminent)
             }
         } else {
-            ContentUnavailableView("표시할 세션이 없습니다", systemImage: "person.crop.rectangle")
+            ContentUnavailableView(L("표시할 세션이 없습니다"), systemImage: "person.crop.rectangle")
         }
     }
 }
@@ -141,13 +141,13 @@ struct MemberRow: View {
     private var quickActions: some View {
         HStack(spacing: 2) {
             if agent.state != .ended && agent.pid != nil {
-                Button { if confirm("'\(agent.name)' 세션을 종료할까요?", "보드에 남아 다시 시작할 수 있습니다.") { store.quit(agent, mode: .now) } } label: { Image(systemName: "power") }
-                    .buttonStyle(.icon).help("종료 (/exit)")
+                Button { if confirm(L("'%@' 세션을 종료할까요?", agent.name), L("보드에 남아 다시 시작할 수 있습니다.")) { store.quit(agent, mode: .now) } } label: { Image(systemName: "power") }
+                    .buttonStyle(.icon).help(L("종료 (/exit)"))
             } else if agent.state == .ended, agent.transcriptPath != nil, !agent.isSubagent {
                 reviveButton                       // same place and size as 종료: power, then 보관
             }
-            Button { if confirm("'\(agent.name)' 세션을 보관할까요?", "세션을 끄고 보드에서 치웁니다. 보관함에서 복원할 수 있습니다.") { store.archive(agent, withTeammates: false) } } label: { Image(systemName: "archivebox") }
-                .buttonStyle(.icon).help("보관")
+            Button { if confirm(L("'%@' 세션을 보관할까요?", agent.name), L("세션을 끄고 보드에서 치웁니다. 보관함에서 복원할 수 있습니다.")) { store.archive(agent, withTeammates: false) } } label: { Image(systemName: "archivebox") }
+                .buttonStyle(.icon).help(L("보관"))
         }.font(.caption)
     }
     /// An ended session: start it again from the row (same ID, its last model and effort). A teammate comes back as a
@@ -155,16 +155,16 @@ struct MemberRow: View {
     private var reviveButton: some View {
         Button {
             let mate = agent.teamName != nil && !agent.isLead
-            guard confirm("'\(agent.name)' 세션을 다시 시작할까요?",
-                          mate ? "재시작하는 팀원은 팀과 분리된 개별 세션으로 열립니다. 팀장과의 연결은 복구되지 않습니다." : "이전 대화를 같은 세션 ID로 이어서 엽니다.") else { return }
+            guard confirm(L("'%@' 세션을 다시 시작할까요?", agent.name),
+                          mate ? L("재시작하는 팀원은 팀과 분리된 개별 세션으로 열립니다. 팀장과의 연결은 복구되지 않습니다.") : L("이전 대화를 같은 세션 ID로 이어서 엽니다.")) else { return }
             let model = ModelChoice(rawValue: agent.model ?? "") ?? ModelChoice.allCases.first { (agent.model ?? "").hasPrefix($0.rawValue) } ?? .sonnet
             _ = store.resume(agent, model: model, effort: EffortChoice(rawValue: agent.effort ?? "") ?? .medium)
         } label: { Image(systemName: "power") }
-        .buttonStyle(.icon).help("다시 시작 — 같은 세션 ID로 이어서 엽니다")
+        .buttonStyle(.icon).help(L("다시 시작 — 같은 세션 ID로 이어서 엽니다"))
     }
     private func confirm(_ title: String, _ info: String) -> Bool {
         let a = NSAlert(); a.messageText = title; a.informativeText = info
-        a.addButton(withTitle: "확인"); a.addButton(withTitle: "취소")
+        a.addButton(withTitle: L("확인")); a.addButton(withTitle: L("취소"))
         return a.runModal() == .alertFirstButtonReturn
     }
     var body: some View {
@@ -172,13 +172,13 @@ struct MemberRow: View {
             StateDot(state: agent.state)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    if agent.isSubagent { Text("서브").font(.caption2.weight(.semibold)).padding(.horizontal, 4).background(Capsule().fill(Theme.ink.opacity(0.12))).help("팀장이 Agent 도구로 띄운 서브에이전트 — 보기 전용") }
+                    if agent.isSubagent { Text(L("서브")).font(.caption2.weight(.semibold)).padding(.horizontal, 4).background(Capsule().fill(Theme.ink.opacity(0.12))).help(L("팀장이 Agent 도구로 띄운 서브에이전트 — 보기 전용")) }
                     Text(agent.name).font(.headline).foregroundStyle(Color.primary).lineLimit(1)
                 }
                 HStack(spacing: 4) {
-                    Text((agent.isBackgroundJob ? "백그라운드 분기 · " : "") + "\(agent.displayModel) · 출력 \(Fmt.tokens(agent.tokens.output))").font(.callout).foregroundStyle(.secondary).lineLimit(1).opacity(agent.isEstimated ? 0.6 : 1)
+                    Text((agent.isBackgroundJob ? L("백그라운드 분기 · ") : "") + L("%@ · 출력 %@", agent.displayModel, Fmt.tokens(agent.tokens.output))).font(.callout).foregroundStyle(.secondary).lineLimit(1).opacity(agent.isEstimated ? 0.6 : 1)
                     if agent.requestedModel != nil || agent.requestedEffort != nil {
-                        Image(systemName: "hourglass").font(.caption).foregroundStyle(.orange).help("모델·effort 변경 적용 대기 중")
+                        Image(systemName: "hourglass").font(.caption).foregroundStyle(.orange).help(L("모델·effort 변경 적용 대기 중"))
                     }
                 }
             }
@@ -189,7 +189,7 @@ struct MemberRow: View {
             Text(Fmt.stateLabel(agent.state)).font(.caption.weight(.semibold)).foregroundStyle(Fmt.stateColor(agent.state)).lineLimit(1)
                 .padding(.horizontal, 7).padding(.vertical, 2)
                 .background(Capsule().fill(Fmt.stateColor(agent.state).opacity(0.14)))
-                .opacity(agent.stateUnconfirmed ? 0.7 : 1).help(agent.stateUnconfirmed ? "\(Fmt.stateLabel(agent.state)) — 상태 확인 중" : (live ?? ""))
+                .opacity(agent.stateUnconfirmed ? 0.7 : 1).help(agent.stateUnconfirmed ? L("%@ — 상태 확인 중", Fmt.stateLabel(agent.state)) : (live ?? ""))
         }.padding(.vertical, 2).contentShape(Rectangle()).onHover { hover = $0 }
     }
 }
@@ -214,7 +214,7 @@ struct AgentPanel: View {
     /// The team leader's session alias (looked up at display time, so /rename shows at once).
     private var leadAlias: String {
         let lead = store.teams.first { $0.name == agent.teamName }?.lead ?? (agent.isLead ? agent : nil)
-        guard let n = lead?.name, !n.isEmpty, n != "team-lead", n != "main", n != lead?.sessionId.prefix(8).description else { return "팀장" }
+        guard let n = lead?.name, !n.isEmpty, n != "team-lead", n != "main", n != lead?.sessionId.prefix(8).description else { return L("팀장") }
         return n
     }
     var body: some View {
@@ -228,7 +228,7 @@ struct AgentPanel: View {
                         PaneChatView(pane: p, sid: agent.sessionId).id(agent.sessionId)       // the CLI's own screen (conversation part)
                     } else {
                     ChatView(entries: store.chat[agent.sessionId] ?? [], showThinking: showThinking, showTools: showTools,
-                             agentName: agent.name, userLabel: (agent.teamName != nil && !agent.isLead && !agent.solo) ? "팀장 지시" : "나", leadName: leadAlias,
+                             agentName: agent.name, userLabel: (agent.teamName != nil && !agent.isLead && !agent.solo) ? L("팀장 지시") : L("나"), leadName: leadAlias,
                              loading: store.chat[agent.sessionId] == nil && agent.transcriptPath != nil, sessionId: agent.sessionId,
                              lastSent: { store.lastSentAt }, holdOlderRows: { [store, sid = agent.sessionId] in store.holdOlderRows($0, sid: sid) }, termStyle: termChat, fontSize: chatFont)
                         .equatable()
@@ -266,7 +266,7 @@ struct AgentPanel: View {
     private func openNewTerminal() {
         guard let p = store.newTerminal(cwd: agent.cwd ?? store.workingDirectory(of: agent)) else { return }
         let n = terms.filter(\.owned).count + 1
-        let t = TermTab(pane: p, title: "셸 \(n)", owned: true); terms.append(t); termSel = t.id
+        let t = TermTab(pane: p, title: L("셸 %@", String(n)), owned: true); terms.append(t); termSel = t.id
     }
     private func openSessionTerminal() {
         guard let p = agent.tmuxPane else { return }
@@ -295,24 +295,24 @@ struct AgentPanel: View {
                             Image(systemName: t.owned ? "apple.terminal" : "sparkles").font(.caption)
                             Text(t.title).font(.callout.weight(sel ? .semibold : .regular)).lineLimit(1)
                             Button { closeTab(t) } label: { Image(systemName: "xmark").font(.caption2.bold()) }
-                                .buttonStyle(.plain).foregroundStyle(.secondary).help(t.owned ? "닫기 (셸 종료)" : "닫기 (세션은 계속 실행)")
+                                .buttonStyle(.plain).foregroundStyle(.secondary).help(t.owned ? L("닫기 (셸 종료)") : L("닫기 (세션은 계속 실행)"))
                         }
                         .padding(.horizontal, 9).padding(.vertical, 5)
                         .background(RoundedRectangle(cornerRadius: 6).fill(sel ? Theme.accent.opacity(0.22) : Theme.ink.opacity(0.10)))
                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(sel ? Theme.accent.opacity(0.6) : Theme.lineHi))
                         .contentShape(Rectangle()).onTapGesture { termSel = t.id }
-                        .contextMenu { Button("기본 터미널 앱으로 내보내기") { popOut(t) }; Button("닫기") { closeTab(t) } }
+                        .contextMenu { Button(L("기본 터미널 앱으로 내보내기")) { popOut(t) }; Button(L("닫기")) { closeTab(t) } }
                     }
                 }
             }
             Menu {
-                Button("새 터미널 (셸)") { openNewTerminal() }
-                Button("세션 터미널 (CLI 화면)") { openSessionTerminal() }.disabled(agent.tmuxPane == nil || agent.state == .ended)
+                Button(L("새 터미널 (셸)")) { openNewTerminal() }
+                Button(L("세션 터미널 (CLI 화면)")) { openSessionTerminal() }.disabled(agent.tmuxPane == nil || agent.state == .ended)
             } label: { Image(systemName: "plus") }
-            .menuStyle(.button).buttonStyle(.raisedCompact).menuIndicator(.hidden).fixedSize().help("터미널 탭 추가")
+            .menuStyle(.button).buttonStyle(.raisedCompact).menuIndicator(.hidden).fixedSize().help(L("터미널 탭 추가"))
             if let t = terms.first(where: { $0.id == termSel }) ?? terms.first {
                 Button { popOut(t) } label: { Image(systemName: "arrow.up.forward.app") }
-                    .buttonStyle(.raisedCompact).help("이 탭을 기본 터미널 앱으로 내보내기 (앱 밖에서 계속 실행)")
+                    .buttonStyle(.raisedCompact).help(L("이 탭을 기본 터미널 앱으로 내보내기 (앱 밖에서 계속 실행)"))
             }
         }
         .padding(.horizontal, 8).padding(.vertical, 5).background(.bar)
@@ -322,28 +322,28 @@ struct AgentPanel: View {
         HStack(spacing: 8) {
                 LazyMenu(entries: {
                     let live = agent.tmuxPane != nil && agent.state != .ended
-                    var e: [MenuEntry] = [.header("앱 안에서 (탭으로 추가)"),
-                        .item("새 터미널 — 이 세션 폴더에서 깨끗한 셸") { openNewTerminal() },
-                        .item("세션 터미널 — 이 세션의 실제 CLI 화면", enabled: live) { openSessionTerminal() },
-                        .separator, .header("기본 터미널 앱으로 (외부)"),
-                        .item("새 터미널 — 이 세션 폴더에서") { store.openExternalShell(cwd: agent.cwd ?? store.workingDirectory(of: agent)) },
-                        .item("세션 터미널 — 이 세션의 CLI 화면", enabled: live) { store.openTerminal(agent) }]
-                    if !terms.isEmpty { e += [.separator, .item("터미널 탭 모두 닫기") { for t in terms { closeTab(t) } }] }
+                    var e: [MenuEntry] = [.header(L("앱 안에서 (탭으로 추가)")),
+                        .item(L("새 터미널 — 이 세션 폴더에서 깨끗한 셸")) { openNewTerminal() },
+                        .item(L("세션 터미널 — 이 세션의 실제 CLI 화면"), enabled: live) { openSessionTerminal() },
+                        .separator, .header(L("기본 터미널 앱으로 (외부)")),
+                        .item(L("새 터미널 — 이 세션 폴더에서")) { store.openExternalShell(cwd: agent.cwd ?? store.workingDirectory(of: agent)) },
+                        .item(L("세션 터미널 — 이 세션의 CLI 화면"), enabled: live) { store.openTerminal(agent) }]
+                    if !terms.isEmpty { e += [.separator, .item(L("터미널 탭 모두 닫기")) { for t in terms { closeTab(t) } }] }
                     return e
-                }) { Label("터미널", systemImage: "terminal") }
-                .buttonStyle(.raisedCompact).fixedSize().help("대화창 옆에 터미널을 엽니다")
+                }) { Label(L("터미널"), systemImage: "terminal") }
+                .buttonStyle(.raisedCompact).fixedSize().help(L("대화창 옆에 터미널을 엽니다"))
                 if store.canQuit(agent) {
-                    Button { quitting = true } label: { Label("종료", systemImage: "power") }.buttonStyle(.raisedCompact).fixedSize().help("종료 (/exit) — 세션을 끕니다. 보드에는 남아 다시 시작할 수 있습니다")
+                    Button { quitting = true } label: { Label(L("종료"), systemImage: "power") }.buttonStyle(.raisedCompact).fixedSize().help(L("종료 (/exit) — 세션을 끕니다. 보드에는 남아 다시 시작할 수 있습니다"))
                 }
                 if store.canResume(agent) {
-                    Button { resuming = true } label: { Label("다시 시작", systemImage: "power") }.buttonStyle(.raisedCompact).fixedSize().help("다시 시작")
+                    Button { resuming = true } label: { Label(L("다시 시작"), systemImage: "power") }.buttonStyle(.raisedCompact).fixedSize().help(L("다시 시작"))
                 } else {
-                    Button { addingTeammate = true } label: { Label("팀원 추가", systemImage: "person.badge.plus") }
-                        .buttonStyle(.raisedCompact).fixedSize().disabled(!agent.canReceiveInput).help("팀원 추가")
+                    Button { addingTeammate = true } label: { Label(L("팀원 추가"), systemImage: "person.badge.plus") }
+                        .buttonStyle(.raisedCompact).fixedSize().disabled(!agent.canReceiveInput).help(L("팀원 추가"))
                 }
-                Button { deleting = true } label: { Label("보관", systemImage: "archivebox") }
+                Button { deleting = true } label: { Label(L("보관"), systemImage: "archivebox") }
                     .buttonStyle(.raisedCompact).fixedSize()
-                    .help("보관 — 세션을 끄고 보드에서 치웁니다 (보관함에서 복원할 수 있습니다)")
+                    .help(L("보관 — 세션을 끄고 보드에서 치웁니다 (보관함에서 복원할 수 있습니다)"))
         }
         .fixedSize()                                         // the buttons never squeeze; the name gives way instead
     }
@@ -353,38 +353,38 @@ struct AgentPanel: View {
             StateDot(state: agent.state)
             Text(agent.name).font(.title3.bold()).lineLimit(1).truncationMode(.tail).frame(minWidth: 80, alignment: .leading)
                 .layoutPriority(1)
-                .help(agent.teamAddress.map { "\(agent.name)\n팀 주소: \($0)" } ?? agent.name)
-            Button { renaming = true } label: { Image(systemName: "pencil") }.buttonStyle(.icon).help("이름 변경")
-            if let p = agent.pendingName { Text("→ '\(p)' 대기 중").font(.caption).foregroundStyle(.orange).lineLimit(1) }
-            if agent.isLead && !agent.solo { Chip(text: "팀장", tint: Theme.accent) }
-            if let o = agent.overlay { Chip(text: "CLI: " + BoardStore.overlayName(o), tint: .orange).help("CLI 화면이 대화가 아니라 목록·선택 화면입니다. 입력은 CLI에서 Esc로 돌아온 뒤에 할 수 있습니다.") }
-            if agent.isBackgroundJob, let j = agent.jobId { Chip(text: "백그라운드 작업 \(j)", tint: .white).help("claude agents에 실린 CLI 백그라운드 작업입니다 (← agents 화면으로 들어가면서 옮겨졌거나 --bg로 시작). 종료는 claude stop, 화면은 claude attach로 붙입니다.") }
+                .help(agent.teamAddress.map { L("%@\n팀 주소: %@", agent.name, $0) } ?? agent.name)
+            Button { renaming = true } label: { Image(systemName: "pencil") }.buttonStyle(.icon).help(L("이름 변경"))
+            if let p = agent.pendingName { Text(L("→ '%@' 대기 중", p)).font(.caption).foregroundStyle(.orange).lineLimit(1) }
+            if agent.isLead && !agent.solo { Chip(text: L("팀장"), tint: Theme.accent) }
+            if let o = agent.overlay { Chip(text: "CLI: " + BoardStore.overlayName(o), tint: .orange).help(L("CLI 화면이 대화가 아니라 목록·선택 화면입니다. 입력은 CLI에서 Esc로 돌아온 뒤에 할 수 있습니다.")) }
+            if agent.isBackgroundJob, let j = agent.jobId { Chip(text: L("백그라운드 작업 %@", j), tint: .white).help(L("claude agents에 실린 CLI 백그라운드 작업입니다 (← agents 화면으로 들어가면서 옮겨졌거나 --bg로 시작). 종료는 claude stop, 화면은 claude attach로 붙입니다.")) }
             LazyMenu(entries: { ModelChoice.allCases.map { m in .item(m.label + (agent.model == m.rawValue ? " ✓" : "")) { store.setModel(m, for: agent) } } }) {
                 Chip(text: agent.displayModel + (agent.requestedModel != nil ? " ⏳" : ""), tint: .white).opacity(agent.modelIsGuess ? 0.55 : 1)
             }
             .buttonStyle(.plain).fixedSize()
-            .disabled(!agent.canReceiveInput).help(agent.requestedModel != nil ? "다음 응답부터 적용됩니다" : "모델 변경")
+            .disabled(!agent.canReceiveInput).help(agent.requestedModel != nil ? L("다음 응답부터 적용됩니다") : L("모델 변경"))
             LazyMenu(entries: { EffortChoice.allCases.map { e in .item(e.rawValue + (agent.effort == e.rawValue ? " ✓" : "")) { store.setEffort(e, for: agent) } } }) {
                 Chip(text: "effort \(agent.effort ?? "?")" + (agent.requestedEffort != nil ? " ⏳" : ""), tint: .white)
             }
             .buttonStyle(.plain).fixedSize()
-            .disabled(!agent.canReceiveInput).help(agent.requestedEffort != nil ? "다음 응답부터 적용됩니다" : "effort 변경")
-            Chip(text: Fmt.stateLabel(agent.state), tint: Fmt.stateColor(agent.state)).opacity(agent.stateUnconfirmed ? 0.7 : 1).help(agent.stateUnconfirmed ? "상태 확인 중" : "")
+            .disabled(!agent.canReceiveInput).help(agent.requestedEffort != nil ? L("다음 응답부터 적용됩니다") : L("effort 변경"))
+            Chip(text: Fmt.stateLabel(agent.state), tint: Fmt.stateColor(agent.state)).opacity(agent.stateUnconfirmed ? 0.7 : 1).help(agent.stateUnconfirmed ? L("상태 확인 중") : "")
             RemoteChip(agent: agent)
-            if agent.state == .needsInput, !agent.pendingCommands.isEmpty { Button("그래도 보내기") { store.forceSendPending(agent) }.buttonStyle(.raisedCompact).fixedSize().help("질문 대기로 보이지만 대기 중인 명령을 지금 보냅니다") }
-            if agent.pendingCommands.contains("/exit") { Text("작업 끝나면 종료").font(.caption).foregroundStyle(.orange).fixedSize() }
+            if agent.state == .needsInput, !agent.pendingCommands.isEmpty { Button(L("그래도 보내기")) { store.forceSendPending(agent) }.buttonStyle(.raisedCompact).fixedSize().help(L("질문 대기로 보이지만 대기 중인 명령을 지금 보냅니다")) }
+            if agent.pendingCommands.contains("/exit") { Text(L("작업 끝나면 종료")).font(.caption).foregroundStyle(.orange).fixedSize() }
             if headerWidth >= 1000, let c = agent.cwd ?? store.workingDirectory(of: agent) {     // first to go when narrow
                 Label((c as NSString).lastPathComponent, systemImage: "folder").font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle).help(c)
             }
             if agent.tmuxPane == nil && agent.state != .ended {
-                Label(agent.entrypoint == "claude-desktop" ? "데스크톱 앱 세션 · 보기 전용" : "보기 전용", systemImage: "eye")
+                Label(agent.entrypoint == "claude-desktop" ? L("데스크톱 앱 세션 · 보기 전용") : L("보기 전용"), systemImage: "eye")
                     .font(.caption).foregroundStyle(.secondary).lineLimit(1).fixedSize()
-                    .help(agent.entrypoint == "claude-desktop" ? "Claude 데스크톱 앱의 세션이라 이 앱에서는 입력할 수 없습니다" : "이 앱에서 입력할 수 없는 세션입니다")
+                    .help(agent.entrypoint == "claude-desktop" ? L("Claude 데스크톱 앱의 세션이라 이 앱에서는 입력할 수 없습니다") : L("이 앱에서 입력할 수 없는 세션입니다"))
             }
             Spacer(minLength: 8)
             if agent.tmuxPane == nil || agent.state == .ended {
-                Toggle("도구 펼침", isOn: $showTools).toggleStyle(.checkbox).font(.caption).fixedSize()
-                Toggle("생각", isOn: $showThinking).toggleStyle(.checkbox).font(.caption).fixedSize()
+                Toggle(L("도구 펼침"), isOn: $showTools).toggleStyle(.checkbox).font(.caption).fixedSize()
+                Toggle(L("생각"), isOn: $showThinking).toggleStyle(.checkbox).font(.caption).fixedSize()
             }
             // titles when they fit, icons (with tooltips) otherwise — measured, the row is built once
             if headerWidth >= 1400 { actionButtons.labelStyle(.titleAndIcon) } else { actionButtons.labelStyle(.iconOnly) }
@@ -466,17 +466,17 @@ struct ComposerBar: View {
                         .fixedSize(horizontal: false, vertical: true)
                     if agent.tmuxPane != nil, agent.overlay == nil {
                         // text left in the CLI's box blocks every send: let the user empty it from here
-                        Button("CLI 입력창 비우기") { store.clearCLIInput(agent); refused = nil }.buttonStyle(.raisedCompact)
-                            .help("CLI 입력창에 남은 글을 지웁니다 (Ctrl+U). 실행 중인 작업은 멈추지 않습니다.")
+                        Button(L("CLI 입력창 비우기")) { store.clearCLIInput(agent); refused = nil }.buttonStyle(.raisedCompact)
+                            .help(L("CLI 입력창에 남은 글을 지웁니다 (Ctrl+U). 실행 중인 작업은 멈추지 않습니다."))
                     }
                 }
                 .task(id: why) { try? await Task.sleep(for: .seconds(15)); if refused == why { refused = nil } }
             }
             HStack(alignment: .bottom, spacing: 8) {
                 Button { pickFiles() } label: { Image(systemName: "paperclip").font(.system(size: 16, weight: .medium)).frame(width: 34, height: 42) }
-                    .buttonStyle(.icon).disabled(!agent.canReceiveInput).help("파일 첨부 (창에 끌어다 놓거나 ⌘V로 스크린샷 붙여넣기도 됩니다)")
-                Composer(text: $draft, placeholder: agent.canReceiveInput ? "메시지 입력 — Enter 전송 · ⇧Enter 줄바꿈 · / 명령"
-                         : (agent.overlay.map { "입력 불가: CLI가 \(BoardStore.overlayName($0)) 화면입니다 — CLI에서 Esc로 대화로 돌아오면 입력할 수 있습니다" } ?? "입력 불가: 종료됐거나 이 앱에서 입력할 수 없는 세션"),
+                    .buttonStyle(.icon).disabled(!agent.canReceiveInput).help(L("파일 첨부 (창에 끌어다 놓거나 ⌘V로 스크린샷 붙여넣기도 됩니다)"))
+                Composer(text: $draft, placeholder: agent.canReceiveInput ? L("메시지 입력 — Enter 전송 · ⇧Enter 줄바꿈 · / 명령")
+                         : (agent.overlay.map { L("입력 불가: CLI가 %@ 화면입니다 — CLI에서 Esc로 대화로 돌아오면 입력할 수 있습니다", BoardStore.overlayName($0)) } ?? L("입력 불가: 종료됐거나 이 앱에서 입력할 수 없는 세션")),
                          enabled: agent.canReceiveInput, onSend: send,
                          onPasteImage: { if let u = Attach.pastedImage() { attachments.append(u); return true }; return false },
                          keyHook: handleKey, ghost: g,
@@ -491,14 +491,14 @@ struct ComposerBar: View {
                     }
                     .frame(width: 34, height: 34)
                     .background(Circle().fill(empty || busy ? AnyShapeStyle(Theme.ink.opacity(0.12)) : AnyShapeStyle(Theme.accentGrad)))
-                }.buttonStyle(.plain).padding(.bottom, 4).help(busy ? "앞 메시지를 CLI에 넣는 중입니다 (첨부 이미지 처리 중). 끝나면 다시 보낼 수 있습니다." : "보내기 (Enter, ⌘↩)")
+                }.buttonStyle(.plain).padding(.bottom, 4).help(busy ? L("앞 메시지를 CLI에 넣는 중입니다 (첨부 이미지 처리 중). 끝나면 다시 보낼 수 있습니다.") : L("보내기 (Enter, ⌘↩)"))
                     .keyboardShortcut(.return, modifiers: .command)
                     .disabled(!agent.canReceiveInput || empty || busy)
                 if agent.state == .busy {          // stop, next to send (was on the status line)
                     Button { store.interrupt(agent) } label: {
                         Image(systemName: "stop.fill").font(.system(size: 12, weight: .bold)).foregroundStyle(Color.primary)
                             .frame(width: 34, height: 34).background(Circle().fill(Theme.surface3))
-                    }.buttonStyle(.plain).padding(.bottom, 4).help("지금 하던 작업만 멈춥니다 (Esc)")
+                    }.buttonStyle(.plain).padding(.bottom, 4).help(L("지금 하던 작업만 멈춥니다 (Esc)"))
                 }
             }
             ComposerFooter(agent: agent, ghost: g, pendingCommands: agent.pendingCommands.count).padding(.horizontal, -24).padding(.bottom, -10)
@@ -536,7 +536,7 @@ struct ComposerBar: View {
             let back = texts.filter { !$0.isEmpty }.joined(separator: "\n\n")
             draft = draft.isEmpty ? back : back + "\n" + draft
             attachments = files.filter { !attachments.contains($0) } + attachments
-            refused = "대기 중이던 메시지 \(q.texts.count)개를 입력창으로 가져왔습니다. 고치거나 지운 뒤 보내세요."
+            refused = L("대기 중이던 메시지 %@개를 입력창으로 가져왔습니다. 고치거나 지운 뒤 보내세요.", String(q.texts.count))
         }
         .onChange(of: attachments) { _, a in        // copied while the file is still there (a screenshot's temp file goes soon)
             let st = Attach.staged(a)
@@ -547,7 +547,7 @@ struct ComposerBar: View {
             guard b.sid == sid, let (t, files) = store.lastSentDraft.removeValue(forKey: sid) else { return }
             draft = draft.isEmpty ? t : t + "\n" + draft
             attachments = files + attachments.filter { !files.contains($0) }
-            refused = "전달되지 않아 되돌려 놓았습니다. 다시 보내 주세요."
+            refused = L("전달되지 않아 되돌려 놓았습니다. 다시 보내 주세요.")
         }
         .onChange(of: agent.state) { old, new in       // a turn just ended: my new prompt is in the history file now
             if old == .busy && new != .busy { PromptHistory.shared.prepare(sessionId: sid, cwd: agent.cwd) { c, nav in completer = c; hist.items = nav } }
@@ -616,7 +616,7 @@ struct ComposerBar: View {
             draft = ""; refused = nil
             guard store.send(t, to: agent) else {
                 draft = typed; attachments = kept
-                refused = store.notice ?? "보내지 못했습니다. CLI 화면을 확인해 주세요."
+                refused = store.notice ?? L("보내지 못했습니다. CLI 화면을 확인해 주세요.")
                 return
             }
             if SlashCatalog.isTerminalOnly(t) { openTerminal() }
@@ -626,7 +626,7 @@ struct ComposerBar: View {
             // bare paths after the text: the CLI turns image paths into "[Image #n]" chips and Claude reads the rest. (A
             // "[첨부 파일]" header with "- path" lines left a bare "-" per image in the CLI's own screen.)
             let list = attachments.map { $0.path.contains(" ") ? "\"" + $0.path + "\"" : $0.path }.joined(separator: " ")
-            t = (t.isEmpty ? "첨부한 파일을 확인해 주세요." : t) + "\n" + list
+            t = (t.isEmpty ? L("첨부한 파일을 확인해 주세요.") : t) + "\n" + list
         }
         let kept = attachments, typed = draft
         store.lastSentDraft[sid] = (typed, kept)
@@ -635,7 +635,7 @@ struct ComposerBar: View {
             // refused (CLI list on screen, someone typing there): put back what was typed and attached, as it was (the
             // text with the file paths already appended used to come back, so the paths showed up in the box)
             draft = typed; attachments = kept
-            refused = store.notice ?? "보내지 못했습니다. CLI 화면을 확인해 주세요."
+            refused = store.notice ?? L("보내지 못했습니다. CLI 화면을 확인해 주세요.")
         }
     }
     // each agent keeps its own half-typed text and attachments (the bar is recreated per agent: .id(sessionId))
@@ -649,9 +649,9 @@ struct ChatView: View, Equatable {
     var entries: [ChatEntry]
     var showThinking: Bool
     var showTools: Bool
-    var agentName: String = "에이전트"
-    var userLabel: String = "나"
-    var leadName: String = "팀장"
+    var agentName: String = L("에이전트")
+    var userLabel: String = L("나")
+    var leadName: String = L("팀장")
     var loading = false
     var sessionId = ""
     var lastSent: () -> Date = { .distantPast }          // closures instead of the store: this view must not redraw on every store change
@@ -716,16 +716,16 @@ struct ChatView: View, Equatable {
                 VStack(alignment: .leading, spacing: 0) {
                     let all = visible
                     let shown = Swift.min(all.count, rowsFor(turns, in: all) + extra)
-                    if all.isEmpty { Text(loading ? "대화 기록을 불러오는 중…" : "대화 기록이 없습니다.").foregroundStyle(.secondary).padding() }
+                    if all.isEmpty { Text(loading ? L("대화 기록을 불러오는 중…") : L("대화 기록이 없습니다.")).foregroundStyle(.secondary).padding() }
                     if all.count > shown {
-                        Button("이전 대화 더 보기 (\(all.count - shown)줄 남음)") { loadOlder(proxy, all: all, shown: shown) }
+                        Button(L("이전 대화 더 보기 (%@줄 남음)", String(all.count - shown))) { loadOlder(proxy, all: all, shown: shown) }
                             .buttonStyle(.raisedCompact).frame(maxWidth: .infinity).padding(.bottom, 10)
                     }
                     let rows = Array(all.suffix(shown))
                     ForEach(Array(rows.enumerated()), id: \.element.id) { i, e in
                         let cont = i > 0 && Self.sameSpeaker(rows[i - 1], e)
                         if termStyle {
-                            TermLine(entry: e, name: e.role == .peer ? (e.toolName ?? "팀원").split(separator: "@").first.map(String.init) ?? "팀원" : agentName,
+                            TermLine(entry: e, name: e.role == .peer ? (e.toolName ?? L("팀원")).split(separator: "@").first.map(String.init) ?? L("팀원") : agentName,
                                      expandAll: showTools, size: fontSize).id(e.id)
                                 .padding(.top, i == 0 ? 0 : (e.role == .tool || e.role == .system ? 2 : 12))
                         } else {
@@ -791,9 +791,9 @@ struct ChatView: View, Equatable {
 struct Bubble: View {
     @AppStorage("ui.chatFont") private var chatFont: Double = 15
     var entry: ChatEntry
-    var agentName: String = "에이전트"
-    var userLabel: String = "나"
-    var leadName: String = "팀장"
+    var agentName: String = L("에이전트")
+    var userLabel: String = L("나")
+    var leadName: String = L("팀장")
     var expandAll = false
     var showHeader = true
     @State private var expanded = false
@@ -807,7 +807,7 @@ struct Bubble: View {
         let head = entry.text.prefix(300)                       // a result can be long: only its start is needed
         let first = head.split(whereSeparator: \.isNewline).first.map(String.init) ?? ""
         let isResult = entry.toolName == "결과"
-        return ToolLine(summary: isResult ? "결과 · " + first : (entry.toolName ?? "tool") + " · " + first, icon: entry.isError ? "exclamationmark.triangle.fill" : (isResult ? "arrow.turn.down.right" : "wrench.and.screwdriver"), isError: entry.isError,
+        return ToolLine(summary: isResult ? L("결과 · %@", first) : (entry.toolName ?? "tool") + " · " + first, icon: entry.isError ? "exclamationmark.triangle.fill" : (isResult ? "arrow.turn.down.right" : "wrench.and.screwdriver"), isError: entry.isError,
                         hasDetail: isResult || entry.text.contains("\n") || entry.text.count > 90, expanded: expandAll ? .constant(true) : $expanded) {
             // a one-line, short argument is already the summary: show details only when there is more than that
             if isResult || entry.text.contains("\n") || entry.text.count > 90 { Text(entry.text) }
@@ -836,7 +836,7 @@ struct Bubble: View {
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Theme.userBubble))
                     .opacity(entry.toolName == "전송 중" ? 0.6 : 1)
-                Text(entry.toolName == "전송 중" ? "전송 중…" : Fmt.time(entry.time))
+                Text(entry.toolName == "전송 중" ? L("전송 중…") : Fmt.time(entry.time))
                     .font(.system(size: 11)).foregroundStyle(.tertiary).padding(.trailing, 6)
             }
         }
@@ -849,7 +849,7 @@ struct Bubble: View {
                 if showHeader {
                     HStack(spacing: 8) {
                         Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.primary.opacity(0.92))
-                        if entry.isThinking { Text("생각").font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary) }
+                        if entry.isThinking { Text(L("생각")).font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary) }
                         Text(Fmt.time(entry.time)).font(.system(size: 11)).foregroundStyle(.tertiary)
                     }.padding(.top, 3)
                 }
@@ -874,11 +874,11 @@ struct Bubble: View {
     }
     private var title: String {
         switch entry.role {
-        case .user: entry.toolName == "전송 중" ? "\(userLabel) · 전송 중…" : userLabel
-        case .assistant: entry.isThinking ? "\(agentName) · 생각" : agentName
-        case .tool: entry.toolName == "결과" ? "도구 결과" : "도구 · \(entry.toolName ?? "")"
-        case .system: "시스템"
-        case .peer: Self.isLeadAddress(entry.toolName) ? leadName : ((entry.toolName ?? "").split(separator: "@").first.map(String.init) ?? "팀원")
+        case .user: entry.toolName == "전송 중" ? L("%@ · 전송 중…", userLabel) : userLabel
+        case .assistant: entry.isThinking ? L("%@ · 생각", agentName) : agentName
+        case .tool: entry.toolName == "결과" ? L("도구 결과") : L("도구 · %@", entry.toolName ?? "")
+        case .system: L("시스템")
+        case .peer: Self.isLeadAddress(entry.toolName) ? leadName : ((entry.toolName ?? "").split(separator: "@").first.map(String.init) ?? L("팀원"))
         }
     }
     private var tint: Color {
@@ -984,16 +984,16 @@ struct SplitPane: View {
     /// The single view's header, in its order (name, 팀장, model, effort, state, RC, folder); the actions sit behind "⋯".
     private var header: some View {
         HStack(spacing: 6) {
-            Image(systemName: "line.3.horizontal").font(.caption).foregroundStyle(.tertiary).help("끌어서 다른 칸과 자리를 바꿉니다")
+            Image(systemName: "line.3.horizontal").font(.caption).foregroundStyle(.tertiary).help(L("끌어서 다른 칸과 자리를 바꿉니다"))
             StateDot(state: agent.state)
             Text(agent.name).font(.callout.bold()).lineLimit(1).layoutPriority(2)
-            if agent.isLead && !agent.solo { Chip(text: "팀장", tint: Theme.accent) }
+            if agent.isLead && !agent.solo { Chip(text: L("팀장"), tint: Theme.accent) }
             LazyMenu(entries: { ModelChoice.allCases.map { m in .item(m.label + (agent.model == m.rawValue ? " ✓" : "")) { store.setModel(m, for: agent) } } }) {
                 Chip(text: agent.displayModel + (agent.requestedModel != nil ? " ⏳" : ""), tint: .white).opacity(agent.modelIsGuess ? 0.55 : 1)
-            }.buttonStyle(.plain).fixedSize().disabled(!agent.canReceiveInput).help("모델 변경")
+            }.buttonStyle(.plain).fixedSize().disabled(!agent.canReceiveInput).help(L("모델 변경"))
             LazyMenu(entries: { EffortChoice.allCases.map { e in .item(e.rawValue + (agent.effort == e.rawValue ? " ✓" : "")) { store.setEffort(e, for: agent) } } }) {
                 Chip(text: "effort \(agent.effort ?? "?")" + (agent.requestedEffort != nil ? " ⏳" : ""), tint: .white)
-            }.buttonStyle(.plain).fixedSize().disabled(!agent.canReceiveInput).help("effort 변경")
+            }.buttonStyle(.plain).fixedSize().disabled(!agent.canReceiveInput).help(L("effort 변경"))
             Chip(text: Fmt.stateLabel(agent.state), tint: Fmt.stateColor(agent.state)).fixedSize().opacity(agent.stateUnconfirmed ? 0.7 : 1)
             RemoteChip(agent: agent).fixedSize()
             if let c = agent.cwd ?? store.workingDirectory(of: agent) {      // shrinks first, then hides
@@ -1003,18 +1003,18 @@ struct SplitPane: View {
             Spacer(minLength: 4)
             LazyMenu(entries: {
                 let live = agent.tmuxPane != nil && agent.state != .ended
-                var e: [MenuEntry] = [.item("이름 변경…") { renaming = true },
-                    .separator, .header("기본 터미널 앱으로"),
-                    .item("세션 터미널 — 이 세션의 CLI 화면", enabled: live) { store.openTerminal(agent) },
-                    .item("새 터미널 — 이 세션 폴더에서") { store.openExternalShell(cwd: agent.cwd ?? store.workingDirectory(of: agent)) },
+                var e: [MenuEntry] = [.item(L("이름 변경…")) { renaming = true },
+                    .separator, .header(L("기본 터미널 앱으로")),
+                    .item(L("세션 터미널 — 이 세션의 CLI 화면"), enabled: live) { store.openTerminal(agent) },
+                    .item(L("새 터미널 — 이 세션 폴더에서")) { store.openExternalShell(cwd: agent.cwd ?? store.workingDirectory(of: agent)) },
                     .separator]
-                if store.canQuit(agent) { e.append(.item("종료 (/exit)") { quitting = true }) }
-                if store.canResume(agent) { e.append(.item("다시 시작…") { resuming = true }) }
-                else { e.append(.item("팀원 추가…", enabled: agent.canReceiveInput) { addingTeammate = true }) }
-                e.append(.item("보관…") { deleting = true })
+                if store.canQuit(agent) { e.append(.item(L("종료 (/exit)")) { quitting = true }) }
+                if store.canResume(agent) { e.append(.item(L("다시 시작…")) { resuming = true }) }
+                else { e.append(.item(L("팀원 추가…"), enabled: agent.canReceiveInput) { addingTeammate = true }) }
+                e.append(.item(L("보관…")) { deleting = true })
                 return e
             }) { Image(systemName: "ellipsis").font(.system(size: 13, weight: .semibold)).frame(width: 24, height: 20).contentShape(Rectangle()) }
-            .buttonStyle(.plain).fixedSize().foregroundStyle(.secondary).help("터미널 · 종료 · 팀원 추가 · 보관")
+            .buttonStyle(.plain).fixedSize().foregroundStyle(.secondary).help(L("터미널 · 종료 · 팀원 추가 · 보관"))
         }
         .padding(.horizontal, 10).padding(.vertical, 6).background(target ? Theme.accent.opacity(0.25) : Theme.area)
         .contentShape(Rectangle())
@@ -1028,7 +1028,7 @@ struct SplitPane: View {
             header
 if paneChat, let p = agent.tmuxPane, agent.state != .ended { PaneChatView(pane: p, sid: agent.sessionId).id(agent.sessionId) } else {
                         ChatView(entries: store.chat[agent.sessionId] ?? [], showThinking: false, showTools: false, agentName: agent.name,
-                     userLabel: "나", leadName: "팀장", loading: store.chat[agent.sessionId] == nil && agent.transcriptPath != nil,
+                     userLabel: L("나"), leadName: L("팀장"), loading: store.chat[agent.sessionId] == nil && agent.transcriptPath != nil,
                      sessionId: agent.sessionId, lastSent: { store.lastSentAt }, termStyle: termChat, fontSize: chatFont)
                 .equatable().id(agent.sessionId)
             }
@@ -1124,44 +1124,44 @@ struct AnswerActions: View {
     var body: some View {
         HStack(spacing: 12) {
             HStack(spacing: 3) {
-                Button { copy(text()) } label: { Label(copied ? "복사됨" : "답변 복사", systemImage: copied ? "checkmark" : "doc.on.doc") }
-                    .help(compact ? "마지막 답변 전체를 복사합니다" : "이 답변 전체를 복사합니다")
+                Button { copy(text()) } label: { Label(copied ? L("복사됨") : L("답변 복사"), systemImage: copied ? "checkmark" : "doc.on.doc") }
+                    .help(compact ? L("마지막 답변 전체를 복사합니다") : L("이 답변 전체를 복사합니다"))
                 if let recent {
                     LazyMenu(entries: {
                         let list = recent()
-                        guard !list.isEmpty else { return [.header("복사할 답변이 없습니다")] }
-                        return [.header("최근 답변 복사 (내 메시지 기준)")] + list.enumerated().map { i, r in
+                        guard !list.isEmpty else { return [.header(L("복사할 답변이 없습니다"))] }
+                        return [.header(L("최근 답변 복사 (내 메시지 기준)"))] + list.enumerated().map { i, r in
                             let q = r.asked.split(whereSeparator: \.isNewline).first.map(String.init) ?? ""
                             let label = q.isEmpty ? String(r.answer.prefix(40)) : (q.count > 40 ? String(q.prefix(40)) + "…" : q)
-                            return .item("\(i + 1). \(label)  (\(r.answer.count)자)") { copy(r.answer) }
+                            return .item(L("%@. %@  (%@자)", String(i + 1), label, String(r.answer.count))) { copy(r.answer) }
                         }
                     }) { Image(systemName: "chevron.down").font(.system(size: 8, weight: .bold)) }
-                    .help("최근 답변 5개 중에서 골라 복사합니다")
+                    .help(L("최근 답변 5개 중에서 골라 복사합니다"))
                 }
             }
             LazyMenu(entries: { Self.targets(text: text(), from: from, fromId: fromId) }) {
-                Label("동료 에이전트에게 전달", systemImage: "arrowshape.turn.up.right")
-            }.help((compact ? "마지막 답변을" : "이 답변을") + " 동료 에이전트의 입력창에 그대로 넣습니다")
+                Label(L("동료 에이전트에게 전달"), systemImage: "arrowshape.turn.up.right")
+            }.help(compact ? L("마지막 답변을 동료 에이전트의 입력창에 그대로 넣습니다") : L("이 답변을 동료 에이전트의 입력창에 그대로 넣습니다"))
         }
         .buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
         .padding(.top, compact ? 0 : 6).padding(.leading, compact ? 0 : 18)
     }
     @MainActor static func targets(text: String, from: String, fromId: String) -> [MenuEntry] {
         guard let store = BoardStore.shared else { return [] }
-        guard !text.isEmpty else { return [.header("보낼 답변이 없습니다")] }
-        var out: [MenuEntry] = [.header("동료 에이전트에게 전달 (꺼진 세션은 고를 수 없음)")]
+        guard !text.isEmpty else { return [.header(L("보낼 답변이 없습니다"))] }
+        var out: [MenuEntry] = [.header(L("동료 에이전트에게 전달 (꺼진 세션은 고를 수 없음)"))]
         func add(_ a: Agent, _ label: String) {
             guard a.sessionId != fromId else { return }
-            out.append(.item(label + (a.state == .ended ? " — 꺼짐" : ""), enabled: a.canReceiveInput) {
-                store.send("[\(from)의 답변을 전달합니다]\n\n" + text, to: a)
-                store.notice = "'\(from)'의 답변을 '\(a.name)'에게 보냈습니다."
+            out.append(.item(label + (a.state == .ended ? L(" — 꺼짐") : ""), enabled: a.canReceiveInput) {
+                store.send(L("[%@의 답변을 전달합니다]", from) + "\n\n" + text, to: a)
+                store.notice = L("'%@'의 답변을 '%@'에게 보냈습니다.", from, a.name)
             })
         }
         for t in store.teams where !t.members.isEmpty {
             out.append(.separator); out.append(.header(t.displayName))
             for m in t.members { add(m, m.name) }
         }
-        if !store.loose.isEmpty { out.append(.separator); out.append(.header("개별 세션")); for a in store.loose { add(a, a.name) } }
+        if !store.loose.isEmpty { out.append(.separator); out.append(.header(L("개별 세션"))); for a in store.loose { add(a, a.name) } }
         return out
     }
 }

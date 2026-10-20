@@ -58,7 +58,7 @@ enum Theme {
 enum AppearanceMode: String, CaseIterable {
     case system, dark, light
     var scheme: ColorScheme? { self == .dark ? .dark : self == .light ? .light : nil }
-    var title: String { self == .dark ? "다크" : self == .light ? "화이트" : "시스템 설정 따르기" }
+    var title: String { self == .dark ? L("다크") : self == .light ? L("화이트") : L("시스템 설정 따르기") }
 }
 
 /// Raised, slightly glossy button. `prominent` = accent; `active` = selected tab.

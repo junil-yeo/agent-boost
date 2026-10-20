@@ -1,0 +1,14 @@
+{
+  "%@: 응답 필요": {
+    "en": "%@: Needs a reply",
+    "es": "%@: Requiere respuesta",
+    "ja": "%@: 応答が必要",
+    "zh": "%@: 需要回复"
+  },
+  "에이전트가 답을 기다리고 있습니다": {
+    "en": "The agent is waiting for your answer",
+    "es": "El agente está esperando tu respuesta",
+    "ja": "エージェントが回答を待っています",
+    "zh": "代理正在等待你的回复"
+  }
+}

@@ -52,9 +52,9 @@ enum TmuxControl {
 
     /// send-keys that tells the user when tmux refused it (pane gone, server down) instead of losing the input silently.
     @discardableResult
-    static func keys(_ args: [String], what: String = "키 입력") -> Bool {
+    static func keys(_ args: [String], what: String = L("키 입력")) -> Bool {
         let r = Shell.tmux(["send-keys"] + args)
-        if r.code != 0 { onWarning?("\(what)을(를) tmux에 보내지 못했습니다: \(r.err.trimmingCharacters(in: .whitespacesAndNewlines).prefix(80))") }
+        if r.code != 0 { onWarning?(L("%@을(를) tmux에 보내지 못했습니다: %@", what, String(r.err.trimmingCharacters(in: .whitespacesAndNewlines).prefix(80)))) }
         return r.code == 0
     }
 
@@ -74,7 +74,7 @@ enum TmuxControl {
         enqueue(pane) {
             guard let path = transcript(sid) else { DispatchQueue.main.async { done(false) }; return }
             let mark = size(path)
-            keys(["-t", pane, "Up"], what: "대기열 꺼내기(↑)")
+            keys(["-t", pane, "Up"], what: L("대기열 꺼내기(↑)"))
             var ok = false
             let end = Date().addingTimeInterval(2)
             repeat {
@@ -83,9 +83,9 @@ enum TmuxControl {
             } while Date() < end
             if ok {
                 usleep(150_000)
-                for _ in 0..<30 { keys(["-t", pane, "C-u"], what: "입력창 비우기"); usleep(30_000) }
+                for _ in 0..<30 { keys(["-t", pane, "C-u"], what: L("입력창 비우기")); usleep(30_000) }
             } else {
-                keys(["-t", pane, "Down"], what: "↓ (기록 탐색 되돌리기)")
+                keys(["-t", pane, "Down"], what: L("↓ (기록 탐색 되돌리기)"))
             }
             SendLog.note("tmux \(pane): 대기열 꺼내기 " + (ok ? "성공 — CLI 입력창 비움" : "실패 (대기열이 이미 처리됨)"))
             DispatchQueue.main.async { done(ok) }
@@ -167,11 +167,11 @@ enum TmuxControl {
                 if l.code == 0 { pasted = Shell.tmux(["paste-buffer", "-p", "-r", "-d", "-b", buf, "-t", pane]).code == 0 }
             }
             if !pasted {
-                onWarning?("여러 줄 붙여넣기에 실패해 줄바꿈이 Enter로 처리될 수 있습니다.")
-                keys(["-t", pane, "-l", "--", text], what: "메시지 입력")
+                onWarning?(L("여러 줄 붙여넣기에 실패해 줄바꿈이 Enter로 처리될 수 있습니다."))
+                keys(["-t", pane, "-l", "--", text], what: L("메시지 입력"))
             }
         } else {
-            guard keys(["-t", pane, "-l", "--", text], what: "메시지 입력") else { SendLog.note("tmux \(pane): 글자 입력 실패"); return }
+            guard keys(["-t", pane, "-l", "--", text], what: L("메시지 입력")) else { SendLog.note("tmux \(pane): 글자 입력 실패"); return }
         }
         usleep(multilineSettle(text))
         waitPasted(pane, needText: true)
@@ -195,20 +195,20 @@ enum TmuxControl {
                 return
             }
             SendLog.note("tmux \(pane): Enter 후에도 입력창에 글이 남음 — Enter 다시")
-            keys(["-t", pane, "Enter"], what: "Enter (다시)")
+            keys(["-t", pane, "Enter"], what: L("Enter (다시)"))
         }
         SendLog.note("tmux \(pane): Enter를 3번 더 눌러도 입력창에 글이 남음")
     }
     /// Empties the CLI's input box (Ctrl+U removes one line of it at a time). Never Esc: that would stop a running turn.
     static func clearInput(_ pane: String) {
-        enqueue(pane) { for _ in 0..<16 { keys(["-t", pane, "C-u"], what: "입력창 비우기"); usleep(40_000) } }
+        enqueue(pane) { for _ in 0..<16 { keys(["-t", pane, "C-u"], what: L("입력창 비우기")); usleep(40_000) } }
     }
     private static func multilineSettle(_ t: String) -> useconds_t { t.contains("\n") ? 150_000 : 60_000 }
 
     /// Slash command: clears any half-typed input first.
     static func command(_ cmd: String, to pane: String) { enqueue(pane) { commandNow(cmd, to: pane) } }
     private static func commandNow(_ cmd: String, to pane: String) {
-        guard keys(["-t", pane, "C-u"], what: "\(cmd) 명령") else { return }
+        guard keys(["-t", pane, "C-u"], what: L("%@ 명령", cmd)) else { return }
         usleep(40_000)
         sendNow(cmd, to: pane)
     }
@@ -216,7 +216,7 @@ enum TmuxControl {
     /// Esc; `settle` keeps the pane's queue busy afterwards so a following command waits for it.
     static func interrupt(_ pane: String, settle: TimeInterval = 0) {
         enqueue(pane) {
-            keys(["-t", pane, "Escape"], what: "중단(Esc)")
+            keys(["-t", pane, "Escape"], what: L("중단(Esc)"))
             if settle > 0 { usleep(useconds_t(settle * 1e6)) }
         }
     }
@@ -345,7 +345,7 @@ enum TmuxCache {
             lock.lock(); let sent = _modelSentAt[pane]; lock.unlock()
             if let sent, Date().timeIntervalSince(sent) < 20, Screen.isSwitchModelPrompt(r.out) {
                 lock.lock(); _modelSentAt[pane] = nil; lock.unlock()
-                TmuxControl.queue(pane) { TmuxControl.keys(["-t", pane, "Enter"], what: "모델 전환 확인(Enter)") }
+                TmuxControl.queue(pane) { TmuxControl.keys(["-t", pane, "Enter"], what: L("모델 전환 확인(Enter)")) }
                 onAutoConfirm?(pane)
             } else if let sent, Date().timeIntervalSince(sent) >= 20 { lock.lock(); _modelSentAt[pane] = nil; lock.unlock() }
         }

@@ -91,7 +91,7 @@ struct TodoCard: View {
                         Image(systemName: "plus").font(.system(size: 14, weight: .semibold)).frame(width: 34, height: TaskCardView.height)
                             .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card.opacity(0.6)))
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line))
-                    }.buttonStyle(.plain).foregroundStyle(.secondary).help("과제 카드 추가")
+                    }.buttonStyle(.plain).foregroundStyle(.secondary).help(L("과제 카드 추가"))
                 }
             }
             .frame(minWidth: 120, maxWidth: .infinity, alignment: .leading)
@@ -105,7 +105,7 @@ struct TodoCard: View {
                     if r > 0 { Text("\(r)").font(.caption.monospacedDigit().weight(.semibold)) }
                 }.foregroundStyle(.secondary)
             }
-            .buttonStyle(.icon).help("과제")
+            .buttonStyle(.icon).help(L("과제"))
             .popover(isPresented: $showPopover, arrowEdge: .bottom) {
                 VStack(spacing: 10) { ForEach(store.boards) { TaskPanel(board: $0, store: store) } }
                     .padding(12).frame(width: 300).background(Theme.bgTop)
@@ -124,7 +124,7 @@ private struct TaskCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 6) {
-                Text(board.title.isEmpty ? "과제 \(index)" : board.title)
+                Text(board.title.isEmpty ? L("과제 %@", String(index)) : board.title)
                     .font(.caption.weight(.semibold)).foregroundStyle(board.title.isEmpty ? Color.secondary : Color.primary.opacity(0.9)).lineLimit(1)
                 Spacer(minLength: 4)
                 if !board.items.isEmpty {
@@ -135,7 +135,7 @@ private struct TaskCardView: View {
                             tint: Theme.accent.opacity(0.85), height: 4, marker: nil)
             // the first two items as they stand in the list; done ones struck through
             if board.items.isEmpty {
-                Text("클릭해서 할 일 추가").font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
+                Text(L("클릭해서 할 일 추가")).font(.caption2).foregroundStyle(.tertiary).lineLimit(1)
             } else {
                 ForEach(board.items.prefix(2)) { it in
                     Text(it.text).font(.caption2).strikethrough(it.done).foregroundStyle(.tertiary).lineLimit(1)
@@ -172,27 +172,27 @@ private struct TaskPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                TextField("과제 \(index) 제목", text: $title)
+                TextField(L("과제 %@ 제목", String(index)), text: $title)
                     .textFieldStyle(.plain).font(.system(size: 14, weight: .semibold)).focused($focus, equals: .title)
                     .onSubmit { store.setTitle(board.id, title) }
                 if board.items.contains(where: \.done) {
-                    Button("완료 지우기") { store.clearDone(board.id) }.buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
+                    Button(L("완료 지우기")) { store.clearDone(board.id) }.buttonStyle(.plain).font(.caption).foregroundStyle(.secondary)
                 }
                 if store.boards.count > TodoStore.count {
-                    Button { store.removeBoard(board.id) } label: { Image(systemName: "trash") }.buttonStyle(.icon).help("이 과제 카드 삭제")
+                    Button { store.removeBoard(board.id) } label: { Image(systemName: "trash") }.buttonStyle(.icon).help(L("이 과제 카드 삭제"))
                 }
             }
             Divider().opacity(0.5)
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(board.items) { row($0) }
-                    if board.items.isEmpty { Text("아직 항목이 없습니다").font(.callout).foregroundStyle(.tertiary).padding(.vertical, 6) }
+                    if board.items.isEmpty { Text(L("아직 항목이 없습니다")).font(.callout).foregroundStyle(.tertiary).padding(.vertical, 6) }
                 }
             }
             .frame(maxHeight: 320).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 6) {
                 Image(systemName: "plus").font(.caption).foregroundStyle(.tertiary)
-                TextField("항목 추가 후 Enter", text: $draft)
+                TextField(L("항목 추가 후 Enter"), text: $draft)
                     .textFieldStyle(.plain).font(.callout).focused($focus, equals: .add)
                     .onSubmit {
                         store.add(board.id, draft)
@@ -228,7 +228,7 @@ private struct TaskPanel: View {
                     .onTapGesture(count: 2) { editText = it.text; editing = it.id; focus = .edit }
             }
             Button { store.remove(board.id, it.id) } label: { Image(systemName: "xmark").font(.caption2) }
-                .buttonStyle(.icon).help("삭제")
+                .buttonStyle(.icon).help(L("삭제"))
         }
         .padding(.vertical, 4).padding(.horizontal, 4)
         .draggable(it.id.uuidString)

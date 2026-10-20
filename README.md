@@ -3,6 +3,21 @@
 Claude Code 에이전트 팀을 한 화면에서 보고 조작하는 macOS 네이티브 앱(SwiftUI).
 tmux는 화면에 보이지 않는 실행 엔진으로만 쓰이며, 사용자는 이 앱만 다룹니다.
 
+## Install / 설치
+
+Paste one line into Terminal. It checks and installs everything the app needs (Command Line Tools, Homebrew, tmux,
+Claude Code, GitHub CLI), signs you in to Claude, builds the app for your Mac, puts it in Applications and opens it.
+Run it again to update.
+
+터미널에 한 줄을 붙여 넣으면 필요한 도구 확인·설치, Claude 로그인, 빌드, 응용 프로그램 폴더 설치와 실행까지 한 번에 진행합니다.
+다시 실행하면 최신 버전으로 업데이트됩니다.
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/junil-yeo/agent_bridge/main/install.sh)"
+```
+
+Languages: English, 한국어, 日本語, 简体中文, Español (chosen at first launch; change any time from the menu above the clock).
+
 ## 실행 / 빌드
 
 - 실행: `AgentBoost.app` 더블클릭

@@ -1,0 +1,278 @@
+{
+  "%@에서 만든 대화입니다. 끄면 원본을 같은 ID로 이어가고(%@의 목록과 같은 대화), 켜면 원본은 두고 복사본을 엽니다.": {
+    "en": "This conversation was created in %@. Off continues the original with the same ID (the same conversation as in %@'s list). On leaves the original and opens a copy.",
+    "ja": "%@ で作成された会話です。オフにすると元の会話を同じ ID で続け（%@ の一覧と同じ会話）、オンにすると元の会話はそのままでコピーを開きます。",
+    "zh": "这是在 %@ 中创建的对话。关闭时以相同 ID 继续原对话（与 %@ 列表中的对话相同），开启时保留原对话并打开副本。",
+    "es": "Esta conversación se creó en %@. Desactivado, continúa la original con el mismo ID (la misma conversación que en la lista de %@). Activado, deja la original y abre una copia."
+  },
+  "'%@' 다시 시작": {
+    "en": "Restart '%@'",
+    "ja": "'%@'を再開",
+    "zh": "重新启动'%@'",
+    "es": "Reiniciar '%@'"
+  },
+  "'%@'에 팀원 추가": {
+    "en": "Add teammates to '%@'",
+    "ja": "'%@'にチームメイトを追加",
+    "zh": "向'%@'添加队友",
+    "es": "Añadir compañeros a '%@'"
+  },
+  "CLI 백그라운드 작업의 대화입니다. CLI 방식대로 같은 ID로 백그라운드에서 이어서 열고(claude --bg --resume) 화면을 붙입니다(claude attach).": {
+    "en": "This conversation is a CLI background job. As the CLI does, it resumes in the background with the same ID (claude --bg --resume) and attaches the screen (claude attach).",
+    "ja": "CLI のバックグラウンドジョブの会話です。CLI と同じ方法で同じ ID のままバックグラウンドで再開し（claude --bg --resume）、画面をアタッチします（claude attach）。",
+    "zh": "这是 CLI 后台任务的对话。将按 CLI 的方式以相同 ID 在后台继续打开（claude --bg --resume）并附加画面（claude attach）。",
+    "es": "Esta conversación es una tarea en segundo plano del CLI. Como hace el CLI, se reanuda en segundo plano con el mismo ID (claude --bg --resume) y se adjunta la pantalla (claude attach)."
+  },
+  "Claude Code의 권한 설정대로 필요할 때 묻습니다.": {
+    "en": "Asks when needed, following Claude Code's permission settings.",
+    "ja": "Claude Code の権限設定に従い、必要なときに確認します。",
+    "zh": "按照 Claude Code 的权限设置在需要时询问。",
+    "es": "Pregunta cuando hace falta, según la configuración de permisos de Claude Code."
+  },
+  "GitHub 저장소": {
+    "en": "GitHub repositories",
+    "ja": "GitHub リポジトリ",
+    "zh": "GitHub 仓库",
+    "es": "Repositorios de GitHub"
+  },
+  "Haiku 팀장은 팀원 생성·종료 규약을 자주 틀립니다 (테스트에서 실패). 팀장은 Sonnet 이상을 권장합니다.": {
+    "en": "A Haiku team lead often gets the teammate create/quit protocol wrong (failed in testing). Sonnet or better is recommended for team leads.",
+    "ja": "Haiku のチームリーダーはチームメイトの作成・終了の手順をよく間違えます（テストで失敗）。チームリーダーには Sonnet 以上を推奨します。",
+    "zh": "Haiku 团队负责人经常弄错创建/退出队友的规程（测试中失败）。建议团队负责人使用 Sonnet 或更高模型。",
+    "es": "Un líder de equipo Haiku suele fallar el protocolo de crear/cerrar compañeros (falló en las pruebas). Se recomienda Sonnet o superior para el líder."
+  },
+  "claude.ai/code가 브라우저에서 열리고, 고른 저장소와 첫 작업이 채워진 상태로 시작합니다. 클라우드 세션의 대화는 웹이나 모바일 앱에서 보며, 이 앱의 세션 목록에는 나타나지 않습니다. 비공개 저장소는 Claude GitHub 앱이 설치돼 있어야 합니다.": {
+    "en": "claude.ai/code opens in your browser with the chosen repositories and first task filled in. Cloud session conversations are viewed on the web or in the mobile app and do not appear in this app's session list. Private repositories require the Claude GitHub app to be installed.",
+    "ja": "ブラウザで claude.ai/code が開き、選んだリポジトリと最初のタスクが入力された状態で始まります。クラウドセッションの会話は Web またはモバイルアプリで表示され、このアプリのセッション一覧には表示されません。非公開リポジトリには Claude GitHub アプリのインストールが必要です。",
+    "zh": "将在浏览器中打开 claude.ai/code，并预先填好所选仓库和首个任务。云端会话的对话在网页或移动应用中查看，不会出现在本应用的会话列表中。私有仓库需要安装 Claude GitHub 应用。",
+    "es": "claude.ai/code se abrirá en el navegador con los repositorios elegidos y la primera tarea ya rellenados. Las conversaciones de sesiones en la nube se ven en la web o en la app móvil y no aparecen en la lista de sesiones de esta app. Los repositorios privados requieren tener instalada la app Claude de GitHub."
+  },
+  "gh(GitHub CLI)가 없어 목록을 불러오지 못했습니다. owner/repo를 위에 직접 입력하세요.": {
+    "en": "Couldn't load the list because gh (GitHub CLI) is not installed. Type owner/repo above.",
+    "ja": "gh（GitHub CLI）がないため一覧を読み込めませんでした。上に owner/repo を直接入力してください。",
+    "zh": "未安装 gh（GitHub CLI），无法加载列表。请在上方直接输入 owner/repo。",
+    "es": "No se pudo cargar la lista porque gh (GitHub CLI) no está instalado. Escribe owner/repo arriba."
+  },
+  "개별 세션입니다. 이 세션이 팀을 만들고 팀장이 됩니다.": {
+    "en": "This is a standalone session. It will create a team and become its lead.",
+    "ja": "単独のセッションです。このセッションがチームを作り、チームリーダーになります。",
+    "zh": "这是一个独立会话。它将创建团队并成为团队负责人。",
+    "es": "Es una sesión individual. Creará un equipo y será su líder."
+  },
+  "검색하거나 owner/repo 직접 입력": {
+    "en": "Search, or type owner/repo",
+    "ja": "検索するか owner/repo を直接入力",
+    "zh": "搜索或直接输入 owner/repo",
+    "es": "Busca o escribe owner/repo"
+  },
+  "권한 확인 없이 실행 (--dangerously-skip-permissions)": {
+    "en": "Run without permission prompts (--dangerously-skip-permissions)",
+    "ja": "権限確認なしで実行（--dangerously-skip-permissions）",
+    "zh": "不经权限确认运行（--dangerously-skip-permissions）",
+    "es": "Ejecutar sin pedir permisos (--dangerously-skip-permissions)"
+  },
+  "만들기": {
+    "en": "Create",
+    "ja": "作成",
+    "zh": "创建",
+    "es": "Crear"
+  },
+  "모델": {
+    "en": "Model",
+    "ja": "モデル",
+    "zh": "模型",
+    "es": "Modelo"
+  },
+  "복사본으로 분기해서 열기 (--fork-session, 새 세션 ID)": {
+    "en": "Open as a forked copy (--fork-session, new session ID)",
+    "ja": "コピーとして分岐して開く（--fork-session、新しいセッション ID）",
+    "zh": "以分支副本打开（--fork-session，新会话 ID）",
+    "es": "Abrir como copia bifurcada (--fork-session, nuevo ID de sesión)"
+  },
+  "비워 두면 지시를 기다립니다": {
+    "en": "Leave empty to wait for instructions",
+    "ja": "空欄なら指示を待ちます",
+    "zh": "留空则等待指示",
+    "es": "Déjalo vacío para esperar instrucciones"
+  },
+  "새 세션": {
+    "en": "New session",
+    "ja": "新しいセッション",
+    "zh": "新会话",
+    "es": "Nueva sesión"
+  },
+  "선택…": {
+    "en": "Choose…",
+    "ja": "選択…",
+    "zh": "选择…",
+    "es": "Elegir…"
+  },
+  "세션이 시작되면 위 팀원 구성을 지시받아 Claude의 팀 기능으로 팀원을 만듭니다. 팀원 생성부터 토큰을 사용합니다.": {
+    "en": "Once the session starts, it is told the teammate setup above and creates the teammates with Claude's team feature. Creating teammates uses tokens.",
+    "ja": "セッションが始まると上のチームメイト構成が指示され、Claude のチーム機能でチームメイトを作成します。チームメイトの作成からトークンを消費します。",
+    "zh": "会话启动后会收到上述队友配置指示，并用 Claude 的团队功能创建队友。创建队友即开始消耗 token。",
+    "es": "Al iniciarse, la sesión recibe la configuración de compañeros de arriba y los crea con la función de equipos de Claude. Crear compañeros consume tokens."
+  },
+  "시작": {
+    "en": "Start",
+    "ja": "開始",
+    "zh": "开始",
+    "es": "Iniciar"
+  },
+  "시작 옵션으로 지정하므로 기본 설정은 바뀌지 않습니다.": {
+    "en": "These are launch options, so your default settings don't change.",
+    "ja": "起動オプションとして指定するため、デフォルト設定は変わりません。",
+    "zh": "这些作为启动选项指定，不会更改默认设置。",
+    "es": "Son opciones de inicio, así que tu configuración predeterminada no cambia."
+  },
+  "역할 (선택)": {
+    "en": "Role (optional)",
+    "ja": "役割（任意）",
+    "zh": "角色（可选）",
+    "es": "Rol (opcional)"
+  },
+  "예: 논문 그림 리뷰 — 한글 가능, 나중에 /rename 으로 변경 가능": {
+    "en": "e.g. Paper figure review — any language, can change later with /rename",
+    "ja": "例: 論文の図のレビュー — 日本語可、後で /rename で変更可能",
+    "zh": "例如：论文图表审阅 — 可用中文，之后可用 /rename 修改",
+    "es": "p. ej. Revisión de figuras del artículo — cualquier idioma, se puede cambiar luego con /rename"
+  },
+  "웹 입력창에 미리 채워집니다. 보내기는 웹에서 누릅니다": {
+    "en": "Prefilled in the web input box. Press send on the web",
+    "ja": "Web の入力欄にあらかじめ入力されます。送信は Web で押します",
+    "zh": "将预先填入网页输入框。请在网页上点击发送",
+    "es": "Se rellenará en el cuadro de entrada web. Pulsa enviar en la web"
+  },
+  "웹에서 열기": {
+    "en": "Open on web",
+    "ja": "Web で開く",
+    "zh": "在网页中打开",
+    "es": "Abrir en la web"
+  },
+  "이 Mac": {
+    "en": "This Mac",
+    "ja": "この Mac",
+    "zh": "此 Mac",
+    "es": "Este Mac"
+  },
+  "이 세션은 tmux를 찾을 수 없는 환경에서 시작돼 팀원을 만들 수 없습니다 (이전 버전 앱의 문제). 종료한 뒤 '다시 시작'하면 해결됩니다.": {
+    "en": "This session was started in an environment where tmux could not be found, so it can't create teammates (an issue in an older app version). Quit it and use 'Restart' to fix this.",
+    "ja": "このセッションは tmux が見つからない環境で開始されたため、チームメイトを作成できません（旧バージョンのアプリの問題）。終了してから「再開」すると解決します。",
+    "zh": "此会话是在找不到 tmux 的环境中启动的，因此无法创建队友（旧版本应用的问题）。退出后使用“重新启动”即可解决。",
+    "es": "Esta sesión se inició en un entorno donde no se encontraba tmux, así que no puede crear compañeros (un problema de una versión anterior de la app). Ciérrala y usa 'Reiniciar' para solucionarlo."
+  },
+  "이 세션이 팀장으로서 팀원을 만듭니다.": {
+    "en": "This session creates the teammates as team lead.",
+    "ja": "このセッションがチームリーダーとしてチームメイトを作成します。",
+    "zh": "此会话将以团队负责人身份创建队友。",
+    "es": "Esta sesión crea los compañeros como líder del equipo."
+  },
+  "이름 (영문)": {
+    "en": "Name (English)",
+    "ja": "名前（英字）",
+    "zh": "名称（英文）",
+    "es": "Nombre (en inglés)"
+  },
+  "이름 (표시용 별칭)": {
+    "en": "Name (display alias)",
+    "ja": "名前（表示用の別名）",
+    "zh": "名称（显示用别名）",
+    "es": "Nombre (alias visible)"
+  },
+  "이전 대화를 같은 세션 ID로 그대로 이어서 엽니다 (claude --resume).": {
+    "en": "Reopens the previous conversation with the same session ID (claude --resume).",
+    "ja": "前回の会話を同じセッション ID のまま再開します（claude --resume）。",
+    "zh": "以相同的会话 ID 继续打开之前的对话（claude --resume）。",
+    "es": "Reabre la conversación anterior con el mismo ID de sesión (claude --resume)."
+  },
+  "작업 중이라 지시가 현재 작업 뒤에 대기열로 들어갑니다.": {
+    "en": "It's working, so the instruction will be queued after the current task.",
+    "ja": "作業中のため、指示は現在のタスクの後にキューに入ります。",
+    "zh": "正在工作，指示将排入当前任务之后的队列。",
+    "es": "Está trabajando, así que la instrucción irá a la cola tras la tarea actual."
+  },
+  "작업 폴더": {
+    "en": "Working folder",
+    "ja": "作業フォルダ",
+    "zh": "工作文件夹",
+    "es": "Carpeta de trabajo"
+  },
+  "저장소 목록을 불러오는 중…": {
+    "en": "Loading repositories…",
+    "ja": "リポジトリ一覧を読み込み中…",
+    "zh": "正在加载仓库列表…",
+    "es": "Cargando repositorios…"
+  },
+  "저장소 목록을 불러오지 못했습니다 (gh auth login 필요할 수 있음). owner/repo를 위에 직접 입력하세요.": {
+    "en": "Couldn't load repositories (you may need gh auth login). Type owner/repo above.",
+    "ja": "リポジトリ一覧を読み込めませんでした（gh auth login が必要な場合があります）。上に owner/repo を直接入力してください。",
+    "zh": "无法加载仓库列表（可能需要 gh auth login）。请在上方直接输入 owner/repo。",
+    "es": "No se pudieron cargar los repositorios (puede que necesites gh auth login). Escribe owner/repo arriba."
+  },
+  "첫 작업 (선택)": {
+    "en": "First task (optional)",
+    "ja": "最初のタスク（任意）",
+    "zh": "首个任务（可选）",
+    "es": "Primera tarea (opcional)"
+  },
+  "첫 작업을 비워 두면 토큰을 쓰지 않고 대기합니다.": {
+    "en": "With no first task, it waits without using tokens.",
+    "ja": "最初のタスクが空なら、トークンを使わずに待機します。",
+    "zh": "首个任务留空时，将不消耗 token 并保持空闲。",
+    "es": "Sin primera tarea, espera sin consumir tokens."
+  },
+  "추가": {
+    "en": "Add",
+    "ja": "追加",
+    "zh": "添加",
+    "es": "Añadir"
+  },
+  "취소": {
+    "en": "Cancel",
+    "ja": "キャンセル",
+    "zh": "取消",
+    "es": "Cancelar"
+  },
+  "클라우드 (웹)": {
+    "en": "Cloud (web)",
+    "ja": "クラウド（Web）",
+    "zh": "云端（网页）",
+    "es": "Nube (web)"
+  },
+  "팀원": {
+    "en": "Teammates",
+    "ja": "チームメイト",
+    "zh": "队友",
+    "es": "Compañeros"
+  },
+  "팀원 구성 (이 세션이 팀장이 됨)": {
+    "en": "Add teammates (this session becomes team lead)",
+    "ja": "チームメイトを編成（このセッションがチームリーダーになる）",
+    "zh": "组建队友（此会话成为团队负责人）",
+    "es": "Añadir compañeros (esta sesión será el líder del equipo)"
+  },
+  "팀원 세션은 팀과 분리된 개별 세션으로 열립니다. 팀장과의 연결은 복구되지 않습니다.": {
+    "en": "A teammate session opens as a standalone session, separate from its team. The link to the team lead is not restored.",
+    "ja": "チームメイトのセッションはチームから切り離された単独のセッションとして開きます。チームリーダーとのつながりは復元されません。",
+    "zh": "队友会话将作为脱离团队的独立会话打开。与团队负责人的连接不会恢复。",
+    "es": "Una sesión de compañero se abre como sesión individual, separada de su equipo. El vínculo con el líder del equipo no se restaura."
+  },
+  "팀원 이름은 팀 주소(name@team)가 되므로 영문·숫자·_·- 만 됩니다 (Claude 제한). 역할은 자유롭게 한글로 적어도 됩니다.": {
+    "en": "A teammate's name becomes its team address (name@team), so only letters, digits, _ and - are allowed (a Claude limit). The role can be written freely in any language.",
+    "ja": "チームメイトの名前はチームアドレス（name@team）になるため、英字・数字・_・- のみ使えます（Claude の制限）。役割は自由に日本語で書けます。",
+    "zh": "队友名称会成为团队地址（name@team），因此只能使用英文字母、数字、_ 和 -（Claude 的限制）。角色可以随意用中文填写。",
+    "es": "El nombre de un compañero se convierte en su dirección de equipo (name@team), así que solo admite letras, números, _ y - (límite de Claude). El rol puede escribirse libremente en cualquier idioma."
+  },
+  "팀원 추가": {
+    "en": "Add teammate",
+    "ja": "チームメイトを追加",
+    "zh": "添加队友",
+    "es": "Añadir compañero"
+  },
+  "파일 수정·셸 명령을 묻지 않고 모두 실행합니다. 믿을 수 있는 폴더에서만 쓰세요.": {
+    "en": "Runs every file edit and shell command without asking. Use only in folders you trust.",
+    "ja": "ファイルの変更やシェルコマンドを確認なしですべて実行します。信頼できるフォルダでのみ使ってください。",
+    "zh": "将不经询问执行所有文件修改和 shell 命令。请仅在可信的文件夹中使用。",
+    "es": "Ejecuta todas las ediciones de archivos y comandos de shell sin preguntar. Úsalo solo en carpetas de confianza."
+  }
+}

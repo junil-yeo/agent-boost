@@ -1,0 +1,248 @@
+{
+  "!명령": {
+    "en": "!command",
+    "ja": "!コマンド",
+    "zh": "!命令",
+    "es": "!comando"
+  },
+  "(작업 폴더에서 끝나지 않은 작업을 찾지 못함)": {
+    "en": "(no unfinished jobs found in the working folder)",
+    "ja": "(作業フォルダに未完了のジョブは見つかりませんでした)",
+    "zh": "(未在工作文件夹中找到未完成的任务)",
+    "es": "(no se encontraron trabajos sin terminar en la carpeta de trabajo)"
+  },
+  "CLI 하단의 \"← %@ agents\": 끝나지 않은 Claude Code 백그라운드 작업 (~/.claude/jobs). 서브에이전트나 다른 세션이 아닙니다. CLI에서 ←로 목록을 열어 정리할 수 있습니다.": {
+    "en": "\"← %@ agents\" at the bottom of the CLI: unfinished Claude Code background jobs (~/.claude/jobs). These are not subagents or other sessions. Press ← in the CLI to open the list and clean them up.",
+    "ja": "CLI 下部の \"← %@ agents\" は、終わっていない Claude Code のバックグラウンドジョブ (~/.claude/jobs) です。サブエージェントや別のセッションではありません。CLI で ← を押すと一覧を開いて整理できます。",
+    "zh": "CLI 底部的 \"← %@ agents\":尚未结束的 Claude Code 后台任务 (~/.claude/jobs)。它们不是子代理或其他会话。在 CLI 中按 ← 可打开列表进行清理。",
+    "es": "\"← %@ agents\" en la parte inferior de la CLI: trabajos en segundo plano de Claude Code sin terminar (~/.claude/jobs). No son subagentes ni otras sesiones. Pulsa ← en la CLI para abrir la lista y limpiarlos."
+  },
+  "Tab을 누르면 입력창에 채웁니다": {
+    "en": "Press Tab to fill it into the input box",
+    "ja": "Tab で入力欄に入力します",
+    "zh": "按 Tab 填入输入框",
+    "es": "Pulsa Tab para rellenar el cuadro de entrada"
+  },
+  "권한 모드 순환 (기본 → 편집 허용 → 계획 …)": {
+    "en": "Cycle permission modes (default → accept edits → plan …)",
+    "ja": "権限モードを切り替え (デフォルト → 編集を許可 → プラン …)",
+    "zh": "切换权限模式 (默认 → 允许编辑 → 计划 …)",
+    "es": "Cambiar modo de permisos (predeterminado → aceptar ediciones → plan …)"
+  },
+  "권한 모드: %@ — 누르거나 Shift+Tab으로 다음 모드로 바꿉니다 (CLI의 shift+tab과 같음)": {
+    "en": "Permission mode: %@ — click or press Shift+Tab to switch to the next mode (same as shift+tab in the CLI)",
+    "ja": "権限モード: %@ — クリックするか Shift+Tab で次のモードに切り替えます (CLI の shift+tab と同じ)",
+    "zh": "权限模式:%@ — 点击或按 Shift+Tab 切换到下一个模式 (与 CLI 中的 shift+tab 相同)",
+    "es": "Modo de permisos: %@ — haz clic o pulsa Shift+Tab para pasar al siguiente modo (igual que shift+tab en la CLI)"
+  },
+  "글자 크기": {
+    "en": "Text size",
+    "ja": "文字サイズ",
+    "zh": "字体大小",
+    "es": "Tamaño del texto"
+  },
+  "꺼내기": {
+    "en": "Pull back",
+    "ja": "取り出す",
+    "zh": "取回",
+    "es": "Recuperar"
+  },
+  "단축키": {
+    "en": "Shortcuts",
+    "ja": "ショートカット",
+    "zh": "快捷键",
+    "es": "Atajos"
+  },
+  "답을 기다리는 중": {
+    "en": "Waiting for your answer",
+    "ja": "回答を待っています",
+    "zh": "等待回答",
+    "es": "Esperando tu respuesta"
+  },
+  "대기 명령 %@": {
+    "en": "Pending commands %@",
+    "ja": "待機中のコマンド %@",
+    "zh": "待发命令 %@",
+    "es": "Comandos pendientes %@"
+  },
+  "대기 중인 메시지를 보내기 전에 입력창으로 되돌립니다 (CLI의 ↑와 같음). 고치거나 지울 수 있습니다.": {
+    "en": "Moves queued messages back into the input box before they are sent (same as ↑ in the CLI). You can edit or delete them.",
+    "ja": "待機中のメッセージを送信前に入力欄へ戻します (CLI の ↑ と同じ)。編集や削除ができます。",
+    "zh": "在发送前将排队的消息移回输入框 (与 CLI 中的 ↑ 相同)。可以修改或删除。",
+    "es": "Devuelve los mensajes en cola al cuadro de entrada antes de enviarlos (igual que ↑ en la CLI). Puedes editarlos o borrarlos."
+  },
+  "대기열 %@": {
+    "en": "Queue %@",
+    "ja": "キュー %@",
+    "zh": "队列 %@",
+    "es": "Cola %@"
+  },
+  "마지막 요청이 실은 컨텍스트: %@ / %@ 토큰": {
+    "en": "Context sent with the last request: %@ / %@ tokens",
+    "ja": "直近のリクエストのコンテキスト: %@ / %@ トークン",
+    "zh": "上次请求携带的上下文:%@ / %@ tokens",
+    "es": "Contexto enviado en la última solicitud: %@ / %@ tokens"
+  },
+  "마지막 요청이 실은 컨텍스트: %@ / %@ 토큰 — /compact 로 줄일 수 있습니다": {
+    "en": "Context sent with the last request: %@ / %@ tokens — /compact can shrink it",
+    "ja": "直近のリクエストのコンテキスト: %@ / %@ トークン — /compact で減らせます",
+    "zh": "上次请求携带的上下文:%@ / %@ tokens — 可用 /compact 缩减",
+    "es": "Contexto enviado en la última solicitud: %@ / %@ tokens — /compact puede reducirlo"
+  },
+  "멈춤": {
+    "en": "blocked",
+    "ja": "停止中",
+    "zh": "已阻塞",
+    "es": "bloqueado"
+  },
+  "백그라운드 작업 %@": {
+    "en": "Background jobs %@",
+    "ja": "バックグラウンドジョブ %@",
+    "zh": "后台任务 %@",
+    "es": "Trabajos en segundo plano %@"
+  },
+  "보내기": {
+    "en": "Send",
+    "ja": "送信",
+    "zh": "发送",
+    "es": "Enviar"
+  },
+  "보내기 (작업 중이면 CLI가 대기열에 넣음)": {
+    "en": "Send (while working, the CLI queues it)",
+    "ja": "送信 (作業中は CLI がキューに入れます)",
+    "zh": "发送 (正在工作时由 CLI 放入队列)",
+    "es": "Enviar (si está trabajando, la CLI lo pone en cola)"
+  },
+  "생각 중": {
+    "en": "thinking",
+    "ja": "思考中",
+    "zh": "思考中",
+    "es": "pensando"
+  },
+  "셸 명령 실행 (에이전트 폴더에서)": {
+    "en": "Run a shell command (in the agent's folder)",
+    "ja": "シェルコマンドを実行 (エージェントのフォルダで)",
+    "zh": "运行 shell 命令 (在代理的文件夹中)",
+    "es": "Ejecutar un comando de shell (en la carpeta del agente)"
+  },
+  "스크린샷·이미지 첨부": {
+    "en": "Attach a screenshot or image",
+    "ja": "スクリーンショット・画像を添付",
+    "zh": "附加截图或图片",
+    "es": "Adjuntar captura o imagen"
+  },
+  "슬래시 명령 팔레트": {
+    "en": "Slash command palette",
+    "ja": "スラッシュコマンドパレット",
+    "zh": "斜杠命令面板",
+    "es": "Paleta de comandos de barra"
+  },
+  "실행 중": {
+    "en": "running",
+    "ja": "実行中",
+    "zh": "运行中",
+    "es": "en ejecución"
+  },
+  "아래 선택지를 고르거나 숫자 키 · Esc로 취소": {
+    "en": "Pick an option below, or use number keys · Esc to cancel",
+    "ja": "下の選択肢を選ぶか数字キー · Esc でキャンセル",
+    "zh": "选择下方选项或按数字键 · Esc 取消",
+    "es": "Elige una opción abajo o usa las teclas numéricas · Esc para cancelar"
+  },
+  "입력 이력 (비어 있을 때) / 팔레트 이동": {
+    "en": "Input history (when empty) / move in palette",
+    "ja": "入力履歴 (空のとき) / パレット内を移動",
+    "zh": "输入历史 (为空时) / 在面板中移动",
+    "es": "Historial de entrada (si está vacío) / moverse en la paleta"
+  },
+  "입력창 단축키": {
+    "en": "Input box shortcuts",
+    "ja": "入力欄のショートカット",
+    "zh": "输入框快捷键",
+    "es": "Atajos del cuadro de entrada"
+  },
+  "입력창 단축키 보기": {
+    "en": "Show input box shortcuts",
+    "ja": "入力欄のショートカットを表示",
+    "zh": "查看输入框快捷键",
+    "es": "Ver atajos del cuadro de entrada"
+  },
+  "작업 중": {
+    "en": "Working",
+    "ja": "作業中",
+    "zh": "工作中",
+    "es": "Trabajando"
+  },
+  "작업 중단 · 질문 취소 · 팔레트 닫기 · 이력 취소": {
+    "en": "Interrupt · cancel question · close palette · cancel history",
+    "ja": "作業を中断 · 質問をキャンセル · パレットを閉じる · 履歴をキャンセル",
+    "zh": "中断工作 · 取消问题 · 关闭面板 · 取消历史",
+    "es": "Interrumpir · cancelar pregunta · cerrar paleta · cancelar historial"
+  },
+  "작업이 끝나면 Claude가 차례로 처리하는 메시지 수": {
+    "en": "Messages Claude will handle in order when the current work finishes",
+    "ja": "作業が終わると Claude が順に処理するメッセージ数",
+    "zh": "当前工作结束后 Claude 将依次处理的消息数",
+    "es": "Mensajes que Claude procesará en orden al terminar el trabajo actual"
+  },
+  "작업이 끝나면 보내는 명령": {
+    "en": "Commands sent when the work finishes",
+    "ja": "作業が終わると送信するコマンド",
+    "zh": "工作结束后发送的命令",
+    "es": "Comandos que se envían al terminar el trabajo"
+  },
+  "줄바꿈 (목록은 번호·글머리 자동 이어짐)": {
+    "en": "New line (lists continue numbering and bullets)",
+    "ja": "改行 (リストは番号・箇条書きを自動で継続)",
+    "zh": "换行 (列表自动延续编号和项目符号)",
+    "es": "Nueva línea (las listas continúan la numeración y viñetas)"
+  },
+  "지금 보내기": {
+    "en": "Send now",
+    "ja": "今すぐ送信",
+    "zh": "立即发送",
+    "es": "Enviar ahora"
+  },
+  "지난 작업 %@": {
+    "en": "Last turn %@",
+    "ja": "前回の作業 %@",
+    "zh": "上次工作 %@",
+    "es": "Último turno %@"
+  },
+  "지난 작업 %@ · %@ 완료": {
+    "en": "Last turn %@ · done %@",
+    "ja": "前回の作業 %@ · %@ 完了",
+    "zh": "上次工作 %@ · %@ 完成",
+    "es": "Último turno %@ · terminado %@"
+  },
+  "질문 선택지 고르기": {
+    "en": "Pick a question option",
+    "ja": "質問の選択肢を選ぶ",
+    "zh": "选择问题选项",
+    "es": "Elegir una opción de la pregunta"
+  },
+  "컨텍스트 %@%": {
+    "en": "Context %@%",
+    "ja": "コンテキスト %@%",
+    "zh": "上下文 %@%",
+    "es": "Contexto %@%"
+  },
+  "파일 멘션 (작업 폴더 검색)": {
+    "en": "Mention a file (search the working folder)",
+    "ja": "ファイルをメンション (作業フォルダを検索)",
+    "zh": "提及文件 (搜索工作文件夹)",
+    "es": "Mencionar un archivo (buscar en la carpeta de trabajo)"
+  },
+  "하던 작업을 멈추고(Esc) 대기 중인 메시지를 바로 처리하게 합니다": {
+    "en": "Stops the current work (Esc) and has the queued messages handled right away",
+    "ja": "作業を中断 (Esc) し、待機中のメッセージをすぐに処理させます",
+    "zh": "停止当前工作 (Esc),立即处理排队的消息",
+    "es": "Detiene el trabajo actual (Esc) y procesa de inmediato los mensajes en cola"
+  },
+  "회색 제안 채우기 / 팔레트 선택": {
+    "en": "Accept the gray suggestion / pick in palette",
+    "ja": "グレーの候補を入力 / パレットで選択",
+    "zh": "填入灰色建议 / 在面板中选择",
+    "es": "Aceptar la sugerencia gris / elegir en la paleta"
+  }
+}

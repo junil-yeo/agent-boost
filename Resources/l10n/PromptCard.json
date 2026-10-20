@@ -1,0 +1,32 @@
+{
+  "기본": {
+    "en": "Default",
+    "es": "Predeterminado",
+    "ja": "デフォルト",
+    "zh": "默认"
+  },
+  "미리보기": {
+    "en": "Preview",
+    "es": "Vista previa",
+    "ja": "プレビュー",
+    "zh": "预览"
+  },
+  "숫자 키 1–%@로 선택 · Esc로 취소": {
+    "en": "Press 1–%@ to choose · Esc to cancel",
+    "es": "Pulsa 1–%@ para elegir · Esc para cancelar",
+    "ja": "数字キー 1–%@ で選択 · Esc で取消",
+    "zh": "按数字键 1–%@ 选择 · Esc 取消"
+  },
+  "전송 중…": {
+    "en": "Sending…",
+    "es": "Enviando…",
+    "ja": "送信中…",
+    "zh": "正在发送…"
+  },
+  "취소 (Esc)": {
+    "en": "Cancel (Esc)",
+    "es": "Cancelar (Esc)",
+    "ja": "キャンセル (Esc)",
+    "zh": "取消 (Esc)"
+  }
+}

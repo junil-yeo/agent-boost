@@ -41,16 +41,16 @@ struct TurnStatusBar: View {
             HStack(spacing: 8) {
                 Text(Spinner.frame(at: ctx.date)).font(.system(size: 15, weight: .bold)).foregroundStyle(Spinner.tint)
                     .frame(width: 16).contentTransition(.identity)
-                Text((agent.screen?.verb ?? "작업 중") + "…").font(.system(size: 13, weight: .semibold)).foregroundStyle(Spinner.verbTint)
+                Text((agent.screen?.verb ?? L("작업 중")) + "…").font(.system(size: 13, weight: .semibold)).foregroundStyle(Spinner.verbTint)
                 Text(details(at: ctx.date)).font(.system(size: 12, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
                 Spacer(minLength: 8)
                 if queued > 0 {
-                    Label("대기열 \(queued)", systemImage: "tray.full").font(.caption).foregroundStyle(.secondary)
-                        .help("작업이 끝나면 Claude가 차례로 처리하는 메시지 수")
-                    Button { onPullQueue() } label: { Label("꺼내기", systemImage: "arrow.uturn.down").font(.caption) }
-                        .buttonStyle(.raisedCompact).help("대기 중인 메시지를 보내기 전에 입력창으로 되돌립니다 (CLI의 ↑와 같음). 고치거나 지울 수 있습니다.")
-                    Button { onPushQueue() } label: { Label("지금 보내기", systemImage: "paperplane.fill").font(.caption) }
-                        .buttonStyle(.raisedCompact).help("하던 작업을 멈추고(Esc) 대기 중인 메시지를 바로 처리하게 합니다")
+                    Label(L("대기열 %@", String(queued)), systemImage: "tray.full").font(.caption).foregroundStyle(.secondary)
+                        .help(L("작업이 끝나면 Claude가 차례로 처리하는 메시지 수"))
+                    Button { onPullQueue() } label: { Label(L("꺼내기"), systemImage: "arrow.uturn.down").font(.caption) }
+                        .buttonStyle(.raisedCompact).help(L("대기 중인 메시지를 보내기 전에 입력창으로 되돌립니다 (CLI의 ↑와 같음). 고치거나 지울 수 있습니다."))
+                    Button { onPushQueue() } label: { Label(L("지금 보내기"), systemImage: "paperplane.fill").font(.caption) }
+                        .buttonStyle(.raisedCompact).help(L("하던 작업을 멈추고(Esc) 대기 중인 메시지를 바로 처리하게 합니다"))
                 }
             }
         }
@@ -62,7 +62,7 @@ struct TurnStatusBar: View {
         else if let s = turnStart { segs.append(Self.clock(now.timeIntervalSince(s))) }
         if let t = agent.screen?.tokens { segs.append("↓ \(t) tokens") }
         else if agent.tokens.output > tokensAtStart { segs.append("↓ \(Fmt.tokens(agent.tokens.output - tokensAtStart)) tokens") }
-        if agent.screen?.thinking == true { segs.append("생각 중") }
+        if agent.screen?.thinking == true { segs.append(L("생각 중")) }
         if let a = agent.screen?.activity { segs.append(a) }
         return segs.isEmpty ? "" : "(" + segs.joined(separator: " · ") + ")"
     }
@@ -76,8 +76,8 @@ struct TurnStatusBar: View {
         HStack(spacing: 8) {
             Image(systemName: "hand.raised.fill").foregroundStyle(Theme.attention)
                 .phaseAnimator([0.45, 1.0]) { v, o in v.opacity(o) } animation: { _ in .easeInOut(duration: 1.0) }
-            Text("답을 기다리는 중").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.attention)
-            Text("아래 선택지를 고르거나 숫자 키 · Esc로 취소").font(.caption).foregroundStyle(.secondary)
+            Text(L("답을 기다리는 중")).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.attention)
+            Text(L("아래 선택지를 고르거나 숫자 키 · Esc로 취소")).font(.caption).foregroundStyle(.secondary)
             Spacer()
         }
     }
@@ -89,7 +89,7 @@ struct TurnStatusBar: View {
         let done = parts.dropFirst().first.map { $0.replacingOccurrences(of: "done ", with: "") }
         return HStack(spacing: 6) {
             Text("✻").foregroundStyle(.tertiary)
-            Text("지난 작업 \(took)" + (done.map { " · \($0) 완료" } ?? "")).font(.caption).foregroundStyle(.tertiary)
+            Text(done.map { L("지난 작업 %@ · %@ 완료", took, $0) } ?? L("지난 작업 %@", took)).font(.caption).foregroundStyle(.tertiary)
             Spacer()
         }
     }
@@ -113,7 +113,7 @@ struct ComposerFooter: View {
                         Text("⏵⏵").font(.system(size: 10, weight: .bold))
                         Text(agent.modeLabel).font(.caption).lineLimit(1)
                     }.fixedSize().foregroundStyle(agent.screen?.mode == nil ? Color.secondary : Theme.dyn(0xFFD700, 0x8A5A00).opacity(0.95))   // the CLI's yellow; dark gold on white
-                }.buttonStyle(.plain).help("권한 모드: \(agent.modeLabel) — 누르거나 Shift+Tab으로 다음 모드로 바꿉니다 (CLI의 shift+tab과 같음)")
+                }.buttonStyle(.plain).help(L("권한 모드: %@ — 누르거나 Shift+Tab으로 다음 모드로 바꿉니다 (CLI의 shift+tab과 같음)", agent.modeLabel))
             }
             if let ctx = agent.contextTokens {
                 let pct = min(100, Int(Double(ctx) / Double(agent.contextWindow) * 100))
@@ -123,16 +123,17 @@ struct ComposerFooter: View {
                         Capsule().fill(Theme.ink.opacity(0.10)).frame(width: 48, height: 5)
                         Capsule().fill(tint).frame(width: max(2, 48 * CGFloat(pct) / 100), height: 5)
                     }
-                    Text("컨텍스트 \(pct)%").font(.caption).foregroundStyle(tint == .secondary ? Color.secondary : tint).lineLimit(1).fixedSize()
+                    Text(L("컨텍스트 %@%", String(pct))).font(.caption).foregroundStyle(tint == .secondary ? Color.secondary : tint).lineLimit(1).fixedSize()
                 }
-                .help("마지막 요청이 실은 컨텍스트: \(Fmt.tokens(ctx)) / \(Fmt.tokens(agent.contextWindow)) 토큰" + (pct >= 65 ? " — /compact 로 줄일 수 있습니다" : ""))
+                .help(pct >= 65 ? L("마지막 요청이 실은 컨텍스트: %@ / %@ 토큰 — /compact 로 줄일 수 있습니다", Fmt.tokens(ctx), Fmt.tokens(agent.contextWindow))
+                                 : L("마지막 요청이 실은 컨텍스트: %@ / %@ 토큰", Fmt.tokens(ctx), Fmt.tokens(agent.contextWindow)))
             }
             if let n = agent.screen?.agents, n > 0 {
-                Label("백그라운드 작업 \(n)", systemImage: "tray.2").font(.caption).foregroundStyle(.secondary)
+                Label(L("백그라운드 작업 %@", String(n)), systemImage: "tray.2").font(.caption).foregroundStyle(.secondary)
                     .help(BackgroundJobs.summary(cliCount: n))
             }
             if pendingCommands > 0 {
-                Label("대기 명령 \(pendingCommands)", systemImage: "clock").font(.caption).foregroundStyle(.orange).help("작업이 끝나면 보내는 명령")
+                Label(L("대기 명령 %@", String(pendingCommands)), systemImage: "clock").font(.caption).foregroundStyle(.orange).help(L("작업이 끝나면 보내는 명령"))
             }
             if let path = agent.transcriptPath {
                 AnswerActions(text: { TranscriptReader.lastAnswer(path) }, compact: true, from: agent.name, fromId: agent.sessionId,
@@ -147,13 +148,13 @@ struct ComposerFooter: View {
                     Text("Tab").font(.system(size: 10, weight: .semibold)).padding(.horizontal, 5).padding(.vertical, 1)
                         .background(RoundedRectangle(cornerRadius: 4).fill(Theme.ink.opacity(0.12)))
                     Text("“\(g.count > 40 ? String(g.prefix(40)) + "…" : g)”").font(.caption).lineLimit(1).truncationMode(.tail)
-                }.layoutPriority(-1).foregroundStyle(.secondary).help("Tab을 누르면 입력창에 채웁니다").opacity(g.isEmpty ? 0 : 1)
+                }.layoutPriority(-1).foregroundStyle(.secondary).help(L("Tab을 누르면 입력창에 채웁니다")).opacity(g.isEmpty ? 0 : 1)
             }
             Button { showKeys.toggle() } label: {
-                Label("단축키", systemImage: "keyboard").labelStyle(narrow ? AnyLabelStyle(.iconOnly) : AnyLabelStyle(.titleAndIcon))
+                Label(L("단축키"), systemImage: "keyboard").labelStyle(narrow ? AnyLabelStyle(.iconOnly) : AnyLabelStyle(.titleAndIcon))
                     .font(.caption).lineLimit(1).fixedSize().padding(.horizontal, 6).padding(.vertical, 2)
                     .overlay(RoundedRectangle(cornerRadius: 5).stroke(Theme.lineHi))
-            }.buttonStyle(.plain).foregroundStyle(.secondary).help("입력창 단축키 보기")
+            }.buttonStyle(.plain).foregroundStyle(.secondary).help(L("입력창 단축키 보기"))
                 .popover(isPresented: $showKeys, arrowEdge: .bottom) { ShortcutSheet() }
         }
         .frame(height: 20)
@@ -165,15 +166,15 @@ struct ComposerFooter: View {
 
 struct ShortcutSheet: View {
     private let rows: [(String, String)] = [
-        ("Enter", "보내기 (작업 중이면 CLI가 대기열에 넣음)"), ("⇧ Enter", "줄바꿈 (목록은 번호·글머리 자동 이어짐)"), ("⌘ Enter", "보내기"),
-        ("Tab", "회색 제안 채우기 / 팔레트 선택"), ("⇧ Tab", "권한 모드 순환 (기본 → 편집 허용 → 계획 …)"),
-        ("↑ ↓", "입력 이력 (비어 있을 때) / 팔레트 이동"), ("Esc", "작업 중단 · 질문 취소 · 팔레트 닫기 · 이력 취소"),
-        ("/", "슬래시 명령 팔레트"), ("@", "파일 멘션 (작업 폴더 검색)"), ("!명령", "셸 명령 실행 (에이전트 폴더에서)"),
-        ("1–9", "질문 선택지 고르기"), ("⌘V", "스크린샷·이미지 첨부"), ("⌘ + / −", "글자 크기"),
+        ("Enter", L("보내기 (작업 중이면 CLI가 대기열에 넣음)")), ("⇧ Enter", L("줄바꿈 (목록은 번호·글머리 자동 이어짐)")), ("⌘ Enter", L("보내기")),
+        ("Tab", L("회색 제안 채우기 / 팔레트 선택")), ("⇧ Tab", L("권한 모드 순환 (기본 → 편집 허용 → 계획 …)")),
+        ("↑ ↓", L("입력 이력 (비어 있을 때) / 팔레트 이동")), ("Esc", L("작업 중단 · 질문 취소 · 팔레트 닫기 · 이력 취소")),
+        ("/", L("슬래시 명령 팔레트")), ("@", L("파일 멘션 (작업 폴더 검색)")), (L("!명령"), L("셸 명령 실행 (에이전트 폴더에서)")),
+        ("1–9", L("질문 선택지 고르기")), ("⌘V", L("스크린샷·이미지 첨부")), ("⌘ + / −", L("글자 크기")),
     ]
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("입력창 단축키").font(.headline).padding(.bottom, 2)
+            Text(L("입력창 단축키")).font(.headline).padding(.bottom, 2)
             ForEach(Array(rows.enumerated()), id: \.offset) { _, r in
                 HStack(alignment: .top, spacing: 10) {
                     Text(r.0).font(.system(.caption, design: .monospaced).weight(.semibold)).frame(width: 64, alignment: .trailing)
@@ -195,11 +196,11 @@ enum BackgroundJobs {
             guard let d = FileManager.default.contents(atPath: dir + "/" + id + "/state.json"),
                   let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any], let st = j["state"] as? String, st != "done" else { continue }
             let when = (try? FileManager.default.attributesOfItem(atPath: dir + "/" + id + "/state.json"))?[.modificationDate] as? Date
-            let label = st == "blocked" ? "멈춤" : st == "running" ? "실행 중" : st
+            let label = st == "blocked" ? L("멈춤") : st == "running" ? L("실행 중") : st
             rows.append("· \(id) — \(label)\(when.map { " (" + Fmt.ago($0) + ")" } ?? "")\n   \((j["detail"] as? String ?? "").prefix(80))")
         }
-        return "CLI 하단의 \"← \(cliCount) agents\": 끝나지 않은 Claude Code 백그라운드 작업 (~/.claude/jobs). 서브에이전트나 다른 세션이 아닙니다. CLI에서 ←로 목록을 열어 정리할 수 있습니다.\n\n"
-            + (rows.isEmpty ? "(작업 폴더에서 끝나지 않은 작업을 찾지 못함)" : rows.joined(separator: "\n"))
+        return L("CLI 하단의 \"← %@ agents\": 끝나지 않은 Claude Code 백그라운드 작업 (~/.claude/jobs). 서브에이전트나 다른 세션이 아닙니다. CLI에서 ←로 목록을 열어 정리할 수 있습니다.", String(cliCount)) + "\n\n"
+            + (rows.isEmpty ? L("(작업 폴더에서 끝나지 않은 작업을 찾지 못함)") : rows.joined(separator: "\n"))
     }
 }
 

@@ -30,30 +30,38 @@ final class ConvoIndex: @unchecked Sendable {
         lock.lock(); files = files.filter { seen.contains($0.key) }; lock.unlock()
     }
 
-    /// Appends the records written after `offset` (up to the last full line).
+    /// Appends the records written after `offset` (up to the last full line). Lines are tested as bytes (memmem):
+    /// turning every line into a String first took 13 s over 150 MB of transcripts; this takes about half a second.
     private func read(_ path: String, into f: inout File) {
-        guard let fh = FileHandle(forReadingAtPath: path) else { return }
-        defer { try? fh.close() }
-        let end = (try? fh.seekToEnd()) ?? 0
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: .alwaysMapped) else { return }
+        let end = UInt64(data.count)
         if end < f.offset { f = File(sid: f.sid, project: f.project) }       // rewritten: start over
         guard end > f.offset else { return }
-        try? fh.seek(toOffset: f.offset)
-        let data = fh.readDataToEndOfFile()
-        guard let last = data.lastIndex(of: 0x0A) else { return }
-        f.offset += UInt64(last - data.startIndex + 1)
         let iso = ISO8601DateFormatter(); iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        for line in data[data.startIndex...last].split(separator: 0x0A) {
-            // cheap byte checks first: tool output and thinking are most of the file and never searched
-            let s = String(decoding: line, as: UTF8.self)
-            if s.contains("\"custom-title\"") || s.contains("\"ai-title\"") {
-                if let d = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any] {
-                    if let t = d["customTitle"] as? String { f.title = t } else if f.title == nil, let t = d["aiTitle"] as? String { f.title = t }
-                }
-                continue
+        func has(_ p: UnsafeRawPointer, _ n: Int, _ s: StaticString) -> Bool { memmem(p, n, s.utf8Start, s.utf8CodeUnitCount) != nil }
+        var lines: [Data] = [], titles: [Data] = []
+        data.withUnsafeBytes { (all: UnsafeRawBufferPointer) in
+            guard let base = all.baseAddress else { return }
+            var start = Int(f.offset)
+            while start < all.count {
+                let p = base + start, rest = all.count - start
+                guard let nl = memchr(p, 0x0A, rest) else { break }          // an unfinished last line: next time
+                let n = UnsafeRawPointer(nl) - p
+                // tool output and thinking are most of the file and never searched: skipped without parsing
+                if has(p, n, "\"custom-title\"") || has(p, n, "\"ai-title\"") { titles.append(Data(bytes: p, count: n)) }
+                else if (has(p, n, "\"type\":\"user\"") && !has(p, n, "\"tool_use_id\""))
+                            || (has(p, n, "\"type\":\"assistant\"") && has(p, n, "\"type\":\"text\"")) { lines.append(Data(bytes: p, count: n)) }
+                start += n + 1
             }
-            let user = s.contains("\"type\":\"user\"")
-            guard (user && !s.contains("\"tool_use_id\"")) || (s.contains("\"type\":\"assistant\"") && s.contains("\"type\":\"text\"")) else { continue }
-            guard let d = try? JSONSerialization.jsonObject(with: Data(line)) as? [String: Any], let type = d["type"] as? String,
+            f.offset = UInt64(start)
+        }
+        for t in titles {
+            if let d = try? JSONSerialization.jsonObject(with: t) as? [String: Any] {
+                if let x = d["customTitle"] as? String { f.title = x } else if f.title == nil, let x = d["aiTitle"] as? String { f.title = x }
+            }
+        }
+        for line in lines {
+            guard let d = try? JSONSerialization.jsonObject(with: line) as? [String: Any], let type = d["type"] as? String,
                   let msg = d["message"] as? [String: Any], (d["isMeta"] as? Bool) != true, (d["isCompactSummary"] as? Bool) != true else { continue }
             let time = (d["timestamp"] as? String).flatMap { iso.date(from: $0) }
             var text = ""
@@ -102,13 +110,13 @@ struct ConvoSearchSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("", text: $query, prompt: Text("모든 세션의 대화에서 찾기 (여러 단어는 모두 포함)")).textFieldStyle(.plain).font(.title3)
+                TextField("", text: $query, prompt: Text(L("모든 세션의 대화에서 찾기 (여러 단어는 모두 포함)"))).textFieldStyle(.plain).font(.title3)
                     .focused($focused)
                 if loading { ProgressView().controlSize(.small) }
-                Button("닫기") { dismiss() }.keyboardShortcut(.cancelAction).buttonStyle(.raisedCompact)
+                Button(L("닫기")) { dismiss() }.keyboardShortcut(.cancelAction).buttonStyle(.raisedCompact)
             }
             .padding(10).background(RoundedRectangle(cornerRadius: 8).fill(Theme.panel))
-            Text(loading ? "대화 기록을 읽는 중…" : (query.trimmingCharacters(in: .whitespaces).isEmpty ? "세션 \(sessions)개의 대화를 검색합니다" : "\(hits.count == 300 ? "300개 이상" : "\(hits.count)개") 찾음 · 세션 \(sessions)개 검색"))
+            Text(loading ? L("대화 기록을 읽는 중…") : (query.trimmingCharacters(in: .whitespaces).isEmpty ? L("세션 %@개의 대화를 검색합니다", String(sessions)) : L("%@개 찾음 · 세션 %@개 검색", hits.count == 300 ? "300+" : String(hits.count), String(sessions))))
                 .font(.caption).foregroundStyle(.secondary)
             HSplitView {
                 List(hits, selection: $picked) { h in row(h).tag(h.id) }
@@ -143,7 +151,7 @@ struct ConvoSearchSheet: View {
         return VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
                 Text(title(h.file)).font(.callout.weight(.semibold)).lineLimit(1)
-                Text(m.user ? "나" : "에이전트").font(.caption2).padding(.horizontal, 5).padding(.vertical, 1)
+                Text(m.user ? L("나") : L("에이전트")).font(.caption2).padding(.horizontal, 5).padding(.vertical, 1)
                     .background(Capsule().fill((m.user ? Theme.accent : Theme.ink).opacity(0.12)))
                 Spacer()
                 if let t = m.time { Text(Self.day.string(from: t)).font(.caption).foregroundStyle(.secondary) }
@@ -184,11 +192,11 @@ struct ConvoSearchSheet: View {
                     Text(title(f)).font(.headline).lineLimit(1)
                     Spacer()
                     Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(f.msgs[h.index].text, forType: .string) } label: {
-                        Label("메시지 복사", systemImage: "doc.on.doc")
+                        Label(L("메시지 복사"), systemImage: "doc.on.doc")
                     }.buttonStyle(.raisedCompact)
                     if let a = store.agent(f.sid) {
-                        Button { store.open(a); dismiss() } label: { Label("세션으로 이동", systemImage: "arrow.right.circle") }
-                            .buttonStyle(.raisedCompact).help("이 세션의 대화창을 엽니다")
+                        Button { store.open(a); dismiss() } label: { Label(L("세션으로 이동"), systemImage: "arrow.right.circle") }
+                            .buttonStyle(.raisedCompact).help(L("이 세션의 대화창을 엽니다"))
                     }
                 }
                 ScrollViewReader { proxy in
@@ -198,7 +206,7 @@ struct ConvoSearchSheet: View {
                                 let m = f.msgs[i]
                                 VStack(alignment: .leading, spacing: 4) {
                                     HStack {
-                                        Text(m.user ? "나" : "에이전트").font(.caption.weight(.semibold)).foregroundStyle(m.user ? Theme.accent : .secondary)
+                                        Text(m.user ? L("나") : L("에이전트")).font(.caption.weight(.semibold)).foregroundStyle(m.user ? Theme.accent : .secondary)
                                         if let t = m.time { Text(Self.day.string(from: t)).font(.caption).foregroundStyle(.secondary) }
                                     }
                                     Text(i == h.index ? mark(m.text, words) : AttributedString(m.text))
@@ -216,7 +224,7 @@ struct ConvoSearchSheet: View {
                 }
             }
         } else {
-            Text(loading ? "" : "왼쪽에서 결과를 고르세요").foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+            Text(loading ? "" : L("왼쪽에서 결과를 고르세요")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

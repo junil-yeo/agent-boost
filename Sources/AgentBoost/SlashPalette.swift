@@ -15,34 +15,34 @@ struct SlashCommand: Identifiable, Equatable {
 }
 
 enum SlashCatalog {
-    static let builtin: [SlashCommand] = [
-        .init(name: "help", desc: "도움말과 사용 가능한 명령 보기", terminalOnly: true),
-        .init(name: "clear", desc: "대화 기록을 비우고 새로 시작"),
-        .init(name: "compact", desc: "대화를 요약해 컨텍스트 확보", argHint: "[요약 지침]"),
-        .init(name: "model", desc: "모델 변경", argHint: "<모델>", needsArg: true),
-        .init(name: "effort", desc: "추론 effort 변경", argHint: "<low|medium|high|xhigh|max>", needsArg: true),
-        .init(name: "rename", desc: "세션 이름 변경", argHint: "<이름>", needsArg: true),
-        .init(name: "resume", desc: "이전 대화 이어서 하기", terminalOnly: true),
-        .init(name: "cost", desc: "토큰 사용량과 비용 확인"),
-        .init(name: "context", desc: "컨텍스트 사용 현황 보기"),
-        .init(name: "usage", desc: "플랜 사용량 한도 보기"),
-        .init(name: "status", desc: "버전·모델·계정 상태 보기", terminalOnly: true),
-        .init(name: "config", desc: "설정 열기", terminalOnly: true),
-        .init(name: "memory", desc: "CLAUDE.md 메모리 편집", terminalOnly: true),
-        .init(name: "init", desc: "프로젝트용 CLAUDE.md 생성"),
-        .init(name: "review", desc: "풀 리퀘스트 리뷰", argHint: "[PR]"),
-        .init(name: "agents", desc: "서브에이전트 관리", terminalOnly: true),
-        .init(name: "mcp", desc: "MCP 서버 연결 관리", terminalOnly: true),
-        .init(name: "permissions", desc: "도구 권한 규칙 관리", terminalOnly: true),
-        .init(name: "hooks", desc: "훅 설정 보기", terminalOnly: true),
-        .init(name: "export", desc: "대화를 파일이나 클립보드로 내보내기", argHint: "[파일명]", terminalOnly: true),
-        .init(name: "add-dir", desc: "작업 폴더 추가", argHint: "<경로>", needsArg: true),
-        .init(name: "doctor", desc: "설치 상태 진단", terminalOnly: true),
-        .init(name: "release-notes", desc: "릴리스 노트 보기", terminalOnly: true),
-        .init(name: "todos", desc: "현재 할 일 목록 보기"),
-        .init(name: "rewind", desc: "이전 시점으로 대화·코드 되돌리기", terminalOnly: true),
-        .init(name: "exit", desc: "세션 종료"),
-    ]
+    static var builtin: [SlashCommand] { [   // computed: the descriptions follow the chosen language
+        .init(name: "help", desc: L("도움말과 사용 가능한 명령 보기"), terminalOnly: true),
+        .init(name: "clear", desc: L("대화 기록을 비우고 새로 시작")),
+        .init(name: "compact", desc: L("대화를 요약해 컨텍스트 확보"), argHint: L("[요약 지침]")),
+        .init(name: "model", desc: L("모델 변경"), argHint: L("<모델>"), needsArg: true),
+        .init(name: "effort", desc: L("추론 effort 변경"), argHint: "<low|medium|high|xhigh|max>", needsArg: true),
+        .init(name: "rename", desc: L("세션 이름 변경"), argHint: L("<이름>"), needsArg: true),
+        .init(name: "resume", desc: L("이전 대화 이어서 하기"), terminalOnly: true),
+        .init(name: "cost", desc: L("토큰 사용량과 비용 확인")),
+        .init(name: "context", desc: L("컨텍스트 사용 현황 보기")),
+        .init(name: "usage", desc: L("플랜 사용량 한도 보기")),
+        .init(name: "status", desc: L("버전·모델·계정 상태 보기"), terminalOnly: true),
+        .init(name: "config", desc: L("설정 열기"), terminalOnly: true),
+        .init(name: "memory", desc: L("CLAUDE.md 메모리 편집"), terminalOnly: true),
+        .init(name: "init", desc: L("프로젝트용 CLAUDE.md 생성")),
+        .init(name: "review", desc: L("풀 리퀘스트 리뷰"), argHint: "[PR]"),
+        .init(name: "agents", desc: L("서브에이전트 관리"), terminalOnly: true),
+        .init(name: "mcp", desc: L("MCP 서버 연결 관리"), terminalOnly: true),
+        .init(name: "permissions", desc: L("도구 권한 규칙 관리"), terminalOnly: true),
+        .init(name: "hooks", desc: L("훅 설정 보기"), terminalOnly: true),
+        .init(name: "export", desc: L("대화를 파일이나 클립보드로 내보내기"), argHint: L("[파일명]"), terminalOnly: true),
+        .init(name: "add-dir", desc: L("작업 폴더 추가"), argHint: L("<경로>"), needsArg: true),
+        .init(name: "doctor", desc: L("설치 상태 진단"), terminalOnly: true),
+        .init(name: "release-notes", desc: L("릴리스 노트 보기"), terminalOnly: true),
+        .init(name: "todos", desc: L("현재 할 일 목록 보기")),
+        .init(name: "rewind", desc: L("이전 시점으로 대화·코드 되돌리기"), terminalOnly: true),
+        .init(name: "exit", desc: L("세션 종료")),
+    ] }
 
     static func isTerminalOnly(_ text: String) -> Bool {
         guard text.hasPrefix("/") else { return false }
@@ -89,7 +89,7 @@ enum SlashCatalog {
         for case let rel as String in en where rel.hasSuffix(".md") {
             let name = String(rel.dropLast(3)).replacingOccurrences(of: "/", with: ":")
             let fm = frontmatter(dir + "/" + rel)
-            out.append(.init(name: name, desc: fm.desc ?? "사용자 정의 명령", argHint: fm.hint, source: source))
+            out.append(.init(name: name, desc: fm.desc ?? L("사용자 정의 명령"), argHint: fm.hint, source: source))
         }
         return out
     }
@@ -100,7 +100,7 @@ enum SlashCatalog {
             let path = dir + "/" + d + "/SKILL.md"
             guard FileManager.default.fileExists(atPath: path) else { continue }
             let fm = frontmatter(path)
-            out.append(.init(name: fm.name ?? d, desc: fm.desc ?? "스킬", argHint: fm.hint, source: source))
+            out.append(.init(name: fm.name ?? d, desc: fm.desc ?? L("스킬"), argHint: fm.hint, source: source))
         }
         return out
     }
@@ -260,11 +260,11 @@ struct SlashPaletteView: View {
             if let h = c.argHint { Text(h).font(.system(.caption, design: .monospaced)).foregroundStyle(selected ? Color.white.opacity(0.8) : Color.secondary) }
             Text(c.desc).font(.callout).foregroundStyle(selected ? Color.white : Color.primary.opacity(0.8)).lineLimit(1)
             Spacer(minLength: 4)
-            if c.terminalOnly { tag("터미널에서 열림", selected) }
+            if c.terminalOnly { tag(L("터미널에서 열림"), selected) }
             switch c.source {
-            case .user: tag("사용자", selected)
-            case .project: tag("프로젝트", selected)
-            case .skill: tag("스킬", selected)
+            case .user: tag(L("사용자"), selected)
+            case .project: tag(L("프로젝트"), selected)
+            case .skill: tag(L("스킬"), selected)
             case .builtin: EmptyView()
             }
         }

@@ -27,10 +27,10 @@ struct TerminalPanel: View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 Image(systemName: "terminal")
-                Text(title).font(.callout.bold()).lineLimit(1).help("tmux 패널 ID \(pane)")
+                Text(title).font(.callout.bold()).lineLimit(1).help(L("tmux 패널 ID %@", pane))
                 Spacer()
-                Text(focused ? "키 입력 중 — 바깥 클릭하면 해제" : "클릭하면 키 입력").font(.caption).foregroundStyle(focused ? Theme.accent : .secondary)
-                Button { onClose() } label: { Image(systemName: "xmark") }.buttonStyle(.icon).help("터미널 패널 닫기")
+                Text(focused ? L("키 입력 중 — 바깥 클릭하면 해제") : L("클릭하면 키 입력")).font(.caption).foregroundStyle(focused ? Theme.accent : .secondary)
+                Button { onClose() } label: { Image(systemName: "xmark") }.buttonStyle(.icon).help(L("터미널 패널 닫기"))
             }
             .padding(.horizontal, 10).padding(.vertical, 6).background(.bar)
             GeometryReader { geo in
@@ -47,9 +47,9 @@ struct TerminalPanel: View {
                 .onChange(of: geo.size) { _, s in lastSize = s; fit(s) }
             }
             HStack(spacing: 6) {
-                TextField("한글 등 텍스트 입력 후 Enter (명령 줄로 전송)", text: $line).textFieldStyle(.roundedBorder)
+                TextField(L("한글 등 텍스트 입력 후 Enter (명령 줄로 전송)"), text: $line).textFieldStyle(.roundedBorder)
                     .onSubmit { sendLine() }
-                Button("보내기") { sendLine() }.disabled(line.isEmpty)
+                Button(L("보내기")) { sendLine() }.disabled(line.isEmpty)
             }.padding(6).background(.bar)
         }
         .onAppear { start() }

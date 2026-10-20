@@ -1,0 +1,116 @@
+{
+  "%@분 전": {
+    "en": "%@ min ago",
+    "ja": "%@分前",
+    "zh": "%@ 分钟前",
+    "es": "hace %@ min"
+  },
+  "%@시간 전": {
+    "en": "%@ h ago",
+    "ja": "%@時間前",
+    "zh": "%@ 小时前",
+    "es": "hace %@ h"
+  },
+  "%@일 전": {
+    "en": "%@ d ago",
+    "ja": "%@日前",
+    "zh": "%@ 天前",
+    "es": "hace %@ d"
+  },
+  "RC 꺼짐": {
+    "en": "RC off",
+    "ja": "RC オフ",
+    "zh": "RC 已关闭",
+    "es": "RC desactivado"
+  },
+  "RC 전환 중…": {
+    "en": "Switching RC…",
+    "ja": "RC 切り替え中…",
+    "zh": "正在切换 RC…",
+    "es": "Cambiando RC…"
+  },
+  "RC 켜짐": {
+    "en": "RC on",
+    "ja": "RC オン",
+    "zh": "RC 已开启",
+    "es": "RC activado"
+  },
+  "Remote Control (휴대폰·claude.ai/code에서 보기)": {
+    "en": "Remote Control (view on phone or claude.ai/code)",
+    "ja": "Remote Control (スマホ・claude.ai/code で表示)",
+    "zh": "Remote Control (在手机或 claude.ai/code 上查看)",
+    "es": "Remote Control (ver en el móvil o en claude.ai/code)"
+  },
+  "Remote Control 꺼짐 — 데스크톱 앱 세션은 여기서 바꿀 수 없습니다": {
+    "en": "Remote Control off — desktop app sessions can't be changed here",
+    "ja": "Remote Control オフ — デスクトップアプリのセッションはここでは変更できません",
+    "zh": "Remote Control 已关闭 — 桌面应用会话无法在此更改",
+    "es": "Remote Control desactivado — las sesiones de la app de escritorio no se pueden cambiar aquí"
+  },
+  "Remote Control 꺼짐. 누르면 켭니다.": {
+    "en": "Remote Control off. Click to turn on.",
+    "ja": "Remote Control オフ。クリックでオンにします。",
+    "zh": "Remote Control 已关闭。点击开启。",
+    "es": "Remote Control desactivado. Haz clic para activarlo."
+  },
+  "Remote Control 켜짐 — 데스크톱 앱 세션은 여기서 바꿀 수 없습니다": {
+    "en": "Remote Control on — desktop app sessions can't be changed here",
+    "ja": "Remote Control オン — デスクトップアプリのセッションはここでは変更できません",
+    "zh": "Remote Control 已开启 — 桌面应用会话无法在此更改",
+    "es": "Remote Control activado — las sesiones de la app de escritorio no se pueden cambiar aquí"
+  },
+  "Remote Control 켜짐: 휴대폰·claude.ai/code에서 보입니다. 누르면 끕니다.": {
+    "en": "Remote Control on: visible on your phone and claude.ai/code. Click to turn off.",
+    "ja": "Remote Control オン: スマホ・claude.ai/code で表示されます。クリックでオフにします。",
+    "zh": "Remote Control 已开启: 可在手机和 claude.ai/code 上查看。点击关闭。",
+    "es": "Remote Control activado: visible en el móvil y en claude.ai/code. Haz clic para desactivarlo."
+  },
+  "끄기": {
+    "en": "Off",
+    "ja": "オフ",
+    "zh": "关闭",
+    "es": "Desactivar"
+  },
+  "대기": {
+    "en": "Idle",
+    "ja": "待機",
+    "zh": "空闲",
+    "es": "Inactivo"
+  },
+  "방금": {
+    "en": "just now",
+    "ja": "たった今",
+    "zh": "刚刚",
+    "es": "ahora mismo"
+  },
+  "알 수 없음": {
+    "en": "Unknown",
+    "ja": "不明",
+    "zh": "未知",
+    "es": "Desconocido"
+  },
+  "응답 필요": {
+    "en": "Needs input",
+    "ja": "応答が必要",
+    "zh": "需要回应",
+    "es": "Requiere respuesta"
+  },
+  "작업 중": {
+    "en": "Working",
+    "ja": "作業中",
+    "zh": "工作中",
+    "es": "Trabajando"
+  },
+  "종료됨": {
+    "en": "Ended",
+    "ja": "終了",
+    "zh": "已结束",
+    "es": "Finalizada"
+  },
+  "켜기": {
+    "en": "On",
+    "ja": "オン",
+    "zh": "开启",
+    "es": "Activar"
+  }
+}

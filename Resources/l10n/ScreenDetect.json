@@ -1,0 +1,38 @@
+{
+  "선택 이동": {
+    "en": "Move selection",
+    "es": "Mover selección",
+    "ja": "選択の移動",
+    "zh": "移动选择"
+  },
+  "선택 확정": {
+    "en": "Confirm selection",
+    "es": "Confirmar selección",
+    "ja": "選択の確定",
+    "zh": "确认选择"
+  },
+  "선택을 보냈지만 선택창이 아직 떠 있습니다. 터미널에서 확인해 주세요.": {
+    "en": "The choice was sent, but the choice window is still open. Please check the terminal.",
+    "es": "Se envió la selección, pero la ventana sigue abierta. Revisa la terminal.",
+    "ja": "選択を送信しましたが、選択ウィンドウがまだ表示されています。ターミナルで確認してください。",
+    "zh": "已发送选择，但选择窗口仍然显示。请在终端中确认。"
+  },
+  "없는 선택지입니다.": {
+    "en": "That option doesn't exist.",
+    "es": "Esa opción no existe.",
+    "ja": "存在しない選択肢です。",
+    "zh": "该选项不存在。"
+  },
+  "커서를 원하는 선택지로 옮기지 못해 취소했습니다. 터미널에서 직접 선택해 주세요.": {
+    "en": "Canceled: couldn't move the cursor to that option. Please choose it in the terminal.",
+    "es": "Cancelado: no se pudo mover el cursor a esa opción. Elígela directamente en la terminal.",
+    "ja": "カーソルを目的の選択肢に移動できなかったため取り消しました。ターミナルで直接選択してください。",
+    "zh": "无法将光标移到该选项，已取消。请在终端中直接选择。"
+  },
+  "화면의 선택창이 바뀌었거나 읽을 수 없어 보내지 않았습니다.": {
+    "en": "Not sent: the choice window on screen changed or couldn't be read.",
+    "es": "No se envió: la ventana de selección cambió o no se pudo leer.",
+    "ja": "画面の選択ウィンドウが変わったか読み取れなかったため、送信しませんでした。",
+    "zh": "屏幕上的选择窗口已变化或无法读取，未发送。"
+  }
+}

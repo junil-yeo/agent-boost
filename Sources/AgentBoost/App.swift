@@ -27,9 +27,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if stops == nil {
             Self.showBoard()
             let a = NSAlert()
-            a.messageText = "Agent Boost를 종료합니다"
-            a.informativeText = "세션 \(live.count)개가 실행 중입니다. 세션은 그대로 두고 앱만 끌까요, 세션까지 모두 끌까요(/exit)? 세션까지 끄면 다음에 앱을 켤 때 다시 시작합니다."
-            a.addButton(withTitle: "앱만 종료"); a.addButton(withTitle: "세션까지 종료"); a.addButton(withTitle: "취소")
+            a.messageText = L("Agent Boost를 종료합니다")
+            a.informativeText = L("세션 %@개가 실행 중입니다. 세션은 그대로 두고 앱만 끌까요, 세션까지 모두 끌까요(/exit)? 세션까지 끄면 다음에 앱을 켤 때 다시 시작합니다.", String(live.count))
+            a.addButton(withTitle: L("앱만 종료")); a.addButton(withTitle: L("세션까지 종료")); a.addButton(withTitle: L("취소"))
             switch a.runModal() {
             case .alertFirstButtonReturn: stops = false
             case .alertSecondButtonReturn: stops = true
@@ -42,9 +42,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if !waiting.isEmpty {
                 Self.showBoard()
                 let a = NSAlert()
-                a.messageText = "응답을 기다리는 세션 \(waiting.count)개가 있습니다"
-                a.informativeText = "앱을 끄면 이 질문들의 알림을 받을 수 없습니다. 세션은 tmux에서 계속 답을 기다립니다.\n\n" + Self.describe(waiting)
-                a.addButton(withTitle: "그래도 앱만 종료"); a.addButton(withTitle: "취소 (답하러 가기)")
+                a.messageText = L("응답을 기다리는 세션 %@개가 있습니다", String(waiting.count))
+                a.informativeText = L("앱을 끄면 이 질문들의 알림을 받을 수 없습니다. 세션은 tmux에서 계속 답을 기다립니다.") + "\n\n" + Self.describe(waiting)
+                a.addButton(withTitle: L("그래도 앱만 종료")); a.addButton(withTitle: L("취소 (답하러 가기)"))
                 if a.runModal() != .alertFirstButtonReturn { return .terminateCancel }
             }
             return .terminateNow
@@ -55,13 +55,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !busy.isEmpty || !waiting.isEmpty || !overlays.isEmpty {
             Self.showBoard()
             let alert = NSAlert()
-            alert.messageText = "세션 \(live.count)개를 모두 끄고 종료할까요?"
+            alert.messageText = L("세션 %@개를 모두 끄고 종료할까요?", String(live.count))
             var lines: [String] = []
-            if !waiting.isEmpty { lines.append("응답을 기다리는 세션 \(waiting.count)개 — 종료하면 그 질문은 취소(Esc)됩니다:\n" + Self.describe(waiting)) }
-            if !busy.isEmpty { lines.append("작업 중인 세션 \(busy.count)개 — 작업을 중단합니다: " + busy.map(\.name).joined(separator: ", ")) }
-            if !overlays.isEmpty { lines.append("CLI가 세션 목록·선택 화면인 세션 \(overlays.count)개 — Esc로 대화로 돌아간 뒤 끕니다: " + overlays.map(\.name).joined(separator: ", ")) }
-            alert.informativeText = lines.joined(separator: "\n\n") + "\n\n다음에 앱을 켜면 다시 시작합니다."
-            alert.addButton(withTitle: waiting.isEmpty ? "중단하고 종료" : "질문 취소하고 종료"); alert.addButton(withTitle: "취소")
+            if !waiting.isEmpty { lines.append(L("응답을 기다리는 세션 %@개 — 종료하면 그 질문은 취소(Esc)됩니다:", String(waiting.count)) + "\n" + Self.describe(waiting)) }
+            if !busy.isEmpty { lines.append(L("작업 중인 세션 %@개 — 작업을 중단합니다: %@", String(busy.count), busy.map(\.name).joined(separator: ", "))) }
+            if !overlays.isEmpty { lines.append(L("CLI가 세션 목록·선택 화면인 세션 %@개 — Esc로 대화로 돌아간 뒤 끕니다: %@", String(overlays.count), overlays.map(\.name).joined(separator: ", "))) }
+            alert.informativeText = lines.joined(separator: "\n\n") + "\n\n" + L("다음에 앱을 켜면 다시 시작합니다.")
+            alert.addButton(withTitle: waiting.isEmpty ? L("중단하고 종료") : L("질문 취소하고 종료")); alert.addButton(withTitle: L("취소"))
             if alert.runModal() != .alertFirstButtonReturn { return .terminateCancel }
         }
         Task { @MainActor in
@@ -69,9 +69,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if !problems.isEmpty {                                 // the last chance to say it: the app is about to be gone
                 Self.showBoard()
                 let a = NSAlert()
-                a.messageText = "일부 세션이 정상 종료되지 않았습니다"
+                a.messageText = L("일부 세션이 정상 종료되지 않았습니다")
                 a.informativeText = problems.joined(separator: "\n")
-                a.addButton(withTitle: "확인")
+                a.addButton(withTitle: L("확인"))
                 a.runModal()
             }
             NSApp.reply(toApplicationShouldTerminate: true)
@@ -175,6 +175,7 @@ struct AgentBoostApp: App {
     @AppStorage("ui.cliSuggest") private var cliSuggest = true
     @AppStorage("ui.termChat") private var termChat = true
     @AppStorage("ui.appearance") private var appearance = AppearanceMode.dark.rawValue
+    @AppStorage(AppLang.key) private var language = ""
     init() {
         Self.migrateOldNames()
         let args = CommandLine.arguments
@@ -183,29 +184,40 @@ struct AgentBoostApp: App {
     }
     var body: some Scene {
         WindowGroup("Agent Boost", id: "main") {
-            RootView().environmentObject(store).frame(minWidth: 900, minHeight: 600)
-                .background(Theme.background.ignoresSafeArea())
-                .tint(Theme.accent).accentColor(Theme.accent)
+            Group {
+                if language.isEmpty {
+                    // first launch: pick a language, then the app starts with its power-on test and rocket loading
+                    LanguagePickerView { l in
+                        L10n.set(l); language = l.rawValue
+                        store.manualRefresh()
+                    }
+                } else {
+                    RootView().environmentObject(store).id(language)     // a new language redraws every text
+                }
+            }
+            .frame(minWidth: 900, minHeight: 600)
+            .background(Theme.background.ignoresSafeArea())
+            .tint(Theme.accent).accentColor(Theme.accent)
         }.windowStyle(.hiddenTitleBar)
         MenuBarExtra {
-            MenuBarContent().environmentObject(store)
+            MenuBarContent().environmentObject(store).id(language)
         } label: {
             MenuBarLabel().environmentObject(store)
         }
         .commands {
             CommandGroup(after: .toolbar) {
-                Button("대화 글자 크게") { chatFont = min(24, chatFont + 1); termFont = min(20, termFont + 1) }.keyboardShortcut("=", modifiers: .command)
-                Button("대화 글자 작게") { chatFont = max(11, chatFont - 1); termFont = max(9, termFont - 1) }.keyboardShortcut("-", modifiers: .command)
-                Button("대화 글자 기본") { chatFont = 15; termFont = 13 }.keyboardShortcut("0", modifiers: .command)
+                Button(L("대화 글자 크게")) { chatFont = min(24, chatFont + 1); termFont = min(20, termFont + 1) }.keyboardShortcut("=", modifiers: .command)
+                Button(L("대화 글자 작게")) { chatFont = max(11, chatFont - 1); termFont = max(9, termFont - 1) }.keyboardShortcut("-", modifiers: .command)
+                Button(L("대화 글자 기본")) { chatFont = 15; termFont = 13 }.keyboardShortcut("0", modifiers: .command)
                 Divider()
-                Picker("화면 모드", selection: $appearance) {
+                Picker(L("화면 모드"), selection: $appearance) {
                     ForEach(AppearanceMode.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
                 }
-                Toggle("알림 표시", isOn: $showNotices)
-                Toggle("터미널식 대화 표시 (가벼움)", isOn: $termChat)
-                Toggle("CLI 다음 입력 제안 켜기 (새로 시작하는 세션부터)", isOn: $cliSuggest)
+                Toggle(L("알림 표시"), isOn: $showNotices)
+                Toggle(L("터미널식 대화 표시 (가벼움)"), isOn: $termChat)
+                Toggle(L("CLI 다음 입력 제안 켜기 (새로 시작하는 세션부터)"), isOn: $cliSuggest)
                 Divider()
-                Button("Claude Code 업데이트") { BoardStore.shared?.updateClaude() }
+                Button(L("Claude Code 업데이트")) { BoardStore.shared?.updateClaude() }
             }
         }
     }
@@ -223,7 +235,7 @@ struct RootView: View {
     }
     @ViewBuilder private func tabContent(_ k: String, active: Bool) -> some View {
         if k == "__archive" { ArchiveView().areaBox() }
-        else if k == "__loose" { TeamDetailView(team: Team(name: "개별 세션", createdAt: nil, leadSessionId: nil, members: store.loose), isLoose: true, active: active) }
+        else if k == "__loose" { TeamDetailView(team: Team(name: L("개별 세션"), createdAt: nil, leadSessionId: nil, members: store.loose), isLoose: true, active: active) }
         else if let t = store.teams.first(where: { $0.name == k }) { TeamDetailView(team: t, active: active) }
         else { OrgChartView() }
     }
@@ -247,9 +259,9 @@ struct RootView: View {
             VStack(spacing: 0) {
             UsageBanner(compact: geo.size.height < 700)
             HStack(spacing: 8) {
-                TabButton(title: "조직도", icon: "rectangle.3.group", active: tab == "home") { tab = "home" }
+                TabButton(title: L("조직도"), icon: "rectangle.3.group", active: tab == "home") { tab = "home" }
                 if !store.loose.isEmpty {
-                    TabButton(title: "개별 세션", icon: "person", active: tab == "__loose", count: store.loose.filter { $0.state != .ended }.count) {
+                    TabButton(title: L("개별 세션"), icon: "person", active: tab == "__loose", count: store.loose.filter { $0.state != .ended }.count) {
                         tab = "__loose"
                     }
                 }
@@ -259,23 +271,23 @@ struct RootView: View {
                 }
                 Spacer(minLength: 12)
                 HStack(spacing: 6) {
-                Button { store.updateClaude() } label: { Label("업데이트", systemImage: "arrow.down.circle") }
-                    .buttonStyle(QuietButtonStyle()).help("claude update를 실행합니다. 실행 중인 세션은 다시 시작해야 새 버전을 씁니다.")
-                Button { AppDelegate.goBackground() } label: { Label("백그라운드", systemImage: "moon.zzz") }
-                    .buttonStyle(QuietButtonStyle()).help("창을 숨기고 백그라운드에서 계속 실행합니다. 메뉴 막대 아이콘이나 앱 아이콘으로 다시 엽니다.")
+                Button { store.updateClaude() } label: { Label(L("업데이트"), systemImage: "arrow.down.circle") }
+                    .buttonStyle(QuietButtonStyle()).help(L("claude update를 실행합니다. 실행 중인 세션은 다시 시작해야 새 버전을 씁니다."))
+                Button { AppDelegate.goBackground() } label: { Label(L("백그라운드"), systemImage: "moon.zzz") }
+                    .buttonStyle(QuietButtonStyle()).help(L("창을 숨기고 백그라운드에서 계속 실행합니다. 메뉴 막대 아이콘이나 앱 아이콘으로 다시 엽니다."))
                 // the count sits beside the label, as on the other tabs (a badge over the corner covered the text)
-                TabButton(title: "보관함", icon: "archivebox", active: tab == "__archive", count: store.archive.count, quiet: true) { tab = "__archive" }
+                TabButton(title: L("보관함"), icon: "archivebox", active: tab == "__archive", count: store.archive.count, quiet: true) { tab = "__archive" }
                 if !store.selection.isEmpty { SelectionBar() }
-                Button { store.createDiskManager() } label: { Label("디스크 관리자 생성", systemImage: "internaldrive") }
+                Button { store.createDiskManager() } label: { Label(L("디스크 관리자 생성"), systemImage: "internaldrive") }
                     .buttonStyle(QuietButtonStyle())
-                    .help("홈 폴더에 'Memory Manager' 세션(Sonnet 5.5 · low)을 만들고 디스크 분석·정리 제안을 바로 지시합니다. 실제 정리는 승인 후에만 합니다.")
+                    .help(L("홈 폴더에 'Memory Manager' 세션(Sonnet 5.5 · low)을 만들고 디스크 분석·정리 제안을 바로 지시합니다. 실제 정리는 승인 후에만 합니다."))
                 Button { appearance = isDark ? AppearanceMode.light.rawValue : AppearanceMode.dark.rawValue } label: {
                     Image(systemName: isDark ? "sun.max" : "moon").frame(width: 16)
                 }
-                .buttonStyle(QuietButtonStyle()).help(isDark ? "화이트 모드로 바꿉니다" : "다크 모드로 바꿉니다")
-                Button { searching = true } label: { Label("대화 검색", systemImage: "magnifyingglass") }
-                    .keyboardShortcut("f", modifiers: [.command, .shift]).buttonStyle(QuietButtonStyle()).help("모든 세션의 지난 대화에서 찾습니다 (⌘⇧F)")
-                Button { creating = true } label: { Label("새 세션", systemImage: "plus") }.keyboardShortcut("n").buttonStyle(TabFaceStyle(strong: true))
+                .buttonStyle(QuietButtonStyle()).help(isDark ? L("화이트 모드로 바꿉니다") : L("다크 모드로 바꿉니다"))
+                Button { searching = true } label: { Label(L("대화 검색"), systemImage: "magnifyingglass") }
+                    .keyboardShortcut("f", modifiers: [.command, .shift]).buttonStyle(QuietButtonStyle()).help(L("모든 세션의 지난 대화에서 찾습니다 (⌘⇧F)"))
+                Button { creating = true } label: { Label(L("새 세션"), systemImage: "plus") }.keyboardShortcut("n").buttonStyle(TabFaceStyle(strong: true))
                 }
             }
             .padding(.horizontal, 8).padding(.vertical, 6)
@@ -328,7 +340,7 @@ struct TabButton: View {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                 Text(title).lineLimit(1)
-                if attention { Image(systemName: "hand.raised.fill").font(.caption).foregroundStyle(Theme.attention).help("응답을 기다리는 세션이 있습니다") }
+                if attention { Image(systemName: "hand.raised.fill").font(.caption).foregroundStyle(Theme.attention).help(L("응답을 기다리는 세션이 있습니다")) }
                 if count > 0 {
                     CountBadge(count: count, tint: active ? Theme.accent : Theme.surface2, fg: active ? .white : .primary)
                 }
@@ -351,7 +363,7 @@ struct SpawnCheckRow: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 10) {
                 Image(systemName: "person.badge.plus")
-                Text("팀원 생성 확인").font(.callout.bold())
+                Text(L("팀원 생성 확인")).font(.callout.bold())
                 ForEach(check.specs) { s in
                     switch check.results[s.name] ?? .waiting {
                     case .waiting: Label(s.name, systemImage: "hourglass").foregroundStyle(.secondary)
@@ -361,15 +373,15 @@ struct SpawnCheckRow: View {
                     }
                 }
                 Spacer()
-                if !check.done { TimelineView(.periodic(from: .now, by: 1)) { ctx in Text("확인 중 \(Int(ctx.date.timeIntervalSince(check.started)))초 경과 · 최대 2분").font(.caption).foregroundStyle(.secondary) } }
-                else { Text("확인 끝").font(.caption).foregroundStyle(.secondary) }
-                Button { store.spawnChecks.removeAll { $0.id == check.id } } label: { Image(systemName: "xmark") }.buttonStyle(.icon).help("닫기")
+                if !check.done { TimelineView(.periodic(from: .now, by: 1)) { ctx in Text(L("확인 중 %@초 경과 · 최대 2분", String(Int(ctx.date.timeIntervalSince(check.started))))).font(.caption).foregroundStyle(.secondary) } }
+                else { Text(L("확인 끝")).font(.caption).foregroundStyle(.secondary) }
+                Button { store.spawnChecks.removeAll { $0.id == check.id } } label: { Image(systemName: "xmark") }.buttonStyle(.icon).help(L("닫기"))
             }.font(.callout)
-            .help("팀장에게 팀원 생성을 지시한 뒤, 실제로 팀원 프로세스가 지정한 모델·effort로 떴는지 앱이 확인합니다. 팀장이 실패를 보고하면 즉시 실패로 표시합니다.")
+            .help(L("팀장에게 팀원 생성을 지시한 뒤, 실제로 팀원 프로세스가 지정한 모델·effort로 떴는지 앱이 확인합니다. 팀장이 실패를 보고하면 즉시 실패로 표시합니다."))
             if !check.reason.isEmpty {
-                Text("팀장 보고: " + check.reason).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                Text(L("팀장 보고: %@", check.reason)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
             } else if !check.leadScreen.isEmpty {
-                Text("팀장 화면:\n" + check.leadScreen).font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
+                Text(L("팀장 화면:\n%@", check.leadScreen)).font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 6).frame(maxWidth: .infinity, alignment: .leading).areaBox()
@@ -387,23 +399,23 @@ struct SelectionBar: View {
         let quit = sel.filter { store.canQuit($0) }.count
         let busy = sel.filter { store.canQuit($0) && $0.state == .busy }.count
         HStack(spacing: 6) {
-            Text("\(sel.count)개 선택").font(.callout.bold()).foregroundStyle(Theme.accent)
-            Button { store.wakeSelected() } label: { Label("깨우기 \(wake)", systemImage: "power") }
-                .buttonStyle(.raisedCompact).disabled(wake == 0).help("종료된 세션을 마지막 모델·effort로 다시 시작")
-            Button { if busy > 0 { askQuit = true } else { store.quitSelected(mode: .now) } } label: { Label("끄기 \(quit)", systemImage: "power") }
-                .buttonStyle(.raisedCompact).disabled(quit == 0).help("실행 중인 세션에 /exit")
-            Button { confirmDelete = true } label: { Label("보관 \(sel.count)", systemImage: "archivebox") }
-                .buttonStyle(.raisedCompact).help("종료 후 보관함으로 (복원 가능)")
-            Button { store.selection.removeAll() } label: { Image(systemName: "xmark.circle") }.buttonStyle(.icon).help("선택 해제")
+            Text(L("%@개 선택", String(sel.count))).font(.callout.bold()).foregroundStyle(Theme.accent)
+            Button { store.wakeSelected() } label: { Label(L("깨우기 %@", String(wake)), systemImage: "power") }
+                .buttonStyle(.raisedCompact).disabled(wake == 0).help(L("종료된 세션을 마지막 모델·effort로 다시 시작"))
+            Button { if busy > 0 { askQuit = true } else { store.quitSelected(mode: .now) } } label: { Label(L("끄기 %@", String(quit)), systemImage: "power") }
+                .buttonStyle(.raisedCompact).disabled(quit == 0).help(L("실행 중인 세션에 /exit"))
+            Button { confirmDelete = true } label: { Label(L("보관 %@", String(sel.count)), systemImage: "archivebox") }
+                .buttonStyle(.raisedCompact).help(L("종료 후 보관함으로 (복원 가능)"))
+            Button { store.selection.removeAll() } label: { Image(systemName: "xmark.circle") }.buttonStyle(.icon).help(L("선택 해제"))
         }
-        .confirmationDialog("선택한 \(sel.count)개 세션을 보관할까요?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("보관") { store.archiveSelected() }
-            Button("취소", role: .cancel) {}
-        } message: { Text(sel.map(\.name).joined(separator: ", ") + "\n실행 중인 세션은 먼저 종료합니다. 보관함에서 복원하거나 영구 삭제할 수 있습니다.") }
-        .confirmationDialog("작업 중인 세션이 \(busy)개 있습니다", isPresented: $askQuit, titleVisibility: .visible) {
-            Button("지금 모두 종료 (작업 중단)", role: .destructive) { store.quitSelected(mode: .now) }
-            Button("작업 끝나면 종료") { store.quitSelected(mode: .whenIdle) }
-            Button("취소", role: .cancel) {}
+        .confirmationDialog(L("선택한 %@개 세션을 보관할까요?", String(sel.count)), isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button(L("보관")) { store.archiveSelected() }
+            Button(L("취소"), role: .cancel) {}
+        } message: { Text(sel.map(\.name).joined(separator: ", ") + "\n" + L("실행 중인 세션은 먼저 종료합니다. 보관함에서 복원하거나 영구 삭제할 수 있습니다.")) }
+        .confirmationDialog(L("작업 중인 세션이 %@개 있습니다", String(busy)), isPresented: $askQuit, titleVisibility: .visible) {
+            Button(L("지금 모두 종료 (작업 중단)"), role: .destructive) { store.quitSelected(mode: .now) }
+            Button(L("작업 끝나면 종료")) { store.quitSelected(mode: .whenIdle) }
+            Button(L("취소"), role: .cancel) {}
         }
     }
 }
@@ -416,22 +428,22 @@ struct ArchiveView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                Text("보관함").font(.title2.bold())
-                Text("\(items.count)개").foregroundStyle(.secondary)
+                Text(L("보관함")).font(.title2.bold())
+                Text(L("%@개", String(items.count))).foregroundStyle(.secondary)
                 Spacer()
                 if !items.isEmpty {
-                    Button(store.archiveSelection.count == items.count ? "선택 해제" : "전체 선택") {
+                    Button(store.archiveSelection.count == items.count ? L("선택 해제") : L("전체 선택")) {
                         store.archiveSelection = store.archiveSelection.count == items.count ? [] : Set(items.map(\.id))
                     }
-                    Button { store.restore(store.archiveSelection) } label: { Label("복원 \(store.archiveSelection.count)", systemImage: "arrow.uturn.backward") }
+                    Button { store.restore(store.archiveSelection) } label: { Label(L("복원 %@", String(store.archiveSelection.count)), systemImage: "arrow.uturn.backward") }
                         .buttonStyle(.raised).disabled(store.archiveSelection.isEmpty)
-                    Button(role: .destructive) { confirmPurge = store.archiveSelection } label: { Label("영구 삭제 \(store.archiveSelection.count)", systemImage: "trash") }
+                    Button(role: .destructive) { confirmPurge = store.archiveSelection } label: { Label(L("영구 삭제 %@", String(store.archiveSelection.count)), systemImage: "trash") }
                         .buttonStyle(.raised).disabled(store.archiveSelection.isEmpty)
                 }
             }.padding(16)
             Divider().padding(.horizontal, 16)
             if items.isEmpty {
-                ContentUnavailableView("보관함이 비어 있습니다", systemImage: "archivebox", description: Text("보드에서 '보관'한 세션이 여기에 모입니다."))
+                ContentUnavailableView(L("보관함이 비어 있습니다"), systemImage: "archivebox", description: Text(L("보드에서 '보관'한 세션이 여기에 모입니다.")))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
@@ -443,28 +455,28 @@ struct ArchiveView: View {
                             VStack(alignment: .leading, spacing: 3) {
                                 HStack(spacing: 6) {
                                     Text(it.name).font(.headline)
-                                    if it.isLead { Chip(text: "팀장", tint: Theme.accent) }
+                                    if it.isLead { Chip(text: L("팀장"), tint: Theme.accent) }
                                     if let t = it.teamName, !it.isLead { Text(t).font(.caption).foregroundStyle(.tertiary) }
                                 }
                                 HStack(spacing: 8) {
                                     if let c = it.cwd { Label((c as NSString).lastPathComponent, systemImage: "folder").font(.caption).foregroundStyle(.secondary) }
-                                    Text("출력 \(Fmt.tokens(it.tokensOut)) · 합 \(Fmt.tokens(it.tokensTotal))").font(.caption).foregroundStyle(.secondary)
-                                    Text("보관 \(Fmt.ago(it.archivedAt))").font(.caption).foregroundStyle(.tertiary)
-                                    if it.transcriptPath == nil { Text("기록 없음").font(.caption).foregroundStyle(.orange) }
+                                    Text(L("출력 %@ · 합 %@", Fmt.tokens(it.tokensOut), Fmt.tokens(it.tokensTotal))).font(.caption).foregroundStyle(.secondary)
+                                    Text(L("%@ 보관", Fmt.ago(it.archivedAt))).font(.caption).foregroundStyle(.tertiary)
+                                    if it.transcriptPath == nil { Text(L("기록 없음")).font(.caption).foregroundStyle(.orange) }
                                 }
                             }
                             Spacer()
-                            Button("복원") { store.restore([it.id]) }.buttonStyle(.raisedCompact)
-                            Button("영구 삭제", role: .destructive) { confirmPurge = [it.id] }.buttonStyle(.raisedCompact)
+                            Button(L("복원")) { store.restore([it.id]) }.buttonStyle(.raisedCompact)
+                            Button(L("영구 삭제"), role: .destructive) { confirmPurge = [it.id] }.buttonStyle(.raisedCompact)
                         }.padding(.vertical, 4)
                     }
                 }.scrollContentBackground(.hidden)
             }
         }
-        .confirmationDialog("영구 삭제할까요?", isPresented: Binding(get: { confirmPurge != nil }, set: { if !$0 { confirmPurge = nil } }), titleVisibility: .visible) {
-            Button("영구 삭제 \(confirmPurge?.count ?? 0)개", role: .destructive) { if let ids = confirmPurge { store.purge(ids) }; confirmPurge = nil }
-            Button("취소", role: .cancel) { confirmPurge = nil }
-        } message: { Text("대화 기록과 관련 폴더를 디스크에서 지웁니다. 되돌릴 수 없습니다.") }
+        .confirmationDialog(L("영구 삭제할까요?"), isPresented: Binding(get: { confirmPurge != nil }, set: { if !$0 { confirmPurge = nil } }), titleVisibility: .visible) {
+            Button(L("영구 삭제 %@개", String(confirmPurge?.count ?? 0)), role: .destructive) { if let ids = confirmPurge { store.purge(ids) }; confirmPurge = nil }
+            Button(L("취소"), role: .cancel) { confirmPurge = nil }
+        } message: { Text(L("대화 기록과 관련 폴더를 디스크에서 지웁니다. 되돌릴 수 없습니다.")) }
     }
 }
 
@@ -475,14 +487,14 @@ struct MenuBarContent: View {
         let all = store.teams.flatMap(\.members) + store.loose
         let live = all.filter { $0.state != .ended }.count
         let busy = all.filter { $0.state == .busy }.count
-        Text("실행 중 \(live) · 작업 중 \(busy)")
-        if let s = store.meters.first { Text("\(s.label.replacingOccurrences(of: "Current session", with: "현재 세션")) \(s.percent)%") }
+        Text(L("실행 중 %@ · 작업 중 %@", String(live), String(busy)))
+        if let s = store.meters.first { Text("\(s.label.replacingOccurrences(of: "Current session", with: L("현재 세션"))) \(s.percent)%") }
         Divider()
-        Button("보드 열기") { AppDelegate.showBoard() }.keyboardShortcut("o")
-        Button("백그라운드로") { AppDelegate.goBackground() }
+        Button(L("보드 열기")) { AppDelegate.showBoard() }.keyboardShortcut("o")
+        Button(L("백그라운드로")) { AppDelegate.goBackground() }
         Divider()
-        Button("앱만 종료 (세션 유지)") { AppDelegate.quit(stopSessions: false) }
-        Button("앱 + 세션 모두 종료") { AppDelegate.quit(stopSessions: true) }
+        Button(L("앱만 종료 (세션 유지)")) { AppDelegate.quit(stopSessions: false) }
+        Button(L("앱 + 세션 모두 종료")) { AppDelegate.quit(stopSessions: true) }
     }
 }
 
@@ -531,7 +543,7 @@ struct AlertStrip: View {
             }
             .frame(height: store.noticeLog.count > 1 ? 44 : 22)
             .animation(.easeOut(duration: 0.2), value: store.noticeLog.count > 1)
-            Button("지우기") { store.noticeLog.removeAll(); store.notice = nil }.buttonStyle(.raisedCompact).help("알림 기록 지우기")
+            Button(L("지우기")) { store.noticeLog.removeAll(); store.notice = nil }.buttonStyle(.raisedCompact).help(L("알림 기록 지우기"))
         }
         .padding(.horizontal, 14).padding(.vertical, 6)
         .areaBox()
@@ -552,12 +564,12 @@ struct CloseInterceptor: NSViewRepresentable {
         @objc func askClose() {
             let live = BoardStore.shared?.controllableLive.count ?? 0
             let a = NSAlert()
-            a.messageText = "창을 닫을까요?"
-            a.informativeText = "백그라운드: 창만 숨기고 앱·세션은 계속 돕니다 (메뉴 막대 아이콘으로 다시 열기).\n앱만 종료: 세션 \(live)개는 그대로 두고 앱만 끕니다.\n세션까지 종료: 세션 \(live)개를 모두 끄고(/exit) 앱을 끕니다. 다음 실행 때 다시 시작합니다."
-            a.addButton(withTitle: "백그라운드로")
-            a.addButton(withTitle: "앱만 종료")
-            a.addButton(withTitle: "세션까지 종료")
-            a.addButton(withTitle: "취소")
+            a.messageText = L("창을 닫을까요?")
+            a.informativeText = L("백그라운드: 창만 숨기고 앱·세션은 계속 돕니다 (메뉴 막대 아이콘으로 다시 열기).\n앱만 종료: 세션 %@개는 그대로 두고 앱만 끕니다.\n세션까지 종료: 세션 %@개를 모두 끄고(/exit) 앱을 끕니다. 다음 실행 때 다시 시작합니다.", String(live), String(live))
+            a.addButton(withTitle: L("백그라운드로"))
+            a.addButton(withTitle: L("앱만 종료"))
+            a.addButton(withTitle: L("세션까지 종료"))
+            a.addButton(withTitle: L("취소"))
             let go: (NSApplication.ModalResponse) -> Void = { r in
                 switch r {
                 case .alertFirstButtonReturn: AppDelegate.goBackground()

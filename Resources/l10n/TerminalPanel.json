@@ -1,0 +1,38 @@
+{
+  "tmux 패널 ID %@": {
+    "en": "tmux pane ID %@",
+    "es": "ID del panel de tmux %@",
+    "ja": "tmux ペイン ID %@",
+    "zh": "tmux 窗格 ID %@"
+  },
+  "보내기": {
+    "en": "Send",
+    "es": "Enviar",
+    "ja": "送信",
+    "zh": "发送"
+  },
+  "클릭하면 키 입력": {
+    "en": "Click to type",
+    "es": "Haz clic para escribir",
+    "ja": "クリックでキー入力",
+    "zh": "点击以输入"
+  },
+  "키 입력 중 — 바깥 클릭하면 해제": {
+    "en": "Typing — click outside to release",
+    "es": "Escribiendo: haz clic fuera para soltar",
+    "ja": "キー入力中 — 外側をクリックで解除",
+    "zh": "正在输入 — 点击外部以释放"
+  },
+  "터미널 패널 닫기": {
+    "en": "Close terminal panel",
+    "es": "Cerrar panel de terminal",
+    "ja": "ターミナルパネルを閉じる",
+    "zh": "关闭终端面板"
+  },
+  "한글 등 텍스트 입력 후 Enter (명령 줄로 전송)": {
+    "en": "Type text (e.g. non-Latin input) and press Enter (sent to the command line)",
+    "es": "Escribe texto y pulsa Enter (se envía a la línea de comandos)",
+    "ja": "日本語などのテキストを入力して Enter(コマンドラインへ送信)",
+    "zh": "输入中文等文本后按 Enter(发送到命令行)"
+  }
+}

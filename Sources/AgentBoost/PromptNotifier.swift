@@ -25,8 +25,8 @@ import UserNotifications
         for a in waiting where !notified.contains(a.sessionId) {
             notified.insert(a.sessionId)
             let c = UNMutableNotificationContent()
-            c.title = "\(a.name): 응답 필요"
-            c.body = a.prompt?.title ?? "에이전트가 답을 기다리고 있습니다"
+            c.title = L("%@: 응답 필요", a.name)
+            c.body = a.prompt?.title ?? L("에이전트가 답을 기다리고 있습니다")
             c.sound = .default
             c.userInfo = ["sessionId": a.sessionId]
             center.add(UNNotificationRequest(identifier: "prompt-" + a.sessionId, content: c, trigger: nil))

@@ -144,16 +144,16 @@ enum Suggest {
             let asks = end.hasSuffix("?") || end.hasSuffix("？") || ["할까요", "드릴까요", "할까", "원하시면", "원하면", "괜찮을까요", "진행할까요", "Should I", "Would you like", "Do you want", "Shall I", "Want me to", "Let me know"].contains { end.contains($0) }
             let numbered = lines.filter { $0.range(of: #"^\d+[.)]\s"#, options: .regularExpression) != nil }.count >= 2
             if asks {
-                if numbered { return "1번으로 진행해 주세요" }
+                if numbered { return L("1번으로 진행해 주세요") }
                 let low = end.lowercased()
-                if low.contains("커밋") || low.contains("commit") { return "네, 커밋해 주세요" }
-                if low.contains("테스트") || low.contains("test") { return "네, 테스트까지 돌려 주세요" }
-                if low.contains("삭제") || low.contains("지울까") || low.contains("delete") || low.contains("remove") { return "네, 지워 주세요" }
-                return "네, 그렇게 진행해 주세요"
+                if low.contains("커밋") || low.contains("commit") { return L("네, 커밋해 주세요") }
+                if low.contains("테스트") || low.contains("test") { return L("네, 테스트까지 돌려 주세요") }
+                if low.contains("삭제") || low.contains("지울까") || low.contains("delete") || low.contains("remove") { return L("네, 지워 주세요") }
+                return L("네, 그렇게 진행해 주세요")
             }
-            if lines.count >= 8, tail.contains(where: { $0.role == .tool && $0.toolName != "결과" }) { return "변경한 내용을 한 번 더 점검하고 문제 없으면 마무리해 주세요" }
+            if lines.count >= 8, tail.contains(where: { $0.role == .tool && $0.toolName != "결과" }) { return L("변경한 내용을 한 번 더 점검하고 문제 없으면 마무리해 주세요") }
         }
-        if let t = tail.last(where: { $0.role == .tool }), t.isError, tail.last?.role == .tool { return "오류 원인을 찾아 고쳐 주세요" }
+        if let t = tail.last(where: { $0.role == .tool }), t.isError, tail.last?.role == .tool { return L("오류 원인을 찾아 고쳐 주세요") }
         return nil
     }
 }

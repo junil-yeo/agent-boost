@@ -1,0 +1,68 @@
+{
+  "모든 세션의 대화에서 찾기 (여러 단어는 모두 포함)": {
+    "en": "Search every session's conversation (all words must match)",
+    "ja": "すべてのセッションの会話を検索(すべての語を含む)",
+    "zh": "在所有会话的对话中搜索(须包含所有词)",
+    "es": "Buscar en las conversaciones de todas las sesiones (deben aparecer todas las palabras)"
+  },
+  "닫기": {
+    "en": "Close",
+    "ja": "閉じる",
+    "zh": "关闭",
+    "es": "Cerrar"
+  },
+  "대화 기록을 읽는 중…": {
+    "en": "Reading conversation history…",
+    "ja": "会話履歴を読み込み中…",
+    "zh": "正在读取对话记录…",
+    "es": "Leyendo el historial de conversaciones…"
+  },
+  "세션 %@개의 대화를 검색합니다": {
+    "en": "Searches conversations in %@ sessions",
+    "ja": "%@ 件のセッションの会話を検索します",
+    "zh": "将搜索 %@ 个会话的对话",
+    "es": "Busca en las conversaciones de %@ sesiones"
+  },
+  "%@개 찾음 · 세션 %@개 검색": {
+    "en": "%@ found · %@ sessions searched",
+    "ja": "%@ 件見つかりました · %@ セッションを検索",
+    "zh": "找到 %@ 条 · 已搜索 %@ 个会话",
+    "es": "%@ encontrados · %@ sesiones buscadas"
+  },
+  "나": {
+    "en": "Me",
+    "ja": "自分",
+    "zh": "我",
+    "es": "Yo"
+  },
+  "에이전트": {
+    "en": "Agent",
+    "ja": "エージェント",
+    "zh": "代理",
+    "es": "Agente"
+  },
+  "메시지 복사": {
+    "en": "Copy message",
+    "ja": "メッセージをコピー",
+    "zh": "复制消息",
+    "es": "Copiar mensaje"
+  },
+  "세션으로 이동": {
+    "en": "Go to session",
+    "ja": "セッションへ移動",
+    "zh": "转到会话",
+    "es": "Ir a la sesión"
+  },
+  "이 세션의 대화창을 엽니다": {
+    "en": "Opens this session's chat",
+    "ja": "このセッションの会話を開きます",
+    "zh": "打开此会话的对话",
+    "es": "Abre el chat de esta sesión"
+  },
+  "왼쪽에서 결과를 고르세요": {
+    "en": "Pick a result on the left",
+    "ja": "左の結果を選んでください",
+    "zh": "请在左侧选择结果",
+    "es": "Elige un resultado a la izquierda"
+  }
+}

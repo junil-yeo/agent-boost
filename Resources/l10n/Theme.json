@@ -1,0 +1,20 @@
+{
+  "다크": {
+    "en": "Dark",
+    "es": "Oscuro",
+    "ja": "ダーク",
+    "zh": "深色"
+  },
+  "시스템 설정 따르기": {
+    "en": "Use system setting",
+    "es": "Usar ajuste del sistema",
+    "ja": "システム設定に合わせる",
+    "zh": "跟随系统设置"
+  },
+  "화이트": {
+    "en": "Light",
+    "es": "Claro",
+    "ja": "ライト",
+    "zh": "浅色"
+  }
+}

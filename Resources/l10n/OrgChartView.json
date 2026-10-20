@@ -1,0 +1,278 @@
+{
+  "%@ — 상태 확인 중": {
+    "en": "%@ — checking status",
+    "ja": "%@ — 状態を確認中",
+    "zh": "%@ — 正在确认状态",
+    "es": "%@ — comprobando estado"
+  },
+  "%@/%@명 활동": {
+    "en": "%@/%@ active",
+    "ja": "%@/%@人が稼働中",
+    "zh": "%@/%@ 人活动中",
+    "es": "%@/%@ activos"
+  },
+  "CLI 백그라운드 작업 %@": {
+    "en": "CLI background job %@",
+    "ja": "CLI バックグラウンドジョブ %@",
+    "zh": "CLI 后台任务 %@",
+    "es": "Tarea en segundo plano del CLI %@"
+  },
+  "CLI가 %@ 화면입니다 — 입력 불가": {
+    "en": "The CLI is showing the %@ screen — input unavailable",
+    "ja": "CLI は %@ 画面です — 入力不可",
+    "zh": "CLI 正显示 %@ 画面 — 无法输入",
+    "es": "El CLI muestra la pantalla %@ — no se puede escribir"
+  },
+  "Claude Code 첫 설정 필요": {
+    "en": "Claude Code first-time setup needed",
+    "ja": "Claude Code の初期設定が必要",
+    "zh": "需要完成 Claude Code 首次设置",
+    "es": "Falta la configuración inicial de Claude Code"
+  },
+  "Claude Code가 이 폴더의 파일을 읽고, 수정하고, 실행할 수 있게 됩니다. 직접 만든 폴더이거나 믿을 수 있는 경우에만 신뢰하세요.": {
+    "en": "Claude Code will be able to read, edit, and execute files in this folder. Trust it only if you created it or otherwise trust it.",
+    "ja": "Claude Code がこのフォルダのファイルを読み取り、変更し、実行できるようになります。自分で作成したフォルダか、信頼できる場合にのみ信頼してください。",
+    "zh": "Claude Code 将能够读取、修改和执行此文件夹中的文件。仅当文件夹是你自己创建的或你信任它时才选择信任。",
+    "es": "Claude Code podrá leer, modificar y ejecutar los archivos de esta carpeta. Confía en ella solo si la creaste tú o es de confianza."
+  },
+  "→ '%@'(으)로 변경 대기 중": {
+    "en": "→ pending rename to '%@'",
+    "ja": "→ '%@' への変更待ち",
+    "zh": "→ 等待重命名为'%@'",
+    "es": "→ cambio de nombre a '%@' pendiente"
+  },
+  "개별 세션": {
+    "en": "Standalone sessions",
+    "ja": "単独のセッション",
+    "zh": "独立会话",
+    "es": "Sesiones individuales"
+  },
+  "다시 시작": {
+    "en": "Restart",
+    "ja": "再開",
+    "zh": "重新启动",
+    "es": "Reiniciar"
+  },
+  "다시 시작…": {
+    "en": "Restart…",
+    "ja": "再開…",
+    "zh": "重新启动…",
+    "es": "Reiniciar…"
+  },
+  "대화 기록이 없는 종료된 팀 %@개 — 보여줄 것도, 다시 시작할 것도 없습니다.": {
+    "en": "%@ ended teams with no conversation history — nothing to show or restart.",
+    "ja": "会話履歴のない終了したチームが %@ 件 — 表示するものも再開するものもありません。",
+    "zh": "%@ 个已结束且无对话记录的团队 — 没有可显示或重新启动的内容。",
+    "es": "%@ equipos terminados sin historial de conversación — nada que mostrar ni reiniciar."
+  },
+  "마지막 활동 %@": {
+    "en": "Last activity %@",
+    "ja": "最終アクティビティ %@",
+    "zh": "最后活动 %@",
+    "es": "Última actividad %@"
+  },
+  "보관": {
+    "en": "Archive",
+    "ja": "アーカイブ",
+    "zh": "归档",
+    "es": "Archivar"
+  },
+  "보관…": {
+    "en": "Archive…",
+    "ja": "アーカイブ…",
+    "zh": "归档…",
+    "es": "Archivar…"
+  },
+  "선택": {
+    "en": "Select",
+    "ja": "選択",
+    "zh": "选择",
+    "es": "Seleccionar"
+  },
+  "시작 중…": {
+    "en": "Starting…",
+    "ja": "開始中…",
+    "zh": "正在启动…",
+    "es": "Iniciando…"
+  },
+  "시작 중인 세션": {
+    "en": "Starting sessions",
+    "ja": "開始中のセッション",
+    "zh": "正在启动的会话",
+    "es": "Sesiones iniciándose"
+  },
+  "실행 %@": {
+    "en": "Running %@",
+    "ja": "実行中 %@",
+    "zh": "运行中 %@",
+    "es": "En ejecución %@"
+  },
+  "에이전트가 없습니다": {
+    "en": "No agents",
+    "ja": "エージェントがいません",
+    "zh": "没有智能体",
+    "es": "No hay agentes"
+  },
+  "열기": {
+    "en": "Open",
+    "ja": "開く",
+    "zh": "打开",
+    "es": "Abrir"
+  },
+  "오른쪽 위 '새 세션'(⌘N)으로 시작하거나, tmux에서 Claude 팀을 띄우면 여기에 나타납니다.": {
+    "en": "Start one with 'New session' (⌘N) at the top right, or launch a Claude team in tmux, and it will appear here.",
+    "ja": "右上の「新しいセッション」（⌘N）で始めるか、tmux で Claude チームを起動すると、ここに表示されます。",
+    "zh": "通过右上角的“新会话”（⌘N）开始，或在 tmux 中启动 Claude 团队，就会显示在这里。",
+    "es": "Empieza una con 'Nueva sesión' (⌘N) arriba a la derecha, o lanza un equipo de Claude en tmux, y aparecerá aquí."
+  },
+  "응답 없음": {
+    "en": "Not responding",
+    "ja": "応答なし",
+    "zh": "无响应",
+    "es": "No responde"
+  },
+  "이 Mac에서 Claude Code를 처음 실행했습니다. 글자 스타일 선택과 로그인은 CLI가 직접 묻는 단계라, 터미널에서 한 번 마치면 그 뒤로는 이 앱에서 바로 시작됩니다.": {
+    "en": "This is the first time Claude Code has run on this Mac. Choosing a text style and logging in are steps the CLI asks directly, so finish them once in Terminal and sessions will start right from this app afterwards.",
+    "ja": "この Mac で Claude Code を初めて実行しました。テキストスタイルの選択とログインは CLI が直接尋ねる手順のため、ターミナルで一度済ませれば、以後はこのアプリからすぐに開始できます。",
+    "zh": "这是 Claude Code 首次在此 Mac 上运行。选择文字样式和登录是由 CLI 直接询问的步骤，在终端中完成一次后，之后即可直接从本应用启动。",
+    "es": "Es la primera vez que Claude Code se ejecuta en este Mac. Elegir el estilo de texto e iniciar sesión son pasos que pregunta el propio CLI, así que complétalos una vez en Terminal y después las sesiones se iniciarán directamente desde esta app."
+  },
+  "이 앱에서 시작한 세션": {
+    "en": "Session started from this app",
+    "ja": "このアプリで開始したセッション",
+    "zh": "从本应用启动的会话",
+    "es": "Sesión iniciada desde esta app"
+  },
+  "이 팀의 팀장·팀원을 한 번에 선택": {
+    "en": "Select this team's lead and teammates at once",
+    "ja": "このチームのリーダーとチームメイトをまとめて選択",
+    "zh": "一次选择此团队的负责人和队友",
+    "es": "Seleccionar a la vez al líder y los compañeros de este equipo"
+  },
+  "이 폴더 신뢰하고 시작": {
+    "en": "Trust this folder and start",
+    "ja": "このフォルダを信頼して開始",
+    "zh": "信任此文件夹并开始",
+    "es": "Confiar en esta carpeta e iniciar"
+  },
+  "이름 변경": {
+    "en": "Rename",
+    "ja": "名前を変更",
+    "zh": "重命名",
+    "es": "Cambiar nombre"
+  },
+  "이름 변경…": {
+    "en": "Rename…",
+    "ja": "名前を変更…",
+    "zh": "重命名…",
+    "es": "Cambiar nombre…"
+  },
+  "이전 실행 기준 추정값": {
+    "en": "Estimate from the previous run",
+    "ja": "前回の実行に基づく推定値",
+    "zh": "基于上次运行的估计值",
+    "es": "Estimación de la ejecución anterior"
+  },
+  "이전 실행 기준 추정값 — 실행 인자에서 읽은 모델입니다": {
+    "en": "Estimate from the previous run — model read from the launch arguments",
+    "ja": "前回の実行に基づく推定値 — 起動引数から読み取ったモデルです",
+    "zh": "基于上次运行的估计值 — 模型读取自启动参数",
+    "es": "Estimación de la ejecución anterior — modelo leído de los argumentos de inicio"
+  },
+  "정리 (휴지통)": {
+    "en": "Clean up (Trash)",
+    "ja": "整理（ゴミ箱）",
+    "zh": "清理（废纸篓）",
+    "es": "Limpiar (Papelera)"
+  },
+  "종료 %@": {
+    "en": "Ended %@",
+    "ja": "終了 %@",
+    "zh": "已结束 %@",
+    "es": "Terminadas %@"
+  },
+  "종료 (/exit)": {
+    "en": "Quit (/exit)",
+    "ja": "終了（/exit）",
+    "zh": "退出（/exit）",
+    "es": "Salir (/exit)"
+  },
+  "종료…": {
+    "en": "Quit…",
+    "ja": "終了…",
+    "zh": "退出…",
+    "es": "Salir…"
+  },
+  "종료하고 보관…": {
+    "en": "Quit and archive…",
+    "ja": "終了してアーカイブ…",
+    "zh": "退出并归档…",
+    "es": "Salir y archivar…"
+  },
+  "출력 %@ · 합 %@": {
+    "en": "Output %@ · Total %@",
+    "ja": "出力 %@ · 合計 %@",
+    "zh": "输出 %@ · 合计 %@",
+    "es": "Salida %@ · Total %@"
+  },
+  "취소": {
+    "en": "Cancel",
+    "ja": "キャンセル",
+    "zh": "取消",
+    "es": "Cancelar"
+  },
+  "터미널에서 설정 마치기": {
+    "en": "Finish setup in Terminal",
+    "ja": "ターミナルで設定を完了",
+    "zh": "在终端中完成设置",
+    "es": "Terminar la configuración en Terminal"
+  },
+  "터미널에서 열기": {
+    "en": "Open in Terminal",
+    "ja": "ターミナルで開く",
+    "zh": "在终端中打开",
+    "es": "Abrir en Terminal"
+  },
+  "토큰 %@": {
+    "en": "Tokens %@",
+    "ja": "トークン %@",
+    "zh": "Token %@",
+    "es": "Tokens %@"
+  },
+  "팀 선택 해제": {
+    "en": "Deselect team",
+    "ja": "チームの選択を解除",
+    "zh": "取消选择团队",
+    "es": "Deseleccionar equipo"
+  },
+  "팀 전체 선택": {
+    "en": "Select whole team",
+    "ja": "チーム全体を選択",
+    "zh": "选择整个团队",
+    "es": "Seleccionar todo el equipo"
+  },
+  "팀원 없음": {
+    "en": "No teammates",
+    "ja": "チームメイトなし",
+    "zh": "无队友",
+    "es": "Sin compañeros"
+  },
+  "팀장": {
+    "en": "Team lead",
+    "ja": "チームリーダー",
+    "zh": "团队负责人",
+    "es": "Líder"
+  },
+  "팀장 없음 — 삭제되었거나 종료됨. 팀원만 남아 있습니다.": {
+    "en": "No team lead — deleted or ended. Only teammates remain.",
+    "ja": "チームリーダーなし — 削除済みまたは終了。チームメイトのみ残っています。",
+    "zh": "无团队负责人 — 已删除或已结束。仅剩队友。",
+    "es": "Sin líder — eliminado o terminado. Solo quedan los compañeros."
+  },
+  "폴더 신뢰 확인 필요": {
+    "en": "Folder trust required",
+    "ja": "フォルダの信頼確認が必要",
+    "zh": "需要确认信任文件夹",
+    "es": "Hay que confiar en la carpeta"
+  }
+}

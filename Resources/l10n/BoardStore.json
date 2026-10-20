@@ -1,0 +1,680 @@
+{
+  " CLI 화면은 닫습니다.": {
+    "en": " The CLI screen will be closed.",
+    "ja": " CLI画面は閉じます。",
+    "zh": " CLI 界面将关闭。",
+    "es": " Se cerrará la pantalla de la CLI."
+  },
+  " — 복사본(새 세션 ID)으로 분기합니다. 원본 대화는 그대로 남습니다.": {
+    "en": " — forking into a copy (new session ID). The original conversation stays as is.",
+    "ja": " — コピー(新しいセッションID)として分岐します。元の会話はそのまま残ります。",
+    "zh": " — 以副本（新会话 ID）分支。原对话保持不变。",
+    "es": " — se bifurca en una copia (nuevo ID de sesión). La conversación original queda intacta."
+  },
+  " — 팀원 %@명 생성 지시 포함": {
+    "en": " — includes instructions to create %@ teammates",
+    "ja": " — チームメイト%@人の作成指示を含む",
+    "zh": " — 含创建 %@ 名队友的指令",
+    "es": " — incluye instrucciones para crear %@ compañeros"
+  },
+  " — 팀원 세션은 팀과 분리된 개별 세션으로 열립니다.": {
+    "en": " — a teammate session opens as a standalone session, separate from its team.",
+    "ja": " — チームメイトのセッションはチームから切り離された個別セッションとして開きます。",
+    "zh": " — 队友会话将作为脱离团队的独立会话打开。",
+    "es": " — una sesión de compañero se abre como sesión independiente, separada de su equipo."
+  },
+  " ⚠️ CLI가 같은 ID로 잇지 않고 복사본(%@)을 만들었습니다. 원본 기록은 그대로 남아 있습니다.": {
+    "en": " ⚠️ The CLI made a copy (%@) instead of continuing with the same ID. The original history is still intact.",
+    "ja": " ⚠️ CLIは同じIDで続けず、コピー(%@)を作成しました。元の履歴はそのまま残っています。",
+    "zh": " ⚠️ CLI 没有沿用同一 ID，而是创建了副本（%@）。原始记录仍保留。",
+    "es": " ⚠️ La CLI creó una copia (%@) en lugar de continuar con el mismo ID. El historial original sigue intacto."
+  },
+  " 데스크톱 앱의 해당 대화가 끊깁니다.": {
+    "en": " The conversation in the desktop app will be disconnected.",
+    "ja": " デスクトップアプリの該当する会話は切断されます。",
+    "zh": " 桌面应用中的该对话将断开。",
+    "es": " La conversación en la app de escritorio se desconectará."
+  },
+  " 셸을 끝내려면 그 창에서 exit 하세요.": {
+    "en": " To end the shell, type exit in that window.",
+    "ja": " シェルを終了するには、そのウィンドウで exit してください。",
+    "zh": " 要结束 shell，请在该窗口中输入 exit。",
+    "es": " Para cerrar el shell, escribe exit en esa ventana."
+  },
+  "%@개 세션에 종료를 보냈습니다 (작업 중인 세션은 끝난 뒤 종료).": {
+    "en": "Sent quit to %@ sessions (working sessions quit when done).",
+    "ja": "%@個のセッションに終了を送信しました (作業中のセッションは終わってから終了)。",
+    "zh": "已向 %@ 个会话发送退出（正在工作的会话将在完成后退出）。",
+    "es": "Se envió el cierre a %@ sesiones (las que están trabajando se cerrarán al terminar)."
+  },
+  "%@개 세션에 종료를 보냈습니다.": {
+    "en": "Sent quit to %@ sessions.",
+    "ja": "%@個のセッションに終了を送信しました。",
+    "zh": "已向 %@ 个会话发送退出。",
+    "es": "Se envió el cierre a %@ sesiones."
+  },
+  "%@개 세션을 다시 시작했습니다.": {
+    "en": "Restarted %@ sessions.",
+    "ja": "%@個のセッションを再起動しました。",
+    "zh": "已重新启动 %@ 个会话。",
+    "es": "Se reiniciaron %@ sesiones."
+  },
+  "%@개 세션을 보관함에서 복원했습니다.": {
+    "en": "Restored %@ sessions from the archive.",
+    "ja": "%@個のセッションを保管庫から復元しました。",
+    "zh": "已从归档中恢复 %@ 个会话。",
+    "es": "Se restauraron %@ sesiones del archivo."
+  },
+  "%@개 세션을 보관함으로 옮겼습니다.": {
+    "en": "Moved %@ sessions to the archive.",
+    "ja": "%@個のセッションを保管庫に移動しました。",
+    "zh": "已将 %@ 个会话移至归档。",
+    "es": "Se movieron %@ sesiones al archivo."
+  },
+  "%@개 세션을 영구 삭제했습니다.": {
+    "en": "Permanently deleted %@ sessions.",
+    "ja": "%@個のセッションを完全に削除しました。",
+    "zh": "已永久删除 %@ 个会话。",
+    "es": "Se eliminaron permanentemente %@ sesiones."
+  },
+  "%@을 휴지통으로 이동": {
+    "en": "moved %@ to the Trash",
+    "ja": "%@をゴミ箱に移動",
+    "zh": "已将%@移到废纸篓",
+    "es": "%@ movido a la Papelera"
+  },
+  "'%@' (pid %@): 30초 안에 끝나지 않아 SIGTERM으로 강제 종료했습니다.": {
+    "en": "'%@' (pid %@): didn't exit within 30 seconds, so it was force-quit with SIGTERM.",
+    "ja": "'%@' (pid %@): 30秒以内に終了しなかったため、SIGTERMで強制終了しました。",
+    "zh": "'%@'（pid %@）：未在 30 秒内退出，已用 SIGTERM 强制终止。",
+    "es": "'%@' (pid %@): no se cerró en 30 segundos, así que se forzó el cierre con SIGTERM."
+  },
+  "'%@' CLI 백그라운드 작업 %@(으)로 이어서 열었습니다 (claude --bg --resume + attach).": {
+    "en": "Resumed '%@' as CLI background job %@ (claude --bg --resume + attach).",
+    "ja": "'%@'をCLIバックグラウンドジョブ %@ として再開しました (claude --bg --resume + attach)。",
+    "zh": "已将'%@'作为 CLI 后台任务 %@ 继续打开（claude --bg --resume + attach）。",
+    "es": "'%@' se reanudó como trabajo en segundo plano de la CLI %@ (claude --bg --resume + attach)."
+  },
+  "'%@' CLI 화면을 닫습니다 (대화는 백그라운드 작업으로 옮겨져 있었습니다).": {
+    "en": "Closing '%@''s CLI screen (the conversation had been moved to a background job).",
+    "ja": "'%@'のCLI画面を閉じます (会話はバックグラウンドジョブに移されていました)。",
+    "zh": "正在关闭'%@'的 CLI 界面（对话已移至后台任务）。",
+    "es": "Cerrando la pantalla de la CLI de '%@' (la conversación se había movido a un trabajo en segundo plano)."
+  },
+  "'%@' Remote Control 꺼짐 — 웹 목록에 더 이상 나타나지 않습니다.": {
+    "en": "'%@' Remote Control off — it no longer appears in the web list.",
+    "ja": "'%@' Remote Control オフ — Webの一覧には表示されなくなります。",
+    "zh": "'%@' Remote Control 已关闭 — 不再显示在网页列表中。",
+    "es": "'%@' Remote Control desactivado — ya no aparece en la lista web."
+  },
+  "'%@' Remote Control 전환을 확인하지 못했습니다. 세션 터미널을 확인해 주세요.": {
+    "en": "Couldn't confirm the Remote Control switch for '%@'. Please check the session terminal.",
+    "ja": "'%@'のRemote Control切り替えを確認できませんでした。セッションのターミナルを確認してください。",
+    "zh": "无法确认'%@'的 Remote Control 切换。请检查会话终端。",
+    "es": "No se pudo confirmar el cambio de Remote Control de '%@'. Revisa la terminal de la sesión."
+  },
+  "'%@' Remote Control 켜짐 — 휴대폰·claude.ai/code에서 이어서 볼 수 있습니다.": {
+    "en": "'%@' Remote Control on — you can follow it from your phone or claude.ai/code.",
+    "ja": "'%@' Remote Control オン — スマートフォンや claude.ai/code から続きを見られます。",
+    "zh": "'%@' Remote Control 已开启 — 可在手机或 claude.ai/code 上继续查看。",
+    "es": "'%@' Remote Control activado — puedes seguirla desde tu teléfono o claude.ai/code."
+  },
+  "'%@' claude stop %@ 실패: %@": {
+    "en": "'%@' claude stop %@ failed: %@",
+    "ja": "'%@' claude stop %@ 失敗: %@",
+    "zh": "'%@' claude stop %@ 失败：%@",
+    "es": "'%@' claude stop %@ falló: %@"
+  },
+  "'%@' claude stop 후에도 프로세스가 남아 SIGTERM을 보냈습니다.": {
+    "en": "'%@' process remained after claude stop, so SIGTERM was sent.",
+    "ja": "'%@'はclaude stop後もプロセスが残ったため、SIGTERMを送信しました。",
+    "zh": "'%@'在 claude stop 后进程仍在，已发送 SIGTERM。",
+    "es": "El proceso de '%@' siguió activo tras claude stop, así que se envió SIGTERM."
+  },
+  "'%@' 다시 시작 (tmux: %@)": {
+    "en": "Restarted '%@' (tmux: %@)",
+    "ja": "'%@'を再起動 (tmux: %@)",
+    "zh": "已重新启动'%@'（tmux：%@）",
+    "es": "'%@' reiniciada (tmux: %@)"
+  },
+  "'%@' 다시 시작 — 팀원 %@명을 같은 이름·모델로 다시 만드는 중입니다 (Claude는 재개 시 팀원을 복원하지 않음).": {
+    "en": "Restarted '%1$@' — recreating %2$@ teammates with the same names and models (Claude doesn't restore teammates on resume).",
+    "ja": "'%@'を再起動 — 同じ名前・モデルでチームメイト%@人を作り直しています (Claudeは再開時にチームメイトを復元しません)。",
+    "zh": "已重新启动'%@' — 正在以相同名称和模型重新创建 %@ 名队友（Claude 恢复时不会还原队友）。",
+    "es": "'%1$@' reiniciado — recreando %2$@ compañeros con los mismos nombres y modelos (Claude no restaura compañeros al reanudar)."
+  },
+  "'%@' 다시 시작 실패 — claude --bg --resume: %@": {
+    "en": "Failed to restart '%@' — claude --bg --resume: %@",
+    "ja": "'%@'の再起動に失敗 — claude --bg --resume: %@",
+    "zh": "重新启动'%@'失败 — claude --bg --resume：%@",
+    "es": "No se pudo reiniciar '%@' — claude --bg --resume: %@"
+  },
+  "'%@' 백그라운드 작업으로 다시 시작하는 중 (claude --bg --resume)…": {
+    "en": "Restarting '%@' as a background job (claude --bg --resume)…",
+    "ja": "'%@'をバックグラウンドジョブとして再起動中 (claude --bg --resume)…",
+    "zh": "正在以后台任务重新启动'%@'（claude --bg --resume）…",
+    "es": "Reiniciando '%@' como trabajo en segundo plano (claude --bg --resume)…"
+  },
+  "'%@' 백그라운드 작업을 CLI 목록에서 지우는 중…": {
+    "en": "Removing background job '%@' from the CLI list…",
+    "ja": "バックグラウンドジョブ'%@'をCLIの一覧から削除中…",
+    "zh": "正在从 CLI 列表中移除后台任务'%@'…",
+    "es": "Quitando el trabajo en segundo plano '%@' de la lista de la CLI…"
+  },
+  "'%@' 백그라운드 작업을 멈춥니다 (claude stop %@).": {
+    "en": "Stopping background job '%@' (claude stop %@).",
+    "ja": "'%@'のバックグラウンドジョブを停止します (claude stop %@)。",
+    "zh": "正在停止'%@'的后台任务（claude stop %@）。",
+    "es": "Deteniendo el trabajo en segundo plano '%@' (claude stop %@)."
+  },
+  "'%@' 삭제 실패 — claude rm %@: %@": {
+    "en": "Failed to delete '%@' — claude rm %@: %@",
+    "ja": "'%@'の削除に失敗 — claude rm %@: %@",
+    "zh": "删除'%@'失败 — claude rm %@：%@",
+    "es": "No se pudo eliminar '%@' — claude rm %@: %@"
+  },
+  "'%@' 삭제: %@": {
+    "en": "Deleted '%@': %@",
+    "ja": "'%@'を削除: %@",
+    "zh": "已删除'%@'：%@",
+    "es": "'%@' eliminada: %@"
+  },
+  "'%@' 세션 창을 찾지 못했습니다.": {
+    "en": "Couldn't find the window of session '%@'.",
+    "ja": "セッション'%@'のウィンドウが見つかりませんでした。",
+    "zh": "找不到会话'%@'的窗口。",
+    "es": "No se encontró la ventana de la sesión '%@'."
+  },
+  "'%@' 세션이 시작 전에 종료되었습니다.": {
+    "en": "Session '%@' ended before it started.",
+    "ja": "セッション'%@'は開始前に終了しました。",
+    "zh": "会话'%@'在启动前已结束。",
+    "es": "La sesión '%@' terminó antes de iniciarse."
+  },
+  "'%@' 세션이 시작 전에 종료되었습니다: %@": {
+    "en": "Session '%@' ended before it started: %@",
+    "ja": "セッション'%@'は開始前に終了しました: %@",
+    "zh": "会话'%@'在启动前已结束：%@",
+    "es": "La sesión '%@' terminó antes de iniciarse: %@"
+  },
+  "'%@' 시작을 취소했습니다.": {
+    "en": "Canceled starting '%@'.",
+    "ja": "'%@'の開始を取り消しました。",
+    "zh": "已取消启动'%@'。",
+    "es": "Se canceló el inicio de '%@'."
+  },
+  "'%@' 에 %@ 을(를) 지금 보낼까요?": {
+    "en": "Send %2$@ to '%1$@' now?",
+    "ja": "'%@'に %@ を今送信しますか?",
+    "zh": "现在向'%@'发送 %@ 吗？",
+    "es": "¿Enviar %2$@ a '%1$@' ahora?"
+  },
+  "'%@' 에이전트가 질문에 답을 기다리는 중이라 %@ 을(를) 대기시킵니다. 화면이 잘못 인식된 경우 '그래도 보내기'를 누르세요.": {
+    "en": "Agent '%@' is waiting for an answer to a question, so %@ is on hold. If the screen was misread, click 'Send anyway'.",
+    "ja": "エージェント'%@'が質問への回答を待っているため、%@ を待機させます。画面が誤認識された場合は「それでも送信」を押してください。",
+    "zh": "代理'%@'正在等待问题的回答，因此 %@ 暂缓发送。如果屏幕识别有误，请点击“仍然发送”。",
+    "es": "El agente '%@' espera una respuesta a una pregunta, así que %@ queda en espera. Si la pantalla se interpretó mal, pulsa 'Enviar de todos modos'."
+  },
+  "'%@' 은(는) 이 tmux 서버에 없는 pane이라 제어할 수 없습니다 — 대기 중이던 %@ 명령을 취소했습니다.": {
+    "en": "'%@' can't be controlled because its pane isn't on this tmux server — canceled the pending %@ command.",
+    "ja": "'%@'はこのtmuxサーバーにないpaneのため操作できません — 待機中の %@ コマンドを取り消しました。",
+    "zh": "'%@'的 pane 不在此 tmux 服务器上，无法控制 — 已取消等待中的 %@ 命令。",
+    "es": "No se puede controlar '%@' porque su pane no está en este servidor tmux — se canceló el comando %@ pendiente."
+  },
+  "'%@' 작업 중 — 대기 상태가 되면 %@ 을(를) 보냅니다.": {
+    "en": "'%@' is working — %@ will be sent once idle.",
+    "ja": "'%@'は作業中 — 待機状態になったら %@ を送信します。",
+    "zh": "'%@'正在工作 — 空闲后将发送 %@。",
+    "es": "'%@' está trabajando — se enviará %@ cuando esté inactiva."
+  },
+  "'%@' 작업 중 — 대기 상태가 되면 이름을 바꿉니다.": {
+    "en": "'%@' is working — it will be renamed once idle.",
+    "ja": "'%@'は作業中 — 待機状態になったら名前を変更します。",
+    "zh": "'%@'正在工作 — 空闲后将重命名。",
+    "es": "'%@' está trabajando — se renombrará cuando esté inactiva."
+  },
+  "'%@' 작업이 끝나면 종료합니다.": {
+    "en": "'%@' will quit when its work is done.",
+    "ja": "'%@'は作業が終わったら終了します。",
+    "zh": "'%@'将在工作完成后退出。",
+    "es": "'%@' se cerrará cuando termine su trabajo."
+  },
+  "'%@' 폴더를 신뢰하고 '%@'을(를) 시작합니다.": {
+    "en": "Trusting folder '%@' and starting '%@'.",
+    "ja": "フォルダ'%@'を信頼して'%@'を開始します。",
+    "zh": "信任文件夹'%@'并启动'%@'。",
+    "es": "Confiando en la carpeta '%@' e iniciando '%@'."
+  },
+  "'%@': claude stop %@ 실패 — %@": {
+    "en": "'%@': claude stop %@ failed — %@",
+    "ja": "'%@': claude stop %@ 失敗 — %@",
+    "zh": "'%@'：claude stop %@ 失败 — %@",
+    "es": "'%@': claude stop %@ falló — %@"
+  },
+  "'%@'가 작업 중입니다. 끝난 뒤 다시 눌러 주세요.": {
+    "en": "'%@' is working. Click again once it's done.",
+    "ja": "'%@'は作業中です。終わってからもう一度押してください。",
+    "zh": "'%@'正在工作。请在完成后再点一次。",
+    "es": "'%@' está trabajando. Vuelve a pulsar cuando termine."
+  },
+  "'%@'는 앱이 조작할 수 있는 터미널(tmux) 세션이 아니라 Remote Control을 바꿀 수 없습니다.": {
+    "en": "Can't change Remote Control: '%@' isn't a terminal (tmux) session this app can control.",
+    "ja": "'%@'はアプリが操作できるターミナル(tmux)セッションではないため、Remote Controlを変更できません。",
+    "zh": "'%@'不是本应用可操作的终端（tmux）会话，无法更改 Remote Control。",
+    "es": "No se puede cambiar Remote Control: '%@' no es una sesión de terminal (tmux) que esta app pueda controlar."
+  },
+  "'%@'에 /exit 을 보냈습니다.": {
+    "en": "Sent /exit to '%@'.",
+    "ja": "'%@'に /exit を送信しました。",
+    "zh": "已向'%@'发送 /exit。",
+    "es": "Se envió /exit a '%@'."
+  },
+  "'%@'에 보낸 메시지가 CLI 기록에서 확인되지 않습니다. 세션 터미널(CLI 화면)에서 입력창에 남아 있는지 확인하세요.": {
+    "en": "The message sent to '%@' doesn't appear in the CLI history. Check the session terminal (CLI screen) to see if it's still in the input box.",
+    "ja": "'%@'に送ったメッセージがCLIの履歴で確認できません。セッションのターミナル(CLI画面)で入力欄に残っていないか確認してください。",
+    "zh": "发送给'%@'的消息未在 CLI 记录中找到。请在会话终端（CLI 界面）中确认它是否仍留在输入框中。",
+    "es": "El mensaje enviado a '%@' no aparece en el historial de la CLI. Revisa en la terminal de la sesión (pantalla de la CLI) si sigue en el cuadro de entrada."
+  },
+  "'%@'에 종료 신호(SIGTERM)를 보냈습니다.": {
+    "en": "Sent a quit signal (SIGTERM) to '%@'.",
+    "ja": "'%@'に終了シグナル(SIGTERM)を送信しました。",
+    "zh": "已向'%@'发送终止信号（SIGTERM）。",
+    "es": "Se envió una señal de cierre (SIGTERM) a '%@'."
+  },
+  "'%@'은(는) %@에서 만든 대화라 이름은 %@에서 바꿔 주세요. 앱이 기록 파일에 쓰면 %@가 이 세션을 거부합니다.": {
+    "en": "'%@' is a conversation created in %@, so rename it in %@. If this app writes to its history file, %@ will reject the session.",
+    "ja": "'%@'は%@で作成された会話のため、名前は%@で変更してください。アプリが履歴ファイルに書き込むと、%@がこのセッションを拒否します。",
+    "zh": "'%@'是在%@中创建的对话，请在%@中重命名。如果本应用写入其记录文件，%@会拒绝此会话。",
+    "es": "'%@' es una conversación creada en %@, así que cámbiale el nombre en %@. Si esta app escribe en su archivo de historial, %@ rechazará la sesión."
+  },
+  "'%@'은(는) CLI 백그라운드 작업 %@(으)로 실행 중입니다. 새로 띄우지 않고 그 화면을 붙입니다 (claude attach).": {
+    "en": "'%@' is running as CLI background job %@. Attaching to it instead of starting a new one (claude attach).",
+    "ja": "'%@'はCLIバックグラウンドジョブ %@ として実行中です。新しく起動せず、その画面にアタッチします (claude attach)。",
+    "zh": "'%@'正作为 CLI 后台任务 %@ 运行。不新建，直接附加到其界面（claude attach）。",
+    "es": "'%@' se está ejecutando como trabajo en segundo plano de la CLI %@. Se adjuntará a él en lugar de iniciar uno nuevo (claude attach)."
+  },
+  "'%@'은(는) CLI 백그라운드 작업의 대화라 --resume으로 열리지 않습니다. CLI 방식대로 --bg --resume으로 이어서 엽니다.": {
+    "en": "'%@' is a CLI background job's conversation, so it can't be opened with --resume. Resuming it the CLI's way with --bg --resume.",
+    "ja": "'%@'はCLIバックグラウンドジョブの会話のため --resume では開けません。CLIの方式どおり --bg --resume で続きを開きます。",
+    "zh": "'%@'是 CLI 后台任务的对话，无法用 --resume 打开。将按 CLI 的方式用 --bg --resume 继续打开。",
+    "es": "'%@' es la conversación de un trabajo en segundo plano de la CLI, así que no se abre con --resume. Se reanudará al estilo de la CLI con --bg --resume."
+  },
+  "'%@'은(는) 이미 CLI 백그라운드 작업 %@(으)로 실행 중입니다. 새로 띄우지 않고 그 화면을 붙입니다 (claude attach).": {
+    "en": "'%@' is already running as CLI background job %@. Attaching to it instead of starting a new one (claude attach).",
+    "ja": "'%@'はすでにCLIバックグラウンドジョブ %@ として実行中です。新しく起動せず、その画面にアタッチします (claude attach)。",
+    "zh": "'%@'已作为 CLI 后台任务 %@ 运行。不新建，直接附加到其界面（claude attach）。",
+    "es": "'%@' ya se está ejecutando como trabajo en segundo plano de la CLI %@. Se adjuntará a él en lugar de iniciar uno nuevo (claude attach)."
+  },
+  "'%@'은(는) 이미 실행 중입니다. 그 세션을 엽니다.": {
+    "en": "'%@' is already running. Opening that session.",
+    "ja": "'%@'はすでに実行中です。そのセッションを開きます。",
+    "zh": "'%@'已在运行。正在打开该会话。",
+    "es": "'%@' ya se está ejecutando. Abriendo esa sesión."
+  },
+  "'%@'은(는) 입력할 수 없는 세션이라 이름을 기록에 저장했습니다. 다음에 다시 시작할 때부터 '%@'(으)로 표시됩니다.": {
+    "en": "'%@' can't take input, so the name was saved to its history. It will show as '%@' from the next restart.",
+    "ja": "'%@'は入力できないセッションのため、名前を履歴に保存しました。次回の再起動から'%@'と表示されます。",
+    "zh": "'%@'是无法输入的会话，已将名称保存到记录中。下次重新启动后将显示为'%@'。",
+    "es": "'%@' no admite entrada, así que el nombre se guardó en su historial. Se mostrará como '%@' a partir del próximo reinicio."
+  },
+  "'%@'은(는) 종료됐거나 tmux 화면이 없는 세션이라 보낼 수 없습니다.": {
+    "en": "Can't send to '%@': the session has ended or has no tmux screen.",
+    "ja": "'%@'は終了したか、tmux画面のないセッションのため送信できません。",
+    "zh": "'%@'已结束或没有 tmux 界面，无法发送。",
+    "es": "No se puede enviar a '%@': la sesión terminó o no tiene pantalla de tmux."
+  },
+  "'%@'을(를) 터미널 앱으로 내보냈습니다.": {
+    "en": "Moved '%@' out to the Terminal app.",
+    "ja": "'%@'をターミナルアプリに移しました。",
+    "zh": "已将'%@'移到终端应用。",
+    "es": "'%@' se pasó a la app Terminal."
+  },
+  "'%@'의 CLI 입력창에 글이 있어 대기 메시지를 꺼내지 않았습니다. 그 글을 보내거나 지운 뒤 다시 시도하세요.": {
+    "en": "Didn't pull the queued messages because '%@''s CLI input box has text. Send or clear that text, then try again.",
+    "ja": "'%@'のCLI入力欄に文字があるため、待機メッセージを取り出しませんでした。その文字を送信または削除してから再試行してください。",
+    "zh": "'%@'的 CLI 输入框中有文字，因此未取出排队消息。请发送或清除该文字后重试。",
+    "es": "No se sacaron los mensajes en cola porque el cuadro de entrada de la CLI de '%@' tiene texto. Envía o borra ese texto y vuelve a intentarlo."
+  },
+  "'%@'의 CLI 입력창에 입력 중인 글이 있어 %@ 을(를) 보류합니다 (터미널에서 같이 쓰는 중). 그 글을 보내거나 지우면 이어서 보냅니다.": {
+    "en": "%2$@ is on hold because there's text being typed in '%1$@''s CLI input box (shared with a terminal). It will be sent once that text is sent or cleared.",
+    "ja": "'%@'のCLI入力欄に入力中の文字があるため、%@ を保留します (ターミナルで同時使用中)。その文字を送信または削除すると続けて送信します。",
+    "zh": "'%@'的 CLI 输入框中有正在输入的文字，因此暂缓 %@（正在终端中共用）。发送或清除该文字后会继续发送。",
+    "es": "%2$@ queda en espera porque hay texto escrito en el cuadro de entrada de la CLI de '%1$@' (compartida con una terminal). Se enviará cuando ese texto se envíe o se borre."
+  },
+  "'%@'의 CLI 입력창에 입력 중인 글이 있어 보내지 않았습니다 (터미널에서 같이 쓰는 중). 그 글을 보내거나 지운 뒤 다시 시도하세요.": {
+    "en": "Not sent: there's text being typed in '%@''s CLI input box (shared with a terminal). Send or clear that text, then try again.",
+    "ja": "'%@'のCLI入力欄に入力中の文字があるため送信しませんでした (ターミナルで同時使用中)。その文字を送信または削除してから再試行してください。",
+    "zh": "'%@'的 CLI 输入框中有正在输入的文字，因此未发送（正在终端中共用）。请发送或清除该文字后重试。",
+    "es": "No se envió: hay texto escrito en el cuadro de entrada de la CLI de '%@' (compartida con una terminal). Envía o borra ese texto y vuelve a intentarlo."
+  },
+  "'%@'의 CLI가 %@ 화면이라 %@ 을(를) 보류합니다. CLI에서 Esc로 대화로 돌아오면 보냅니다.": {
+    "en": "%3$@ is on hold because '%1$@''s CLI shows %2$@. It will be sent once you press Esc in the CLI to return to the conversation.",
+    "ja": "'%@'のCLIが%@画面のため、%@ を保留します。CLIでEscを押して会話に戻ると送信します。",
+    "zh": "'%@'的 CLI 正在显示%@，因此暂缓 %@。在 CLI 中按 Esc 回到对话后会发送。",
+    "es": "%3$@ queda en espera porque la CLI de '%1$@' muestra %2$@. Se enviará cuando vuelvas a la conversación con Esc en la CLI."
+  },
+  "'%@'의 CLI가 %@ 화면이라 보낼 수 없습니다. CLI에서 Esc를 눌러 대화로 돌아온 뒤 다시 보내세요.": {
+    "en": "Can't send because '%@''s CLI shows %@. Press Esc in the CLI to return to the conversation, then send again.",
+    "ja": "'%@'のCLIが%@画面のため送信できません。CLIでEscを押して会話に戻ってから、もう一度送信してください。",
+    "zh": "'%@'的 CLI 正在显示%@，无法发送。请在 CLI 中按 Esc 回到对话后重新发送。",
+    "es": "No se puede enviar porque la CLI de '%@' muestra %@. Pulsa Esc en la CLI para volver a la conversación y envía de nuevo."
+  },
+  "'%@'의 CLI가 질문에 대한 답을 기다리는 중이라 보내지 않았습니다. 질문 카드에서 먼저 답하거나 Esc로 취소한 뒤 다시 보내세요.": {
+    "en": "Not sent: '%@''s CLI is waiting for an answer to a question. Answer it on the question card or cancel with Esc, then send again.",
+    "ja": "'%@'のCLIが質問への回答を待っているため送信しませんでした。質問カードで先に回答するかEscで取り消してから、もう一度送信してください。",
+    "zh": "'%@'的 CLI 正在等待问题的回答，因此未发送。请先在问题卡片中回答或按 Esc 取消，然后重新发送。",
+    "es": "No se envió: la CLI de '%@' espera una respuesta a una pregunta. Respóndela en la tarjeta de pregunta o cancela con Esc y envía de nuevo."
+  },
+  "'%@'이(가) 30초 안에 끝나지 않아 강제 종료(%@)했습니다.": {
+    "en": "'%@' didn't exit within 30 seconds, so it was force-quit (%@).",
+    "ja": "'%@'が30秒以内に終了しなかったため、強制終了(%@)しました。",
+    "zh": "'%@'未在 30 秒内退出，已强制终止（%@）。",
+    "es": "'%@' no se cerró en 30 segundos, así que se forzó el cierre (%@)."
+  },
+  "'%@'이(가) 메시지를 받지 않았습니다. 입력창에 되돌려 놓았으니 다시 보내 주세요.": {
+    "en": "'%@' didn't receive the message. It's back in the input box; please send it again.",
+    "ja": "'%@'がメッセージを受け取りませんでした。入力欄に戻したので、もう一度送信してください。",
+    "zh": "'%@'未收到消息。已放回输入框，请重新发送。",
+    "es": "'%@' no recibió el mensaje. Se devolvió al cuadro de entrada; envíalo de nuevo."
+  },
+  "CLI 화면 닫기(ctrl+c)": {
+    "en": "Close CLI screen (ctrl+c)",
+    "ja": "CLI画面を閉じる(ctrl+c)",
+    "zh": "关闭 CLI 界面（ctrl+c）",
+    "es": "Cerrar pantalla de la CLI (ctrl+c)"
+  },
+  "Claude Code CLI를 찾을 수 없습니다 (%@). 설치: https://claude.ai/code 안내를 따르거나 터미널에서 npm install -g @anthropic-ai/claude-code": {
+    "en": "Claude Code CLI not found (%@). Install: follow the guide at https://claude.ai/code, or run npm install -g @anthropic-ai/claude-code in Terminal",
+    "ja": "Claude Code CLIが見つかりません (%@)。インストール: https://claude.ai/code の案内に従うか、ターミナルで npm install -g @anthropic-ai/claude-code",
+    "zh": "找不到 Claude Code CLI (%@)。安装：按照 https://claude.ai/code 的说明，或在终端运行 npm install -g @anthropic-ai/claude-code",
+    "es": "No se encontró Claude Code CLI (%@). Instalar: sigue la guía de https://claude.ai/code o ejecuta npm install -g @anthropic-ai/claude-code en Terminal"
+  },
+  "Claude Code 업데이트 실패: %@": {
+    "en": "Claude Code update failed: %@",
+    "ja": "Claude Codeのアップデートに失敗: %@",
+    "zh": "Claude Code 更新失败：%@",
+    "es": "Falló la actualización de Claude Code: %@"
+  },
+  "Claude Code 업데이트 확인 중…": {
+    "en": "Checking for Claude Code updates…",
+    "ja": "Claude Codeのアップデートを確認中…",
+    "zh": "正在检查 Claude Code 更新…",
+    "es": "Buscando actualizaciones de Claude Code…"
+  },
+  "Claude Code 업데이트: %@ — 실행 중인 세션은 다시 시작해야 새 버전을 씁니다.": {
+    "en": "Claude Code update: %@ — running sessions use the new version after a restart.",
+    "ja": "Claude Codeアップデート: %@ — 実行中のセッションは再起動すると新しいバージョンを使います。",
+    "zh": "Claude Code 更新：%@ — 正在运行的会话需重新启动才会使用新版本。",
+    "es": "Actualización de Claude Code: %@ — las sesiones en ejecución usarán la nueva versión tras reiniciarse."
+  },
+  "Claude Code에 로그인되어 있지 않습니다. 터미널에서 claude 를 한 번 실행해 로그인하면 사용량과 세션이 동작합니다.": {
+    "en": "You're not logged in to Claude Code. Run claude once in Terminal and log in to enable usage and sessions.",
+    "ja": "Claude Codeにログインしていません。ターミナルで claude を一度実行してログインすると、使用量とセッションが動作します。",
+    "zh": "尚未登录 Claude Code。在终端中运行一次 claude 并登录后，用量和会话即可使用。",
+    "es": "No has iniciado sesión en Claude Code. Ejecuta claude una vez en Terminal e inicia sesión para que funcionen el uso y las sesiones."
+  },
+  "Claude 데스크톱 앱": {
+    "en": "the Claude desktop app",
+    "ja": "Claudeデスクトップアプリ",
+    "zh": "Claude 桌面应用",
+    "es": "la app de escritorio de Claude"
+  },
+  "Esc 후 보내기": {
+    "en": "Esc, then send",
+    "ja": "Esc後に送信",
+    "zh": "按 Esc 后发送",
+    "es": "Esc y enviar"
+  },
+  "tmux pane에서 실행 중인 세션에만 팀원을 추가할 수 있습니다.": {
+    "en": "Teammates can only be added to a session running in a tmux pane.",
+    "ja": "チームメイトはtmux paneで実行中のセッションにのみ追加できます。",
+    "zh": "只能向在 tmux pane 中运行的会话添加队友。",
+    "es": "Solo se pueden añadir compañeros a una sesión que se ejecute en un pane de tmux."
+  },
+  "tmux pane이 없거나 종료된 세션이라 변경할 수 없습니다.": {
+    "en": "Can't change it: the session has no tmux pane or has ended.",
+    "ja": "tmux paneがないか終了したセッションのため変更できません。",
+    "zh": "该会话没有 tmux pane 或已结束，无法更改。",
+    "es": "No se puede cambiar: la sesión no tiene pane de tmux o ya terminó."
+  },
+  "tmux를 찾을 수 없습니다 (%@). 세션 시작·입력·종료가 동작하지 않습니다. 설치: brew install tmux": {
+    "en": "tmux not found (%@). Starting, typing into and quitting sessions won't work. Install: brew install tmux",
+    "ja": "tmuxが見つかりません (%@)。セッションの開始・入力・終了が動作しません。インストール: brew install tmux",
+    "zh": "找不到 tmux (%@)。会话的启动、输入和退出都无法使用。安装：brew install tmux",
+    "es": "No se encontró tmux (%@). No funcionará iniciar, escribir en ni cerrar sesiones. Instalar: brew install tmux"
+  },
+  "⚠ 전달 확인 안 됨 — %@": {
+    "en": "⚠ Delivery not confirmed — %@",
+    "ja": "⚠ 送信未確認 — %@",
+    "zh": "⚠ 未确认送达 — %@",
+    "es": "⚠ Entrega no confirmada — %@"
+  },
+  "그대로 보내기": {
+    "en": "Send as is",
+    "ja": "そのまま送信",
+    "zh": "直接发送",
+    "es": "Enviar tal cual"
+  },
+  "기록 없는 팀 %@개를 정리했습니다. 팀 폴더는 휴지통으로 옮겼습니다.": {
+    "en": "Cleaned up %@ teams with no history. Their team folders were moved to the Trash.",
+    "ja": "履歴のないチーム%@個を整理しました。チームフォルダはゴミ箱に移動しました。",
+    "zh": "已清理 %@ 个没有记录的团队。团队文件夹已移到废纸篓。",
+    "es": "Se limpiaron %@ equipos sin historial. Sus carpetas se movieron a la Papelera."
+  },
+  "너는 이 Mac의 디스크 관리자다. 지금은 분석하고 정리 방법을 제안만 한다. 내가 승인하기 전에는 아무것도 지우거나 옮기지 마라.\n아래를 조사해라. 오래 걸리는 du는 깊이를 제한하고, 권한 오류는 건너뛴다.\n1. 디스크 전체 용량과 여유 공간 (df -h /).\n2. 홈 폴더 아래 가장 큰 폴더 상위 20개.\n3. 개발·앱 캐시: ~/Library/Caches, ~/Library/Logs, ~/Library/Developer(DerivedData, 시뮬레이터), ~/.cache, ~/.npm, ~/.cargo, pip·conda·micromamba 캐시, Homebrew 캐시, Docker 이미지와 볼륨.\n4. 오래 쓰지 않은(90일 이상) 캐시와 임시 파일: $TMPDIR, /private/tmp, ~/Downloads 안의 오래되고 큰 파일.\n5. 최근 30일 안에 설치되었고 크기가 큰 앱 (/Applications, ~/Applications).\n6. 휴지통 크기와 로컬 Time Machine 스냅샷 (tmutil listlocalsnapshots /).\n결과는 \"항목 · 크기 · 마지막 사용 · 판단(안전/확인 필요/위험) · 정리 방법(명령)\" 표로 정리하고, 확보 가능한 용량 합계와 추천 순서를 제안해라.\niCloud 동기화 폴더(~/Library/Mobile Documents), 문서·사진 원본, 연구 자료(~/Desktop/Research)는 정리 대상으로 제안하지 마라.": {
+    "en": "You are the disk manager for this Mac. For now, only analyze and propose how to clean up. Do not delete or move anything until I approve.\nInvestigate the following. Limit the depth of slow du runs and skip permission errors.\n1. Total disk capacity and free space (df -h /).\n2. The 20 largest folders under the home folder.\n3. Development and app caches: ~/Library/Caches, ~/Library/Logs, ~/Library/Developer (DerivedData, simulators), ~/.cache, ~/.npm, ~/.cargo, pip/conda/micromamba caches, the Homebrew cache, Docker images and volumes.\n4. Caches and temporary files unused for a long time (90+ days): $TMPDIR, /private/tmp, and old large files in ~/Downloads.\n5. Large apps installed in the last 30 days (/Applications, ~/Applications).\n6. Trash size and local Time Machine snapshots (tmutil listlocalsnapshots /).\nSummarize the results in a table of \"Item · Size · Last used · Verdict (safe/needs review/risky) · How to clean (command)\", and propose the total space that can be freed and a recommended order.\nDo not propose cleaning iCloud-synced folders (~/Library/Mobile Documents), original documents and photos, or research material (~/Desktop/Research).",
+    "ja": "あなたはこのMacのディスク管理者です。今は分析して整理方法を提案するだけにしてください。私が承認するまでは何も削除・移動しないでください。\n以下を調査してください。時間のかかるduは深さを制限し、権限エラーはスキップしてください。\n1. ディスク全体の容量と空き容量 (df -h /)。\n2. ホームフォルダ以下で最も大きいフォルダ上位20個。\n3. 開発・アプリのキャッシュ: ~/Library/Caches、~/Library/Logs、~/Library/Developer (DerivedData、シミュレータ)、~/.cache、~/.npm、~/.cargo、pip・conda・micromambaのキャッシュ、Homebrewのキャッシュ、Dockerのイメージとボリューム。\n4. 長く使っていない(90日以上)キャッシュと一時ファイル: $TMPDIR、/private/tmp、~/Downloads内の古くて大きいファイル。\n5. 最近30日以内にインストールされたサイズの大きいアプリ (/Applications、~/Applications)。\n6. ゴミ箱のサイズとローカルのTime Machineスナップショット (tmutil listlocalsnapshots /)。\n結果は「項目 · サイズ · 最終使用 · 判断(安全/要確認/危険) · 整理方法(コマンド)」の表にまとめ、確保できる容量の合計とおすすめの順序を提案してください。\niCloud同期フォルダ(~/Library/Mobile Documents)、書類・写真の原本、研究資料(~/Desktop/Research)は整理対象として提案しないでください。",
+    "zh": "你是这台 Mac 的磁盘管理员。现在只做分析并提出清理方案。在我批准之前，不要删除或移动任何东西。\n调查以下内容。耗时较长的 du 要限制深度，权限错误直接跳过。\n1. 磁盘总容量和可用空间 (df -h /)。\n2. 主文件夹下最大的前 20 个文件夹。\n3. 开发和应用缓存：~/Library/Caches、~/Library/Logs、~/Library/Developer（DerivedData、模拟器）、~/.cache、~/.npm、~/.cargo、pip·conda·micromamba 缓存、Homebrew 缓存、Docker 镜像和卷。\n4. 长期未使用（90 天以上）的缓存和临时文件：$TMPDIR、/private/tmp、~/Downloads 中旧的大文件。\n5. 最近 30 天内安装且体积较大的应用 (/Applications、~/Applications)。\n6. 废纸篓大小和本地 Time Machine 快照 (tmutil listlocalsnapshots /)。\n将结果整理成“项目 · 大小 · 最后使用 · 判断（安全/需确认/危险） · 清理方法（命令）”表格，并给出可释放空间的总量和推荐顺序。\n不要将 iCloud 同步文件夹 (~/Library/Mobile Documents)、文档和照片原件、研究资料 (~/Desktop/Research) 列为清理对象。",
+    "es": "Eres el administrador de disco de este Mac. Por ahora, solo analiza y propón cómo limpiar. No borres ni muevas nada hasta que yo lo apruebe.\nInvestiga lo siguiente. Limita la profundidad de los du lentos y omite los errores de permisos.\n1. Capacidad total del disco y espacio libre (df -h /).\n2. Las 20 carpetas más grandes dentro de la carpeta de inicio.\n3. Cachés de desarrollo y de apps: ~/Library/Caches, ~/Library/Logs, ~/Library/Developer (DerivedData, simuladores), ~/.cache, ~/.npm, ~/.cargo, cachés de pip/conda/micromamba, la caché de Homebrew, imágenes y volúmenes de Docker.\n4. Cachés y archivos temporales sin uso durante mucho tiempo (90 días o más): $TMPDIR, /private/tmp y archivos antiguos y grandes en ~/Downloads.\n5. Apps grandes instaladas en los últimos 30 días (/Applications, ~/Applications).\n6. Tamaño de la Papelera e instantáneas locales de Time Machine (tmutil listlocalsnapshots /).\nResume los resultados en una tabla de \"Elemento · Tamaño · Último uso · Valoración (seguro/revisar/riesgoso) · Cómo limpiar (comando)\" y propone el total de espacio que se puede liberar y un orden recomendado.\nNo propongas limpiar carpetas sincronizadas con iCloud (~/Library/Mobile Documents), originales de documentos y fotos ni material de investigación (~/Desktop/Research)."
+  },
+  "대기 메시지를 꺼내지 못했습니다. 이미 처리됐을 수 있습니다.": {
+    "en": "Couldn't pull the queued messages. They may already have been processed.",
+    "ja": "待機メッセージを取り出せませんでした。すでに処理された可能性があります。",
+    "zh": "无法取出排队消息。它们可能已被处理。",
+    "es": "No se pudieron sacar los mensajes en cola. Puede que ya se hayan procesado."
+  },
+  "대기열 전송(Enter)": {
+    "en": "Send queue (Enter)",
+    "ja": "キュー送信(Enter)",
+    "zh": "发送队列（Enter）",
+    "es": "Enviar cola (Enter)"
+  },
+  "대화 기록": {
+    "en": "conversation history",
+    "ja": "会話履歴",
+    "zh": "对话记录",
+    "es": "historial de la conversación"
+  },
+  "대화 기록 파일을 찾지 못해 이름을 저장하지 못했습니다.": {
+    "en": "Couldn't save the name: the conversation history file wasn't found.",
+    "ja": "会話履歴ファイルが見つからず、名前を保存できませんでした。",
+    "zh": "找不到对话记录文件，无法保存名称。",
+    "es": "No se pudo guardar el nombre: no se encontró el archivo de historial de la conversación."
+  },
+  "대화 기록이 없어 다시 시작할 수 없습니다.": {
+    "en": "Can't restart: there's no conversation history.",
+    "ja": "会話履歴がないため再起動できません。",
+    "zh": "没有对话记录，无法重新启动。",
+    "es": "No se puede reiniciar: no hay historial de la conversación."
+  },
+  "대화 선택(/resume)": {
+    "en": "conversation picker (/resume)",
+    "ja": "会話選択(/resume)",
+    "zh": "对话选择（/resume）",
+    "es": "selector de conversaciones (/resume)"
+  },
+  "모델 %@": {
+    "en": "model %@",
+    "ja": "モデル %@",
+    "zh": "模型 %@",
+    "es": "modelo %@"
+  },
+  "모델 전환 확인창에 자동으로 Yes를 선택했습니다 (직접 고른 모델 변경)": {
+    "en": "Automatically chose Yes in the model switch prompt (model change you picked)",
+    "ja": "モデル切り替えの確認で自動的にYesを選択しました (自分で選んだモデル変更)",
+    "zh": "已在模型切换确认中自动选择 Yes（你选择的模型更改）",
+    "es": "Se eligió Yes automáticamente en la confirmación de cambio de modelo (cambio elegido por ti)"
+  },
+  "모드 전환(Shift+Tab)": {
+    "en": "Switch mode (Shift+Tab)",
+    "ja": "モード切替(Shift+Tab)",
+    "zh": "切换模式（Shift+Tab）",
+    "es": "Cambiar modo (Shift+Tab)"
+  },
+  "사용량 출력을 읽지 못함": {
+    "en": "Couldn't read usage output",
+    "ja": "使用量の出力を読み取れません",
+    "zh": "无法读取用量输出",
+    "es": "No se pudo leer la salida de uso"
+  },
+  "새 세션 '%@' 시작 (tmux: %@)": {
+    "en": "Started new session '%@' (tmux: %@)",
+    "ja": "新しいセッション'%@'を開始 (tmux: %@)",
+    "zh": "已启动新会话'%@'（tmux：%@）",
+    "es": "Nueva sesión '%@' iniciada (tmux: %@)"
+  },
+  "새 터미널을 열지 못했습니다: %@": {
+    "en": "Couldn't open a new terminal: %@",
+    "ja": "新しいターミナルを開けませんでした: %@",
+    "zh": "无法打开新终端：%@",
+    "es": "No se pudo abrir una nueva terminal: %@"
+  },
+  "세션": {
+    "en": "Session",
+    "ja": "セッション",
+    "zh": "会话",
+    "es": "Sesión"
+  },
+  "세션 목록(← agents)": {
+    "en": "session list (← agents)",
+    "ja": "セッション一覧(← agents)",
+    "zh": "会话列表（← agents）",
+    "es": "lista de sesiones (← agents)"
+  },
+  "세션 시작 실패: %@": {
+    "en": "Failed to start session: %@",
+    "ja": "セッションの開始に失敗: %@",
+    "zh": "启动会话失败：%@",
+    "es": "No se pudo iniciar la sesión: %@"
+  },
+  "옮길 파일 없음": {
+    "en": "no files to move",
+    "ja": "移動するファイルなし",
+    "zh": "没有要移动的文件",
+    "es": "no hay archivos que mover"
+  },
+  "원격 제어 메뉴에 Enter를 보내지 못했습니다.": {
+    "en": "Couldn't send Enter to the Remote Control menu.",
+    "ja": "Remote ControlメニューにEnterを送信できませんでした。",
+    "zh": "无法向 Remote Control 菜单发送 Enter。",
+    "es": "No se pudo enviar Enter al menú de Remote Control."
+  },
+  "원래 작업 폴더를 찾을 수 없습니다.": {
+    "en": "The original working folder can't be found.",
+    "ja": "元の作業フォルダが見つかりません。",
+    "zh": "找不到原来的工作文件夹。",
+    "es": "No se encuentra la carpeta de trabajo original."
+  },
+  "응답 %@": {
+    "en": "Reply %@",
+    "ja": "応答 %@",
+    "zh": "待回复 %@",
+    "es": "Responder %@"
+  },
+  "이 세션은 tmux 안에서 실행되고 있지 않아 터미널로 열 수 없습니다.": {
+    "en": "This session isn't running inside tmux, so it can't be opened in Terminal.",
+    "ja": "このセッションはtmux内で実行されていないため、ターミナルで開けません。",
+    "zh": "此会话未在 tmux 中运行，无法在终端中打开。",
+    "es": "Esta sesión no se ejecuta dentro de tmux, así que no se puede abrir en Terminal."
+  },
+  "이름을 입력하세요.": {
+    "en": "Enter a name.",
+    "ja": "名前を入力してください。",
+    "zh": "请输入名称。",
+    "es": "Introduce un nombre."
+  },
+  "작업 폴더가 없습니다: %@": {
+    "en": "Working folder doesn't exist: %@",
+    "ja": "作業フォルダがありません: %@",
+    "zh": "工作文件夹不存在：%@",
+    "es": "La carpeta de trabajo no existe: %@"
+  },
+  "작업: %@": {
+    "en": "Task: %@",
+    "ja": "タスク: %@",
+    "zh": "任务：%@",
+    "es": "Tarea: %@"
+  },
+  "중단(Esc)": {
+    "en": "Interrupt (Esc)",
+    "ja": "中断(Esc)",
+    "zh": "中断（Esc）",
+    "es": "Interrumpir (Esc)"
+  },
+  "지난번 종료 때 끈 세션 %@개를 다시 시작했습니다.": {
+    "en": "Restarted %@ sessions that were turned off at the last quit.",
+    "ja": "前回の終了時に止めたセッション%@個を再起動しました。",
+    "zh": "已重新启动上次退出时关闭的 %@ 个会话。",
+    "es": "Se reiniciaron %@ sesiones que se apagaron al cerrar la última vez."
+  },
+  "질문이나 권한 요청이 떠 있으면 Enter가 첫 번째 선택(허용)을 확정할 수 있습니다. 'Esc 후 보내기'는 먼저 Esc로 프롬프트를 닫습니다(거절로 처리될 수 있음).": {
+    "en": "If a question or permission request is showing, Enter may confirm the first choice (allow). 'Esc, then send' first closes the prompt with Esc (it may count as a rejection).",
+    "ja": "質問や権限リクエストが表示されている場合、Enterで最初の選択肢(許可)が確定されることがあります。「Esc後に送信」は先にEscでプロンプトを閉じます(拒否として扱われる場合があります)。",
+    "zh": "如果正显示问题或权限请求，Enter 可能会确认第一个选项（允许）。“按 Esc 后发送”会先用 Esc 关闭提示（可能被视为拒绝）。",
+    "es": "Si hay una pregunta o solicitud de permiso en pantalla, Enter puede confirmar la primera opción (permitir). 'Esc y enviar' primero cierra el aviso con Esc (puede contar como rechazo)."
+  },
+  "취소": {
+    "en": "Cancel",
+    "ja": "キャンセル",
+    "zh": "取消",
+    "es": "Cancelar"
+  },
+  "터미널 '%@'을(를) 찾지 못했습니다.": {
+    "en": "Couldn't find terminal '%@'.",
+    "ja": "ターミナル'%@'が見つかりませんでした。",
+    "zh": "找不到终端'%@'。",
+    "es": "No se encontró la terminal '%@'."
+  },
+  "터미널에서 '%@'을(를) 열었습니다. 설정과 로그인을 마치면 여기에 나타납니다.": {
+    "en": "Opened '%@' in Terminal. It will appear here once setup and login are done.",
+    "ja": "ターミナルで'%@'を開きました。設定とログインを終えるとここに表示されます。",
+    "zh": "已在终端中打开'%@'。完成设置和登录后会显示在这里。",
+    "es": "Se abrió '%@' en Terminal. Aparecerá aquí cuando termines la configuración y el inicio de sesión."
+  },
+  "터미널에서 '%@'의 tmux 세션을 열었습니다. 닫을 때는 창만 닫으면 되고(세션은 계속 실행), 터미널에서 입력한 것도 여기에 반영됩니다.": {
+    "en": "Opened '%@''s tmux session in Terminal. To close, just close the window (the session keeps running). What you type in Terminal also shows up here.",
+    "ja": "ターミナルで'%@'のtmuxセッションを開きました。閉じるときはウィンドウを閉じるだけでよく(セッションは実行を続けます)、ターミナルで入力した内容もここに反映されます。",
+    "zh": "已在终端中打开'%@'的 tmux 会话。关闭时只需关闭窗口（会话继续运行），在终端中输入的内容也会同步到这里。",
+    "es": "Se abrió la sesión tmux de '%@' en Terminal. Para cerrarla, basta con cerrar la ventana (la sesión sigue ejecutándose). Lo que escribas en Terminal también se refleja aquí."
+  },
+  "터미널을 열지 못했습니다: %@": {
+    "en": "Couldn't open Terminal: %@",
+    "ja": "ターミナルを開けませんでした: %@",
+    "zh": "无法打开终端：%@",
+    "es": "No se pudo abrir Terminal: %@"
+  },
+  "팀 %@ 폴더": {
+    "en": "team %@ folder",
+    "ja": "チームの%@フォルダ",
+    "zh": "团队 %@ 文件夹",
+    "es": "carpeta %@ del equipo"
+  },
+  "팀원 이름은 영문·숫자·_·- 만 쓸 수 있습니다 (Claude의 Agent 도구 제한). 잘못된 이름은 건너뛰었습니다.": {
+    "en": "Teammate names can only use letters, digits, _ and - (a limit of Claude's Agent tool). Invalid names were skipped.",
+    "ja": "チームメイトの名前には英字・数字・_・- のみ使えます (ClaudeのAgentツールの制限)。無効な名前はスキップしました。",
+    "zh": "队友名称只能使用英文字母、数字、_ 和 -（Claude 的 Agent 工具限制）。已跳过无效名称。",
+    "es": "Los nombres de compañeros solo pueden usar letras, números, _ y - (límite de la herramienta Agent de Claude). Se omitieron los nombres no válidos."
+  },
+  "폴더 신뢰 선택(↓)": {
+    "en": "Folder trust choice (↓)",
+    "ja": "フォルダ信頼の選択(↓)",
+    "zh": "选择信任文件夹（↓）",
+    "es": "Elegir confiar en la carpeta (↓)"
+  },
+  "폴더 신뢰 확인(Enter)": {
+    "en": "Folder trust confirm (Enter)",
+    "ja": "フォルダ信頼の確定(Enter)",
+    "zh": "确认信任文件夹（Enter）",
+    "es": "Confirmar confianza en la carpeta (Enter)"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "복사": {
+    "en": "Copy",
+    "es": "Copiar",
+    "ja": "コピー",
+    "zh": "复制"
+  },
+  "복사됨": {
+    "en": "Copied",
+    "es": "Copiado",
+    "ja": "コピーしました",
+    "zh": "已复制"
+  },
+  "이 칸의 내용을 복사합니다": {
+    "en": "Copy this block's contents",
+    "es": "Copia el contenido de este bloque",
+    "ja": "このブロックの内容をコピーします",
+    "zh": "复制此区块的内容"
+  }
+}

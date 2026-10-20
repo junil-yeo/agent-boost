@@ -1,0 +1,524 @@
+{
+  "%@ 보관": {
+    "en": "Archived %@",
+    "ja": "%@にアーカイブ",
+    "zh": "%@归档",
+    "es": "Archivado %@"
+  },
+  "%@개": {
+    "en": "%@ items",
+    "ja": "%@件",
+    "zh": "%@ 项",
+    "es": "%@ elementos"
+  },
+  "%@개 선택": {
+    "en": "%@ selected",
+    "ja": "%@件選択",
+    "zh": "已选 %@ 个",
+    "es": "%@ seleccionados"
+  },
+  "Agent Boost를 종료합니다": {
+    "en": "Quit Agent Boost",
+    "ja": "Agent Boostを終了します",
+    "zh": "退出 Agent Boost",
+    "es": "Salir de Agent Boost"
+  },
+  "CLI 다음 입력 제안 켜기 (새로 시작하는 세션부터)": {
+    "en": "Enable CLI next-input suggestions (new sessions only)",
+    "ja": "CLIの次の入力候補をオン(新しく開始するセッションから)",
+    "zh": "开启 CLI 下一步输入建议(仅对新会话生效)",
+    "es": "Activar sugerencias de entrada de la CLI (solo sesiones nuevas)"
+  },
+  "CLI가 세션 목록·선택 화면인 세션 %@개 — Esc로 대화로 돌아간 뒤 끕니다: %@": {
+    "en": "%@ sessions with the CLI on a session list or picker — Esc back to the conversation, then quit: %@",
+    "ja": "CLIがセッション一覧・選択画面になっているセッション %@件 — Escで会話に戻ってから終了します: %@",
+    "zh": "%@ 个会话的 CLI 停在会话列表或选择界面 — 先按 Esc 返回对话再退出: %@",
+    "es": "%@ sesiones con la CLI en una lista o selector — se vuelve a la conversación con Esc y luego se cierran: %@"
+  },
+  "Claude Code 업데이트": {
+    "en": "Update Claude Code",
+    "ja": "Claude Codeをアップデート",
+    "zh": "更新 Claude Code",
+    "es": "Actualizar Claude Code"
+  },
+  "claude update를 실행합니다. 실행 중인 세션은 다시 시작해야 새 버전을 씁니다.": {
+    "en": "Runs claude update. Running sessions use the new version only after a restart.",
+    "ja": "claude updateを実行します。実行中のセッションは再起動後に新しいバージョンを使います。",
+    "zh": "运行 claude update。正在运行的会话需重启后才会使用新版本。",
+    "es": "Ejecuta claude update. Las sesiones en curso usarán la nueva versión solo tras reiniciarse."
+  },
+  "개별 세션": {
+    "en": "Solo sessions",
+    "ja": "個別セッション",
+    "zh": "独立会话",
+    "es": "Sesiones individuales"
+  },
+  "그래도 앱만 종료": {
+    "en": "Quit app anyway",
+    "ja": "それでもアプリだけ終了",
+    "zh": "仍然仅退出应用",
+    "es": "Salir de la app de todos modos"
+  },
+  "기록 없음": {
+    "en": "No transcript",
+    "ja": "記録なし",
+    "zh": "无记录",
+    "es": "Sin registro"
+  },
+  "깨우기 %@": {
+    "en": "Wake %@",
+    "ja": "起動 %@",
+    "zh": "唤醒 %@",
+    "es": "Reactivar %@"
+  },
+  "끄기 %@": {
+    "en": "Quit %@",
+    "ja": "終了 %@",
+    "zh": "关闭 %@",
+    "es": "Cerrar %@"
+  },
+  "다음에 앱을 켜면 다시 시작합니다.": {
+    "en": "They restart the next time you open the app.",
+    "ja": "次にアプリを開くと再開します。",
+    "zh": "下次打开应用时会重新启动。",
+    "es": "Se reiniciarán la próxima vez que abras la app."
+  },
+  "다크 모드로 바꿉니다": {
+    "en": "Switch to dark mode",
+    "ja": "ダークモードに切り替え",
+    "zh": "切换到深色模式",
+    "es": "Cambiar a modo oscuro"
+  },
+  "닫기": {
+    "en": "Close",
+    "ja": "閉じる",
+    "zh": "关闭",
+    "es": "Cerrar"
+  },
+  "대화 검색": {
+    "en": "Search chats",
+    "ja": "会話を検索",
+    "zh": "搜索对话",
+    "es": "Buscar conversaciones"
+  },
+  "대화 글자 기본": {
+    "en": "Default Chat Text Size",
+    "ja": "会話の文字サイズを標準に",
+    "zh": "对话字号恢复默认",
+    "es": "Tamaño de texto predeterminado"
+  },
+  "대화 글자 작게": {
+    "en": "Smaller Chat Text",
+    "ja": "会話の文字を小さく",
+    "zh": "缩小对话字号",
+    "es": "Texto más pequeño"
+  },
+  "대화 글자 크게": {
+    "en": "Larger Chat Text",
+    "ja": "会話の文字を大きく",
+    "zh": "放大对话字号",
+    "es": "Texto más grande"
+  },
+  "대화 기록과 관련 폴더를 디스크에서 지웁니다. 되돌릴 수 없습니다.": {
+    "en": "This deletes the conversation history and related folders from disk. It cannot be undone.",
+    "ja": "会話記録と関連フォルダをディスクから削除します。元に戻せません。",
+    "zh": "将从磁盘删除对话记录和相关文件夹。此操作无法撤销。",
+    "es": "Se borrarán del disco el historial de conversación y las carpetas relacionadas. No se puede deshacer."
+  },
+  "디스크 관리자 생성": {
+    "en": "Create Disk Manager",
+    "ja": "ディスクマネージャーを作成",
+    "zh": "创建磁盘管理器",
+    "es": "Crear gestor de disco"
+  },
+  "모든 세션의 지난 대화에서 찾습니다 (⌘⇧F)": {
+    "en": "Search past conversations of every session (⌘⇧F)",
+    "ja": "すべてのセッションの過去の会話を検索 (⌘⇧F)",
+    "zh": "在所有会话的历史对话中搜索 (⌘⇧F)",
+    "es": "Buscar en las conversaciones anteriores de todas las sesiones (⌘⇧F)"
+  },
+  "백그라운드": {
+    "en": "Background",
+    "ja": "バックグラウンド",
+    "zh": "后台",
+    "es": "Segundo plano"
+  },
+  "백그라운드: 창만 숨기고 앱·세션은 계속 돕니다 (메뉴 막대 아이콘으로 다시 열기).\n앱만 종료: 세션 %@개는 그대로 두고 앱만 끕니다.\n세션까지 종료: 세션 %@개를 모두 끄고(/exit) 앱을 끕니다. 다음 실행 때 다시 시작합니다.": {
+    "en": "Background: hides the window while the app and sessions keep running (reopen from the menu bar icon).\nQuit app only: quits the app and leaves the %@ sessions running.\nQuit with sessions: quits all %@ sessions (/exit) and the app. They restart on the next launch.",
+    "ja": "バックグラウンド: ウィンドウだけ隠し、アプリとセッションは動き続けます(メニューバーアイコンから再表示)。\nアプリだけ終了: %@件のセッションはそのままにアプリだけ終了します。\nセッションも終了: %@件のセッションをすべて終了(/exit)してアプリを終了します。次回起動時に再開します。",
+    "zh": "后台: 仅隐藏窗口,应用和会话继续运行(可从菜单栏图标重新打开)。\n仅退出应用: 保留 %@ 个会话,只退出应用。\n连同会话退出: 关闭全部 %@ 个会话(/exit)并退出应用。下次启动时会重新开始。",
+    "es": "Segundo plano: oculta la ventana y la app y las sesiones siguen en marcha (vuelve a abrirla desde el icono de la barra de menús).\nSalir solo de la app: cierra la app y deja las %@ sesiones en marcha.\nSalir con las sesiones: cierra las %@ sesiones (/exit) y la app. Se reiniciarán en el próximo inicio."
+  },
+  "백그라운드로": {
+    "en": "Move to Background",
+    "ja": "バックグラウンドへ",
+    "zh": "转到后台",
+    "es": "Pasar a segundo plano"
+  },
+  "보관": {
+    "en": "Archive",
+    "ja": "アーカイブ",
+    "zh": "归档",
+    "es": "Archivar"
+  },
+  "보관 %@": {
+    "en": "Archive %@",
+    "ja": "アーカイブ %@",
+    "zh": "归档 %@",
+    "es": "Archivar %@"
+  },
+  "보관함": {
+    "en": "Archive",
+    "ja": "アーカイブ",
+    "zh": "归档",
+    "es": "Archivo"
+  },
+  "보관함이 비어 있습니다": {
+    "en": "The archive is empty",
+    "ja": "アーカイブは空です",
+    "zh": "归档为空",
+    "es": "El archivo está vacío"
+  },
+  "보드 열기": {
+    "en": "Open Board",
+    "ja": "ボードを開く",
+    "zh": "打开面板",
+    "es": "Abrir tablero"
+  },
+  "보드에서 '보관'한 세션이 여기에 모입니다.": {
+    "en": "Sessions you archive from the board appear here.",
+    "ja": "ボードで「アーカイブ」したセッションがここに集まります。",
+    "zh": "在面板上归档的会话会显示在这里。",
+    "es": "Las sesiones que archives desde el tablero aparecen aquí."
+  },
+  "복원": {
+    "en": "Restore",
+    "ja": "復元",
+    "zh": "恢复",
+    "es": "Restaurar"
+  },
+  "복원 %@": {
+    "en": "Restore %@",
+    "ja": "復元 %@",
+    "zh": "恢复 %@",
+    "es": "Restaurar %@"
+  },
+  "새 세션": {
+    "en": "New session",
+    "ja": "新しいセッション",
+    "zh": "新会话",
+    "es": "Nueva sesión"
+  },
+  "선택 해제": {
+    "en": "Deselect All",
+    "ja": "選択解除",
+    "zh": "取消选择",
+    "es": "Deseleccionar"
+  },
+  "선택한 %@개 세션을 보관할까요?": {
+    "en": "Archive the %@ selected sessions?",
+    "ja": "選択した%@件のセッションをアーカイブしますか?",
+    "zh": "归档所选的 %@ 个会话?",
+    "es": "¿Archivar las %@ sesiones seleccionadas?"
+  },
+  "세션 %@개가 실행 중입니다. 세션은 그대로 두고 앱만 끌까요, 세션까지 모두 끌까요(/exit)? 세션까지 끄면 다음에 앱을 켤 때 다시 시작합니다.": {
+    "en": "%@ sessions are running. Quit only the app and leave them running, or quit them too (/exit)? Sessions you quit restart the next time you open the app.",
+    "ja": "%@件のセッションが実行中です。セッションはそのままにアプリだけ終了しますか、それともセッションもすべて終了(/exit)しますか? セッションも終了すると、次にアプリを開いたときに再開します。",
+    "zh": "有 %@ 个会话正在运行。仅退出应用并保留会话,还是连同会话一起关闭(/exit)? 关闭的会话会在下次打开应用时重新启动。",
+    "es": "Hay %@ sesiones en marcha. ¿Salir solo de la app y dejarlas en marcha, o cerrarlas también (/exit)? Las sesiones cerradas se reiniciarán la próxima vez que abras la app."
+  },
+  "세션 %@개를 모두 끄고 종료할까요?": {
+    "en": "Quit all %@ sessions and exit?",
+    "ja": "%@件のセッションをすべて終了してアプリを終了しますか?",
+    "zh": "关闭全部 %@ 个会话并退出?",
+    "es": "¿Cerrar las %@ sesiones y salir?"
+  },
+  "세션까지 종료": {
+    "en": "Quit with Sessions",
+    "ja": "セッションも終了",
+    "zh": "连同会话退出",
+    "es": "Salir con las sesiones"
+  },
+  "실행 중 %@ · 작업 중 %@": {
+    "en": "Running %@ · Working %@",
+    "ja": "実行中 %@ · 作業中 %@",
+    "zh": "运行中 %@ · 工作中 %@",
+    "es": "En marcha %@ · Trabajando %@"
+  },
+  "실행 중인 세션에 /exit": {
+    "en": "Send /exit to running sessions",
+    "ja": "実行中のセッションに/exit",
+    "zh": "向运行中的会话发送 /exit",
+    "es": "Enviar /exit a las sesiones en marcha"
+  },
+  "실행 중인 세션은 먼저 종료합니다. 보관함에서 복원하거나 영구 삭제할 수 있습니다.": {
+    "en": "Running sessions are quit first. You can restore them or delete them permanently from the archive.",
+    "ja": "実行中のセッションは先に終了します。アーカイブから復元または完全に削除できます。",
+    "zh": "运行中的会话会先被关闭。之后可在归档中恢复或永久删除。",
+    "es": "Las sesiones en marcha se cerrarán primero. Puedes restaurarlas o eliminarlas definitivamente desde el archivo."
+  },
+  "알림 기록 지우기": {
+    "en": "Clear notification history",
+    "ja": "通知履歴を消去",
+    "zh": "清除通知记录",
+    "es": "Borrar historial de avisos"
+  },
+  "알림 표시": {
+    "en": "Show Notifications",
+    "ja": "通知を表示",
+    "zh": "显示通知",
+    "es": "Mostrar avisos"
+  },
+  "앱 + 세션 모두 종료": {
+    "en": "Quit App + All Sessions",
+    "ja": "アプリとセッションをすべて終了",
+    "zh": "退出应用和所有会话",
+    "es": "Salir de la app y de todas las sesiones"
+  },
+  "앱만 종료": {
+    "en": "Quit App Only",
+    "ja": "アプリだけ終了",
+    "zh": "仅退出应用",
+    "es": "Salir solo de la app"
+  },
+  "앱만 종료 (세션 유지)": {
+    "en": "Quit App Only (Keep Sessions)",
+    "ja": "アプリだけ終了(セッション維持)",
+    "zh": "仅退出应用(保留会话)",
+    "es": "Salir solo de la app (mantener sesiones)"
+  },
+  "앱을 끄면 이 질문들의 알림을 받을 수 없습니다. 세션은 tmux에서 계속 답을 기다립니다.": {
+    "en": "Once the app quits you won't be notified about these questions. The sessions keep waiting for an answer in tmux.",
+    "ja": "アプリを終了すると、これらの質問の通知を受け取れません。セッションはtmuxで回答を待ち続けます。",
+    "zh": "退出应用后将无法收到这些问题的通知。会话会在 tmux 中继续等待回答。",
+    "es": "Si sales de la app no recibirás avisos de estas preguntas. Las sesiones seguirán esperando respuesta en tmux."
+  },
+  "업데이트": {
+    "en": "Update",
+    "ja": "アップデート",
+    "zh": "更新",
+    "es": "Actualizar"
+  },
+  "영구 삭제": {
+    "en": "Delete Permanently",
+    "ja": "完全に削除",
+    "zh": "永久删除",
+    "es": "Eliminar definitivamente"
+  },
+  "영구 삭제 %@": {
+    "en": "Delete %@ Permanently",
+    "ja": "完全に削除 %@",
+    "zh": "永久删除 %@",
+    "es": "Eliminar definitivamente %@"
+  },
+  "영구 삭제 %@개": {
+    "en": "Delete %@ Permanently",
+    "ja": "%@件を完全に削除",
+    "zh": "永久删除 %@ 项",
+    "es": "Eliminar %@ definitivamente"
+  },
+  "영구 삭제할까요?": {
+    "en": "Delete permanently?",
+    "ja": "完全に削除しますか?",
+    "zh": "要永久删除吗?",
+    "es": "¿Eliminar definitivamente?"
+  },
+  "응답을 기다리는 세션 %@개 — 종료하면 그 질문은 취소(Esc)됩니다:": {
+    "en": "%@ sessions waiting for an answer — quitting cancels their questions (Esc):",
+    "ja": "回答待ちのセッション %@件 — 終了するとその質問はキャンセル(Esc)されます:",
+    "zh": "%@ 个会话正在等待回答 — 退出将取消这些问题(Esc):",
+    "es": "%@ sesiones esperan respuesta — al salir se cancelarán sus preguntas (Esc):"
+  },
+  "응답을 기다리는 세션 %@개가 있습니다": {
+    "en": "%@ sessions are waiting for an answer",
+    "ja": "回答待ちのセッションが%@件あります",
+    "zh": "有 %@ 个会话正在等待回答",
+    "es": "Hay %@ sesiones esperando respuesta"
+  },
+  "응답을 기다리는 세션이 있습니다": {
+    "en": "A session is waiting for an answer",
+    "ja": "回答待ちのセッションがあります",
+    "zh": "有会话正在等待回答",
+    "es": "Hay una sesión esperando respuesta"
+  },
+  "일부 세션이 정상 종료되지 않았습니다": {
+    "en": "Some sessions did not quit cleanly",
+    "ja": "一部のセッションが正常に終了しませんでした",
+    "zh": "部分会话未能正常关闭",
+    "es": "Algunas sesiones no se cerraron correctamente"
+  },
+  "작업 끝나면 종료": {
+    "en": "Quit When Done",
+    "ja": "作業が終わったら終了",
+    "zh": "完成后退出",
+    "es": "Cerrar al terminar"
+  },
+  "작업 중인 세션 %@개 — 작업을 중단합니다: %@": {
+    "en": "%@ working sessions — their work will be interrupted: %@",
+    "ja": "作業中のセッション %@件 — 作業を中断します: %@",
+    "zh": "%@ 个工作中的会话 — 将中断其工作: %@",
+    "es": "%@ sesiones trabajando — se interrumpirá su trabajo: %@"
+  },
+  "작업 중인 세션이 %@개 있습니다": {
+    "en": "%@ sessions are working",
+    "ja": "作業中のセッションが%@件あります",
+    "zh": "有 %@ 个会话正在工作",
+    "es": "Hay %@ sesiones trabajando"
+  },
+  "전체 선택": {
+    "en": "Select All",
+    "ja": "すべて選択",
+    "zh": "全选",
+    "es": "Seleccionar todo"
+  },
+  "조직도": {
+    "en": "Org chart",
+    "ja": "組織図",
+    "zh": "组织图",
+    "es": "Organigrama"
+  },
+  "종료 후 보관함으로 (복원 가능)": {
+    "en": "Quit and move to the archive (restorable)",
+    "ja": "終了してアーカイブへ(復元可能)",
+    "zh": "关闭后移入归档(可恢复)",
+    "es": "Cerrar y mover al archivo (restaurable)"
+  },
+  "종료된 세션을 마지막 모델·effort로 다시 시작": {
+    "en": "Restart ended sessions with their last model and effort",
+    "ja": "終了したセッションを最後のモデル・effortで再開",
+    "zh": "以上次的模型和 effort 重新启动已结束的会话",
+    "es": "Reiniciar las sesiones terminadas con su último modelo y effort"
+  },
+  "중단하고 종료": {
+    "en": "Interrupt and Quit",
+    "ja": "中断して終了",
+    "zh": "中断并退出",
+    "es": "Interrumpir y salir"
+  },
+  "지금 모두 종료 (작업 중단)": {
+    "en": "Quit All Now (Interrupt Work)",
+    "ja": "今すぐすべて終了(作業を中断)",
+    "zh": "立即全部关闭(中断工作)",
+    "es": "Cerrar todo ahora (interrumpir trabajo)"
+  },
+  "지우기": {
+    "en": "Clear",
+    "ja": "消去",
+    "zh": "清除",
+    "es": "Borrar"
+  },
+  "질문 취소하고 종료": {
+    "en": "Cancel Questions and Quit",
+    "ja": "質問をキャンセルして終了",
+    "zh": "取消问题并退出",
+    "es": "Cancelar preguntas y salir"
+  },
+  "창을 닫을까요?": {
+    "en": "Close the window?",
+    "ja": "ウィンドウを閉じますか?",
+    "zh": "关闭窗口?",
+    "es": "¿Cerrar la ventana?"
+  },
+  "창을 숨기고 백그라운드에서 계속 실행합니다. 메뉴 막대 아이콘이나 앱 아이콘으로 다시 엽니다.": {
+    "en": "Hides the window and keeps running in the background. Reopen it from the menu bar icon or the app icon.",
+    "ja": "ウィンドウを隠してバックグラウンドで実行を続けます。メニューバーアイコンかアプリアイコンから再表示します。",
+    "zh": "隐藏窗口并在后台继续运行。可通过菜单栏图标或应用图标重新打开。",
+    "es": "Oculta la ventana y sigue ejecutándose en segundo plano. Vuelve a abrirla desde el icono de la barra de menús o de la app."
+  },
+  "출력 %@ · 합 %@": {
+    "en": "Output %@ · Total %@",
+    "ja": "出力 %@ · 合計 %@",
+    "zh": "输出 %@ · 合计 %@",
+    "es": "Salida %@ · Total %@"
+  },
+  "취소": {
+    "en": "Cancel",
+    "ja": "キャンセル",
+    "zh": "取消",
+    "es": "Cancelar"
+  },
+  "취소 (답하러 가기)": {
+    "en": "Cancel (Go Answer)",
+    "ja": "キャンセル(回答しに行く)",
+    "zh": "取消(去回答)",
+    "es": "Cancelar (ir a responder)"
+  },
+  "터미널식 대화 표시 (가벼움)": {
+    "en": "Terminal-Style Chat View (Lightweight)",
+    "ja": "ターミナル風の会話表示(軽量)",
+    "zh": "终端式对话显示(轻量)",
+    "es": "Vista de chat estilo terminal (ligera)"
+  },
+  "팀원 생성 확인": {
+    "en": "Teammate creation check",
+    "ja": "チームメイト作成の確認",
+    "zh": "队员创建检查",
+    "es": "Comprobación de compañeros creados"
+  },
+  "팀장": {
+    "en": "Team lead",
+    "ja": "チームリーダー",
+    "zh": "组长",
+    "es": "Líder del equipo"
+  },
+  "팀장 보고: %@": {
+    "en": "Team lead reports: %@",
+    "ja": "チームリーダーの報告: %@",
+    "zh": "组长报告: %@",
+    "es": "Informe del líder: %@"
+  },
+  "팀장 화면:\n%@": {
+    "en": "Team lead screen:\n%@",
+    "ja": "チームリーダーの画面:\n%@",
+    "zh": "组长屏幕:\n%@",
+    "es": "Pantalla del líder:\n%@"
+  },
+  "팀장에게 팀원 생성을 지시한 뒤, 실제로 팀원 프로세스가 지정한 모델·effort로 떴는지 앱이 확인합니다. 팀장이 실패를 보고하면 즉시 실패로 표시합니다.": {
+    "en": "After the team lead is told to create teammates, the app checks that each teammate process actually started with the requested model and effort. If the team lead reports a failure, it is marked as failed right away.",
+    "ja": "チームリーダーにチームメイトの作成を指示した後、チームメイトのプロセスが指定のモデル・effortで実際に起動したかをアプリが確認します。チームリーダーが失敗を報告すると、すぐに失敗として表示します。",
+    "zh": "指示组长创建队员后,应用会确认队员进程是否确实以指定的模型和 effort 启动。若组长报告失败,会立即标记为失败。",
+    "es": "Tras pedir al líder que cree compañeros, la app comprueba que cada proceso se inició de verdad con el modelo y el effort indicados. Si el líder informa de un fallo, se marca como fallido de inmediato."
+  },
+  "현재 세션": {
+    "en": "Current session",
+    "ja": "現在のセッション",
+    "zh": "当前会话",
+    "es": "Sesión actual"
+  },
+  "홈 폴더에 'Memory Manager' 세션(Sonnet 5.5 · low)을 만들고 디스크 분석·정리 제안을 바로 지시합니다. 실제 정리는 승인 후에만 합니다.": {
+    "en": "Creates a 'Memory Manager' session (Sonnet 5.5 · low) in your home folder and asks it to analyze the disk and suggest cleanups. Nothing is cleaned up without your approval.",
+    "ja": "ホームフォルダに'Memory Manager'セッション(Sonnet 5.5 · low)を作成し、ディスク分析と整理の提案をすぐに指示します。実際の整理は承認後にのみ行います。",
+    "zh": "在主文件夹中创建 'Memory Manager' 会话(Sonnet 5.5 · low),并立即让它分析磁盘、提出清理建议。实际清理仅在你批准后进行。",
+    "es": "Crea una sesión 'Memory Manager' (Sonnet 5.5 · low) en tu carpeta de inicio y le pide analizar el disco y proponer limpiezas. No se limpia nada sin tu aprobación."
+  },
+  "화면 모드": {
+    "en": "Appearance",
+    "ja": "表示モード",
+    "zh": "显示模式",
+    "es": "Apariencia"
+  },
+  "화이트 모드로 바꿉니다": {
+    "en": "Switch to light mode",
+    "ja": "ライトモードに切り替え",
+    "zh": "切换到浅色模式",
+    "es": "Cambiar a modo claro"
+  },
+  "확인": {
+    "en": "OK",
+    "ja": "OK",
+    "zh": "确定",
+    "es": "Aceptar"
+  },
+  "확인 끝": {
+    "en": "Check done",
+    "ja": "確認完了",
+    "zh": "检查完成",
+    "es": "Comprobación terminada"
+  },
+  "확인 중 %@초 경과 · 최대 2분": {
+    "en": "Checking, %@ s elapsed · up to 2 min",
+    "ja": "確認中 %@秒経過 · 最大2分",
+    "zh": "检查中,已过 %@ 秒 · 最长 2 分钟",
+    "es": "Comprobando, %@ s transcurridos · máx. 2 min"
+  }
+}

@@ -20,7 +20,7 @@ struct PromptCard: View {
                 Image(systemName: "hand.raised.fill").foregroundStyle(Theme.attention)
                 Text(title).font(.headline).lineLimit(2).textSelection(.enabled)
                 Spacer(minLength: 0)
-                if sending { ProgressView().controlSize(.small); Text("전송 중…").font(.caption).foregroundStyle(.secondary) }
+                if sending { ProgressView().controlSize(.small); Text(L("전송 중…")).font(.caption).foregroundStyle(.secondary) }
             }
             if let detail, !detail.isEmpty {
                 Text(detail).font(.callout).foregroundStyle(Color.primary.opacity(0.75)).textSelection(.enabled)
@@ -35,7 +35,7 @@ struct PromptCard: View {
                                 .frame(width: 18, height: 18).background(Circle().fill(Theme.ink.opacity(i == 0 ? 0.28 : 0.12)))
                             Text(label).lineLimit(2).multilineTextAlignment(.leading)
                             Spacer(minLength: 0)
-                            if i == cursor && !sending { Text("기본").font(.caption2).foregroundStyle(.secondary) }
+                            if i == cursor && !sending { Text(L("기본")).font(.caption2).foregroundStyle(.secondary) }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -44,9 +44,9 @@ struct PromptCard: View {
                 }
             }
             HStack {
-                Text("숫자 키 1–\(max(1, min(options.count, 9)))로 선택 · Esc로 취소").font(.caption).foregroundStyle(.secondary)
+                Text(L("숫자 키 1–%@로 선택 · Esc로 취소", String(max(1, min(options.count, 9))))).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button("취소 (Esc)") { onCancel() }.buttonStyle(.raisedCompact).disabled(sending)
+                Button(L("취소 (Esc)")) { onCancel() }.buttonStyle(.raisedCompact).disabled(sending)
             }
         }
         .padding(12)
@@ -59,7 +59,7 @@ struct PromptCard: View {
             Button { withAnimation(.easeOut(duration: 0.12)) { previewOpen.toggle() } } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold)).rotationEffect(.degrees(previewOpen ? 90 : 0))
-                    Text("미리보기").font(.caption)
+                    Text(L("미리보기")).font(.caption)
                 }.foregroundStyle(.secondary)
             }.buttonStyle(.plain)
             if previewOpen {

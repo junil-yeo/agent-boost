@@ -280,20 +280,20 @@ enum PromptDriver {
     static func answer(pane p: String, expected: PromptInfo, optionIndex: Int) -> String? {
         func screen() -> String? { let r = Shell.tmux(["capture-pane", "-p", "-t", p, "-S", "-4"]); return r.code == 0 ? r.out : nil }
         func same(_ x: PromptInfo?) -> Bool { x?.title == expected.title && x?.options == expected.options }
-        guard expected.options.indices.contains(optionIndex) else { return "없는 선택지입니다." }
-        guard let now = screen(), let cur = Screen.prompt(now), same(cur) else { return "화면의 선택창이 바뀌었거나 읽을 수 없어 보내지 않았습니다." }
+        guard expected.options.indices.contains(optionIndex) else { return L("없는 선택지입니다.") }
+        guard let now = screen(), let cur = Screen.prompt(now), same(cur) else { return L("화면의 선택창이 바뀌었거나 읽을 수 없어 보내지 않았습니다.") }
         let delta = optionIndex - cur.cursor
         for _ in 0..<abs(delta) {
-            guard TmuxControl.keys(["-t", p, delta > 0 ? "Down" : "Up"], what: "선택 이동") else { return nil }
+            guard TmuxControl.keys(["-t", p, delta > 0 ? "Down" : "Up"], what: L("선택 이동")) else { return nil }
             usleep(90_000)
         }
         usleep(200_000)
         guard let moved = screen(), let pr = Screen.prompt(moved), same(pr), pr.cursor == optionIndex else {
-            return "커서를 원하는 선택지로 옮기지 못해 취소했습니다. 터미널에서 직접 선택해 주세요."
+            return L("커서를 원하는 선택지로 옮기지 못해 취소했습니다. 터미널에서 직접 선택해 주세요.")
         }
-        guard TmuxControl.keys(["-t", p, "Enter"], what: "선택 확정") else { return nil }
+        guard TmuxControl.keys(["-t", p, "Enter"], what: L("선택 확정")) else { return nil }
         usleep(800_000)
-        if let after = screen(), same(Screen.prompt(after)) { return "선택을 보냈지만 선택창이 아직 떠 있습니다. 터미널에서 확인해 주세요." }
+        if let after = screen(), same(Screen.prompt(after)) { return L("선택을 보냈지만 선택창이 아직 떠 있습니다. 터미널에서 확인해 주세요.") }
         return nil
     }
 }

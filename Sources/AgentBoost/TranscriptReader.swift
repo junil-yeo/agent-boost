@@ -176,7 +176,7 @@ final class TranscriptReader {
             if body.hasPrefix("{"), let d = body.data(using: .utf8), let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] {
                 let kind = j["type"] as? String ?? ""
                 let result = j["result"] as? String ?? j["message"] as? String ?? ""
-                body = kind == "idle_notification" ? "⏸ 대기 중" + (result.isEmpty ? "" : " — " + result) : (result.isEmpty ? kind : result)
+                body = kind == "idle_notification" ? L("⏸ 대기 중") + (result.isEmpty ? "" : " — " + result) : (result.isEmpty ? kind : result)
             }
             out.append((String(s[fr]), body))
         }
@@ -285,7 +285,7 @@ final class TranscriptReader {
     /// on a new branch. Keep only the later copy. The CLI's own "[Request interrupted …]" record is a notice, not my words.
     private static func addUser(_ text: String, id: String, time: Date?, into st: inout Snapshot) {
         if text.hasPrefix("[Request interrupted") {
-            st.entries.append(ChatEntry(id: id, role: .system, text: text.contains("tool use") ? "중단됨 — 도구 실행을 멈췄습니다" : "중단됨", toolName: "auto", time: time))
+            st.entries.append(ChatEntry(id: id, role: .system, text: text.contains("tool use") ? L("중단됨 — 도구 실행을 멈췄습니다") : L("중단됨"), toolName: "auto", time: time))
             return
         }
         if let t = time, let k = st.entries.indices.suffix(30).last(where: {

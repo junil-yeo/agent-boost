@@ -11,17 +11,17 @@ enum Fmt {
     static func ago(_ d: Date?) -> String {
         guard let d else { return "" }
         let s = Int(-d.timeIntervalSinceNow)
-        if s < 60 { return "방금" }
-        if s < 3600 { return "\(s / 60)분 전" }
-        if s < 86400 { return "\(s / 3600)시간 전" }
-        return "\(s / 86400)일 전"
+        if s < 60 { return L("방금") }
+        if s < 3600 { return L("%@분 전", String(s / 60)) }
+        if s < 86400 { return L("%@시간 전", String(s / 3600)) }
+        return L("%@일 전", String(s / 86400))
     }
     static func time(_ d: Date?) -> String {
         guard let d else { return "" }
         let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.string(from: d)
     }
     static func stateLabel(_ s: AgentState) -> String {
-        switch s { case .busy: "작업 중"; case .idle: "대기"; case .ended: "종료됨"; case .unknown: "알 수 없음"; case .needsInput: "응답 필요" }
+        switch s { case .busy: L("작업 중"); case .idle: L("대기"); case .ended: L("종료됨"); case .unknown: L("알 수 없음"); case .needsInput: L("응답 필요") }
     }
     static func stateColor(_ s: AgentState) -> Color {
         switch s { case .busy: Theme.normal; case .idle: Theme.busy; case .ended: .secondary; case .unknown: .gray; case .needsInput: Theme.attention }
@@ -65,13 +65,13 @@ struct RemoteChip: View {
             let pending = store.rcPending.contains(agent.sessionId)
             let tint: Color = on ? Theme.dyn(0x5CCC9E, 0x1F8A5E) : .secondary
             LazyMenu(entries: { [
-                .header("Remote Control (휴대폰·claude.ai/code에서 보기)"),
-                .item((on ? "✓ " : "   ") + "켜기", enabled: !on) { store.toggleRemote(agent) },
-                .item((!on ? "✓ " : "   ") + "끄기", enabled: on) { store.toggleRemote(agent) },
+                .header(L("Remote Control (휴대폰·claude.ai/code에서 보기)")),
+                .item((on ? "✓ " : "   ") + L("켜기"), enabled: !on) { store.toggleRemote(agent) },
+                .item((!on ? "✓ " : "   ") + L("끄기"), enabled: on) { store.toggleRemote(agent) },
             ] }) {
                 HStack(spacing: 4) {
                     Image(systemName: on ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
-                    Text(pending ? "RC 전환 중…" : (on ? "RC 켜짐" : "RC 꺼짐"))
+                    Text(pending ? L("RC 전환 중…") : (on ? L("RC 켜짐") : L("RC 꺼짐")))
                 }
                 .font(.callout.weight(.medium)).lineLimit(1).fixedSize()
                 .padding(.horizontal, 8).padding(.vertical, 3)
@@ -80,8 +80,8 @@ struct RemoteChip: View {
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(tint.opacity(0.35), lineWidth: 0.8))
             }
             .buttonStyle(.plain).disabled(pending || agent.tmuxPane == nil)
-            .help(agent.tmuxPane == nil ? "Remote Control \(on ? "켜짐" : "꺼짐") — 데스크톱 앱 세션은 여기서 바꿀 수 없습니다"
-                  : on ? "Remote Control 켜짐: 휴대폰·claude.ai/code에서 보입니다. 누르면 끕니다." : "Remote Control 꺼짐. 누르면 켭니다.")
+            .help(agent.tmuxPane == nil ? (on ? L("Remote Control 켜짐 — 데스크톱 앱 세션은 여기서 바꿀 수 없습니다") : L("Remote Control 꺼짐 — 데스크톱 앱 세션은 여기서 바꿀 수 없습니다"))
+                  : on ? L("Remote Control 켜짐: 휴대폰·claude.ai/code에서 보입니다. 누르면 끕니다.") : L("Remote Control 꺼짐. 누르면 켭니다."))
         }
     }
 }

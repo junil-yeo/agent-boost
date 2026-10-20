@@ -1,0 +1,50 @@
+{
+  "%@시간 %@분 남음": {
+    "en": "%@h %@m left",
+    "es": "Quedan %@ h %@ min",
+    "ja": "残り%@時間%@分",
+    "zh": "剩余 %@ 小时 %@ 分钟"
+  },
+  "%@일 %@시간 남음": {
+    "en": "%@d %@h left",
+    "es": "Quedan %@ d %@ h",
+    "ja": "残り%@日%@時間",
+    "zh": "剩余 %@ 天 %@ 小时"
+  },
+  "계획 모드": {
+    "en": "Plan mode",
+    "es": "Modo plan",
+    "ja": "プランモード",
+    "zh": "计划模式"
+  },
+  "권한 확인 없음": {
+    "en": "Bypass permissions",
+    "es": "Omitir permisos",
+    "ja": "権限確認なし",
+    "zh": "跳过权限确认"
+  },
+  "기본 모드": {
+    "en": "Default mode",
+    "es": "Modo predeterminado",
+    "ja": "デフォルトモード",
+    "zh": "默认模式"
+  },
+  "모델 미확인": {
+    "en": "Model unknown",
+    "es": "Modelo desconocido",
+    "ja": "モデル未確認",
+    "zh": "模型未知"
+  },
+  "자동 모드": {
+    "en": "Auto mode",
+    "es": "Modo automático",
+    "ja": "自動モード",
+    "zh": "自动模式"
+  },
+  "편집 자동 허용": {
+    "en": "Accept edits",
+    "es": "Aceptar ediciones",
+    "ja": "編集を自動許可",
+    "zh": "自动接受编辑"
+  }
+}

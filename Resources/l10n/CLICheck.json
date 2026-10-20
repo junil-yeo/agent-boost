@@ -1,0 +1,20 @@
+{
+  "Claude Code CLI가 %@%@로 업데이트됐습니다. %@. 전송·상태 표시·대기열이 틀어질 수 있으니 App Developer 세션에 알려 주세요.": {
+    "en": "Claude Code CLI was updated to %@%@. %@. Sending, status display and the queue may break, so please tell the App Developer session.",
+    "es": "Claude Code CLI se actualizó a %@%@. %@. El envío, el estado y la cola pueden fallar; avisa a la sesión App Developer.",
+    "ja": "Claude Code CLI が %@%@ に更新されました。%@。送信・状態表示・キューが正しく動かない可能性があるため、App Developer セッションに知らせてください。",
+    "zh": "Claude Code CLI 已更新到 %@%@。%@。发送、状态显示和队列可能出错，请通知 App Developer 会话。"
+  },
+  "앱이 읽는 CLI 화면 문구 %@개가 사라졌습니다 (%@)": {
+    "en": "%@ CLI screen texts the app reads are gone (%@)",
+    "es": "Desaparecieron %@ textos de pantalla del CLI que la app lee (%@)",
+    "ja": "アプリが読み取る CLI 画面の文言 %@ 件が消えました (%@)",
+    "zh": "应用读取的 %@ 条 CLI 屏幕文本已消失 (%@)"
+  },
+  "입력창을 찾지 못한 세션: %@": {
+    "en": "Sessions with no input box found: %@",
+    "es": "Sesiones sin cuadro de entrada: %@",
+    "ja": "入力欄が見つからないセッション: %@",
+    "zh": "未找到输入框的会话: %@"
+  }
+}

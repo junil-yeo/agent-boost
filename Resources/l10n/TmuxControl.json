@@ -1,0 +1,68 @@
+{
+  "%@ 명령": {
+    "en": "%@ command",
+    "ja": "%@ コマンド",
+    "zh": "%@ 命令",
+    "es": "comando %@"
+  },
+  "%@을(를) tmux에 보내지 못했습니다: %@": {
+    "en": "Couldn't send %@ to tmux: %@",
+    "ja": "%@ を tmux に送信できませんでした: %@",
+    "zh": "无法将%@发送到 tmux: %@",
+    "es": "No se pudo enviar %@ a tmux: %@"
+  },
+  "Enter (다시)": {
+    "en": "Enter (again)",
+    "ja": "Enter (再送)",
+    "zh": "Enter (重试)",
+    "es": "Enter (de nuevo)"
+  },
+  "↓ (기록 탐색 되돌리기)": {
+    "en": "↓ (leave history browsing)",
+    "ja": "↓ (履歴の移動を戻す)",
+    "zh": "↓ (退出历史浏览)",
+    "es": "↓ (salir del historial)"
+  },
+  "대기열 꺼내기(↑)": {
+    "en": "Pull from queue (↑)",
+    "ja": "キューから取り出し (↑)",
+    "zh": "从队列取出 (↑)",
+    "es": "Sacar de la cola (↑)"
+  },
+  "메시지 입력": {
+    "en": "Message input",
+    "ja": "メッセージ入力",
+    "zh": "消息输入",
+    "es": "entrada del mensaje"
+  },
+  "모델 전환 확인(Enter)": {
+    "en": "Confirm model switch (Enter)",
+    "ja": "モデル切り替えの確認 (Enter)",
+    "zh": "确认切换模型 (Enter)",
+    "es": "confirmar cambio de modelo (Enter)"
+  },
+  "여러 줄 붙여넣기에 실패해 줄바꿈이 Enter로 처리될 수 있습니다.": {
+    "en": "Multi-line paste failed, so line breaks may be sent as Enter.",
+    "ja": "複数行の貼り付けに失敗したため、改行が Enter として扱われる可能性があります。",
+    "zh": "多行粘贴失败,换行可能会被当作 Enter 处理。",
+    "es": "Falló el pegado de varias líneas; los saltos de línea pueden enviarse como Enter."
+  },
+  "입력창 비우기": {
+    "en": "Clearing the input box",
+    "ja": "入力欄のクリア",
+    "zh": "清空输入框",
+    "es": "vaciar el cuadro de entrada"
+  },
+  "중단(Esc)": {
+    "en": "Interrupt (Esc)",
+    "ja": "中断 (Esc)",
+    "zh": "中断 (Esc)",
+    "es": "interrumpir (Esc)"
+  },
+  "키 입력": {
+    "en": "Keystrokes",
+    "ja": "キー入力",
+    "zh": "按键输入",
+    "es": "pulsaciones de teclas"
+  }
+}

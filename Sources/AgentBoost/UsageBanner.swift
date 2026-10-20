@@ -22,13 +22,13 @@ struct UsageBanner: View {
                     }
                 }
                 .buttonStyle(TabFaceStyle(raised: true, small: true))
-                .help("github.com/junil-yeo/agent_bridge — 브라우저에서 엽니다")
+                .help(L("github.com/junil-yeo/agent_bridge — 브라우저에서 엽니다"))
             }
             .padding(.top, 12).fixedSize()
             if store.meters.isEmpty || store.rebooting {
                 // power-on self-test while the numbers are on their way; a red OFF flag if they could not be read
                 let failed = !store.usageBusy && store.usageError != nil
-                let status = store.usageBusy ? "사용량 불러오는 중" : (store.loggedOut ? "터미널에서 claude 실행 후 로그인" : failed ? "사용량을 불러오지 못했습니다" : "사용량 대기 중")
+                let status = store.usageBusy ? L("사용량 불러오는 중") : (store.loggedOut ? L("터미널에서 claude 실행 후 로그인") : failed ? L("사용량을 불러오지 못했습니다") : L("사용량 대기 중"))
                 if compact {
                     BootClock { t in
                         HStack(spacing: 6) {
@@ -41,7 +41,7 @@ struct UsageBanner: View {
                     }.help(store.usageError ?? "")
                 } else {
                     ForEach(0..<3, id: \.self) { i in
-                        BootClock { t in MeterSelfTest(t: t + Double(i) * 0.35, status: status, failed: failed, title: store.loggedOut ? "로그인 필요" : nil) }
+                        BootClock { t in MeterSelfTest(t: t + Double(i) * 0.35, status: status, failed: failed, title: store.loggedOut ? L("로그인 필요") : nil) }
                             .help(store.usageError ?? "")
                     }
                 }
@@ -50,10 +50,11 @@ struct UsageBanner: View {
             }
             TrafficLight(meter: store.meters.first { $0.label.lowercased().contains("all models") }, testing: store.meters.isEmpty && store.usageError == nil,
                          refresh: RefreshButton(spinning: store.rebooting) { store.manualRefresh() }
-                            .help("사용량·세션 새로고침 — 5분마다 자동 갱신" + (store.usageUpdated.map { " · 마지막 \(Fmt.time($0))" } ?? "")))
+                            .help(L("사용량·세션 새로고침 — 5분마다 자동 갱신") + (store.usageUpdated.map { L(" · 마지막 %@", Fmt.time($0)) } ?? "")))
             // logo and usage hug the left (fixed widths); the task row takes all the space that is left
             TodoCard(forceIcon: compact).frame(maxWidth: .infinity, alignment: .leading)
             (compact ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(alignment: .trailing, spacing: 4))) {
+                LanguageMenu()
                 TimelineView(.periodic(from: .now, by: 1)) { ctx in
                     Text(UsageBanner.clock.string(from: ctx.date))   // 24-hour HH:mm
                         .font(.system(size: compact ? 15 : 20, weight: .medium, design: .monospaced)).monospacedDigit().fixedSize()
@@ -62,21 +63,21 @@ struct UsageBanner: View {
                         .background(RoundedRectangle(cornerRadius: 6).fill(Theme.bezel))
                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.line, lineWidth: 1))
                 }
-                .help("현재 시각")
+                .help(L("현재 시각"))
                 HStack(spacing: 8) {
                 TimelineView(.periodic(from: .now, by: 5)) { _ in
                     VStack(alignment: .trailing, spacing: 0) {
                         Text(String(format: "RAM %.1fGB", HostMemory.availableGB()))
-                        Text({ let g = HostMemory.diskFreeGB(); return g.isNaN ? "디스크 …" : String(format: "디스크 %.1fGB", g) }())
+                        Text({ let g = HostMemory.diskFreeGB(); return g.isNaN ? L("디스크 …") : L("디스크 %@GB", String(format: "%.1f", g)) }())
                     }.font(.system(size: 11, weight: .medium)).monospacedDigit().foregroundStyle(.secondary).fixedSize()
                 }
-                .help("여유 공간 (5초마다)\nRAM: 작업용 시스템 메모리 중 지금 쓸 수 있는 양 (비어 있음 + 비활성 + 회수 가능)\n디스크: 저장 공간 중 남은 용량")
+                .help(L("여유 공간 (5초마다)\nRAM: 작업용 시스템 메모리 중 지금 쓸 수 있는 양 (비어 있음 + 비활성 + 회수 가능)\n디스크: 저장 공간 중 남은 용량"))
 Button { showNotices.toggle() } label: {
                     Image(systemName: showNotices ? "bell.fill" : "bell.slash").font(.system(size: 14))
                         .foregroundStyle(showNotices ? Theme.accent : Color.secondary)
                 }
                 .buttonStyle(.icon)
-                .help(showNotices ? "알림 막대 켜짐 — 누르면 숨깁니다 (기록은 계속 쌓입니다)" : "알림 막대 꺼짐 — 누르면 알림과 지난 기록을 보여줍니다")
+                .help(showNotices ? L("알림 막대 켜짐 — 누르면 숨깁니다 (기록은 계속 쌓입니다)") : L("알림 막대 꺼짐 — 누르면 알림과 지난 기록을 보여줍니다"))
                 }
             }
         }
@@ -88,16 +89,16 @@ Button { showNotices.toggle() } label: {
         var compact = false
         var label: String {
             let l = m.label.lowercased()
-            if l.contains("session") { return "현재" }
-            if l.contains("all models") { return "주간" }
-            if l.contains("fable") { return "페이블" }
+            if l.contains("session") { return L("현재") }
+            if l.contains("all models") { return L("주간") }
+            if l.contains("fable") { return L("페이블") }
             return m.label.replacingOccurrences(of: "Current week (", with: "").replacingOccurrences(of: ")", with: "")   // another per-model limit: its model name
         }
         /// Use at reset if the current pace holds. Nothing used yet = 0 %; only the first moments of a period (too
         /// little time to extrapolate) have no number.
         var projectionText: String {
-            if let p = m.projected { return "소모 추세에 따른 최종 예상 사용량 \(p)%" }
-            return m.percent == 0 ? "소모 추세에 따른 최종 예상 사용량 0%" : "소모 추세에 따른 최종 예상 사용량 계산 중"
+            if let p = m.projected { return L("소모 추세에 따른 최종 예상 사용량 %@%", String(p)) }
+            return m.percent == 0 ? L("소모 추세에 따른 최종 예상 사용량 %@%", "0") : L("소모 추세에 따른 최종 예상 사용량 계산 중")
         }
         var projectionColor: Color {
             guard let p = m.projected else { return Theme.textDim }
@@ -115,7 +116,7 @@ Button { showNotices.toggle() } label: {
             }
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(RoundedRectangle(cornerRadius: 8).fill(Theme.card))
-            .help(m.remainingText.isEmpty ? m.resets : "초기화: \(m.resets) · \(m.remainingText)")
+            .help(m.remainingText.isEmpty ? m.resets : L("초기화: %@ · %@", m.resets, m.remainingText))
         }
         /// A round instrument: the arc is usage, the magenta bug is time elapsed, the thin inner arc is the projected
         /// use at reset. Numbers sit beside the dial, so nothing is told by colour alone.
@@ -132,10 +133,10 @@ Button { showNotices.toggle() } label: {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(label).font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.busy).lineLimit(1)
                     if let e = m.elapsed {
-                        Text("시간 \(Int(e * 100))% 경과").font(.system(size: 10, weight: .medium).monospacedDigit()).foregroundStyle(Theme.bug).lineLimit(1).minimumScaleFactor(0.8)
+                        Text(L("시간 %@% 경과", String(Int(e * 100)))).font(.system(size: 10, weight: .medium).monospacedDigit()).foregroundStyle(Theme.bug).lineLimit(1).minimumScaleFactor(0.8)
                         Text(m.remainingText).font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.textDim).lineLimit(1).minimumScaleFactor(0.7)
                     } else {
-                        Text(m.resets.isEmpty ? "사용 시작 전" : "초기화 \(m.resets)").font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.textDim).lineLimit(2)
+                        Text(m.resets.isEmpty ? L("사용 시작 전") : L("초기화 %@", m.resets)).font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.textDim).lineLimit(2)
                     }
                 }
                 .frame(width: 92, alignment: .leading)
@@ -143,14 +144,14 @@ Button { showNotices.toggle() } label: {
             // bottom line, the full card width: where this pace ends by the reset
             Text(projectionText).font(.system(size: 10, weight: .medium).monospacedDigit()).foregroundStyle(projectionColor)
                 .lineLimit(1).fixedSize().frame(width: 168, alignment: .leading)
-                .help(m.projected.map { "지금 속도대로면 초기화 때 \($0)%를 씁니다" } ?? (m.percent == 0 ? "이번 기간에 아직 쓴 양이 없습니다" : "기간이 막 시작돼 아직 추세를 계산하지 않습니다"))
+                .help(m.projected.map { L("지금 속도대로면 초기화 때 %@%를 씁니다", String($0)) } ?? (m.percent == 0 ? L("이번 기간에 아직 쓴 양이 없습니다") : L("기간이 막 시작돼 아직 추세를 계산하지 않습니다")))
             }
             .padding(.horizontal, 8).padding(.vertical, 6)
             .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bezel))
             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Theme.line, lineWidth: 1))
             .help(m.elapsed.map { e in
                 let pace = Double(m.percent) / 100 - e
-                return "초기화: \(m.resets)\n" + (pace > 0.05 ? "시간보다 빠르게 쓰는 중 (+\(Int(pace * 100))%p)" : pace < -0.05 ? "여유 있음 (\(Int(-pace * 100))%p)" : "시간과 비슷한 속도")
+                return L("초기화: %@", m.resets) + "\n" + (pace > 0.05 ? L("시간보다 빠르게 쓰는 중 (+%@%p)", String(Int(pace * 100))) : pace < -0.05 ? L("여유 있음 (%@%p)", String(Int(-pace * 100))) : L("시간과 비슷한 속도"))
             } ?? m.resets)
         }
     }
@@ -162,7 +163,7 @@ Button { showNotices.toggle() } label: {
         var body: some View {
             let p = meter?.projected
             let on: Int = p.map { $0 <= 100 ? 0 : $0 <= 120 ? 1 : 2 } ?? -1
-            let tip = p.map { "주간 전체 추세: 초기화 때 \($0)% 예상" } ?? "주간 사용량 추세 계산 전"
+            let tip = p.map { L("주간 전체 추세: 초기화 때 %@% 예상", String($0)) } ?? L("주간 사용량 추세 계산 전")
             Group {
                 if testing { BootClock { t in AnnunciatorPanel(on: on, test: AnnunciatorPanel<EmptyView>.testStep(t), tip: tip, key: refresh) } }
                 else { AnnunciatorPanel(on: on, tip: tip, key: refresh) }

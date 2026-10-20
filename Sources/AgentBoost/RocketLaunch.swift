@@ -22,10 +22,10 @@ struct RocketLaunch: View {
                         .onChange(of: loaded && t >= Self.flight * 0.5, initial: true) { _, ready in if ready { finish() } }
                 }
             }
-            Text("세션을 불러오는 중").font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textDim).padding(16)
+            Text(L("세션을 불러오는 중")).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textDim).padding(16)
         }
         .clipped()
-        .accessibilityElement(children: .ignore).accessibilityLabel("세션을 불러오는 중")
+        .accessibilityElement(children: .ignore).accessibilityLabel(L("세션을 불러오는 중"))
         .onAppear { start = Date(); if loaded { finish() } }
         .onChange(of: loaded) { _, l in if l { finish() } }
     }

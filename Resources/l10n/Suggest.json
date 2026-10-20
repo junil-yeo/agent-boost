@@ -1,0 +1,44 @@
+{
+  "1번으로 진행해 주세요": {
+    "en": "Please go with option 1",
+    "ja": "1番で進めてください",
+    "zh": "请按第 1 个方案进行",
+    "es": "Adelante con la opción 1, por favor"
+  },
+  "네, 그렇게 진행해 주세요": {
+    "en": "Yes, please go ahead",
+    "ja": "はい、その方向で進めてください",
+    "zh": "好的,请就这样进行",
+    "es": "Sí, adelante, por favor"
+  },
+  "네, 지워 주세요": {
+    "en": "Yes, please delete it",
+    "ja": "はい、削除してください",
+    "zh": "好的,请删除",
+    "es": "Sí, elimínalo, por favor"
+  },
+  "네, 커밋해 주세요": {
+    "en": "Yes, please commit",
+    "ja": "はい、コミットしてください",
+    "zh": "好的,请提交",
+    "es": "Sí, haz el commit, por favor"
+  },
+  "네, 테스트까지 돌려 주세요": {
+    "en": "Yes, and please run the tests too",
+    "ja": "はい、テストまで実行してください",
+    "zh": "好的,也请运行测试",
+    "es": "Sí, y ejecuta también las pruebas, por favor"
+  },
+  "변경한 내용을 한 번 더 점검하고 문제 없으면 마무리해 주세요": {
+    "en": "Please review your changes once more and wrap up if everything looks good",
+    "ja": "変更内容をもう一度確認し、問題なければ仕上げてください",
+    "zh": "请再检查一遍改动,没有问题就收尾",
+    "es": "Revisa los cambios una vez más y, si todo está bien, termina, por favor"
+  },
+  "오류 원인을 찾아 고쳐 주세요": {
+    "en": "Please find the cause of the error and fix it",
+    "ja": "エラーの原因を見つけて修正してください",
+    "zh": "请找出错误原因并修复",
+    "es": "Encuentra la causa del error y corrígelo, por favor"
+  }
+}

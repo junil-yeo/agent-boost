@@ -59,8 +59,8 @@ enum CLICheck {
         SendLog.note("CLI 점검 \(from)\(now): 사라진 문구 \(gone.count)개 \(gone), 입력창 못 찾음 \(noBox)")
         guard before != nil, !gone.isEmpty || !noBox.isEmpty else { return nil }   // first run: just remember the version
         var parts: [String] = []
-        if !gone.isEmpty { parts.append("앱이 읽는 CLI 화면 문구 \(gone.count)개가 사라졌습니다 (\(gone.prefix(4).joined(separator: ", "))\(gone.count > 4 ? " …" : ""))") }
-        if !noBox.isEmpty { parts.append("입력창을 찾지 못한 세션: \(noBox.joined(separator: ", "))") }
-        return "Claude Code CLI가 \(from)\(now)로 업데이트됐습니다. " + parts.joined(separator: ". ") + ". 전송·상태 표시·대기열이 틀어질 수 있으니 App Developer 세션에 알려 주세요."
+        if !gone.isEmpty { parts.append(L("앱이 읽는 CLI 화면 문구 %@개가 사라졌습니다 (%@)", String(gone.count), gone.prefix(4).joined(separator: ", ") + (gone.count > 4 ? " …" : ""))) }
+        if !noBox.isEmpty { parts.append(L("입력창을 찾지 못한 세션: %@", noBox.joined(separator: ", "))) }
+        return L("Claude Code CLI가 %@%@로 업데이트됐습니다. %@. 전송·상태 표시·대기열이 틀어질 수 있으니 App Developer 세션에 알려 주세요.", from, now, parts.joined(separator: ". "))
     }
 }
