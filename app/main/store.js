@@ -19,6 +19,8 @@ const Shell = require('./shell');
 const { L } = require('./l10n');
 const M = require('./models');
 const { newAgent, copyAgent, working } = M;
+const Pins = require('./pins');
+const ListMeta = require('./listmeta');
 
 // ── sibling modules (ported from their Swift files in parallel; loaded lazily: some require this one) ────────────────
 function mod(n) {
@@ -155,6 +157,7 @@ const S = {
   pulled: { sid: '', gen: 0, texts: [] },   // queued messages taken back out of the CLI's queue
   lastSentAt: null,          // not @Published in Swift: only ChatView reads it, at scroll time
   launchTab: null,
+  pinnedTeams: [],           // teams the org chart shows (pins.js: the lead is pinned)
 };
 const chat = {};             // sessionId -> [ChatEntry] (not in the snapshot: store.getChat)
 const chatVersion = {};      // sessionId -> bumped whenever chat[sid] changes
@@ -386,6 +389,7 @@ function refresh() {
   for (const a of Object.values(sessions)) {
     if (a.tmuxPane != null && (paneSess[a.tmuxPane] || '').startsWith('ab-')) a.origin = 'board';
   }
+  applyPinMappings(sessions, jobs, paneSess);
   const [teamsRaw, memberSessionIds] = loadTeams(sessions, panes, parkedOriginals);
   const focus = liveChats();
   const all = teamsRaw;
@@ -439,7 +443,8 @@ function refresh() {
     looseAgents.push(a);
   }
   for (const t of all) {
-    for (const m of t.members) enrich(m, focus.has(m.sessionId));
+    const tp = teamPinnedNow(t);
+    for (const m of t.members) enrich(m, focus.has(m.sessionId), tp);
     t.members.sort((x, y) => cmp(x.isLead ? 0 : 1, y.isLead ? 0 : 1) || cmp(x.name, y.name));
   }
   // every session is the lead of an implicit team; until it has a teammate it is an individual session
@@ -461,6 +466,7 @@ function refresh() {
   teams.sort((x, y) => cmp(M.teamLiveCount(x) > 0 ? 0 : 1, M.teamLiveCount(y) > 0 ? 0 : 1) || cmp(x.createdAt ?? -Infinity, y.createdAt ?? -Infinity));
   looseAgents.sort((x, y) => cmp(x.state === 'ended' ? 1 : 0, y.state === 'ended' ? 1 : 0) || cmp(x.name, y.name));
   const everyone = teams.flatMap((t) => t.members).concat(looseAgents);
+  markPinned(teams, looseAgents);
   Cache.setWanted(new Set(everyone.map((a) => a.tmuxPane).filter((x) => x != null)));
   trackLaunches(new Set(Object.values(sessions).map((a) => a.pid).filter((x) => x != null)), new Set(everyone.map((a) => a.tmuxPane).filter((x) => x != null)));
   if (S.spawnChecks.length > 0) verifySpawns(everyone, S.teams);   // (Swift reads self.teams here: the previous tick's)
@@ -621,7 +627,7 @@ function normEntry(e) {
 }
 const squash = (s) => s.split(/\s+/).filter(Boolean).join(' ');
 
-function enrich(a, wantEntries) {
+function enrich(a, wantEntries, pinnedHint) {
   if (a.tmuxPane != null) a.tmuxSession = paneSessionMap[a.tmuxPane] ?? null;
   if (pendingRenames[a.sessionId] != null) a.pendingName = pendingRenames[a.sessionId];
   a.pendingCommands = [...(pendingCommands[a.sessionId] || [])];
@@ -631,7 +637,9 @@ function enrich(a, wantEntries) {
   if (a.tmuxPane != null && working(a)) a.queued = queuedCount(p);
   const R = reader();
   const mode = R.effective(p, wantEntries ? Mode('full') : (a.state === 'ended' ? Mode('skip') : Mode('light')));
-  const loading = R.needsWarm(p, mode, () => refreshSoon());   // first / upgrade parse runs in the background
+  const loading = R.needsWarm(p, mode, () => refreshSoon(), warmPriority(a, wantEntries, pinnedHint));   // first / upgrade parse runs in the background
+  // nothing read yet for this file (no parse, no numbers from an earlier run): the list shows "…", not 0
+  a.tokensUnread = !!loading && typeof R.known === 'function' && !R.known(p);
   const s = loading ? R.peek(p) : R.snapshot(p, mode);
   // model: transcript > what the user asked for / last known (cache) > launch flag (a guess)
   if (s.model) { a.model = s.model; a.modelIsGuess = false; }
@@ -743,6 +751,7 @@ function transcript(sid) {
 function mergeViewers(sessions, panes) {
   const viewers = {};                                   // job id -> viewer
   const hidden = new Set();                             // session ids of parked viewers
+  viewerPairs = [];
   for (const [k, a] of Object.entries(sessions)) {
     if (a.isBackgroundJob) continue;
     const j = a.parkedJobId;
@@ -763,6 +772,7 @@ function mergeViewers(sessions, panes) {
     const v = viewers[j];
     if (v) {
       delete viewers[j];
+      if (!v.sessionId.startsWith('attach:')) viewerPairs.push([v.sessionId, b.sessionId]);   // the job card keeps the viewer's pin
       b.tmuxPane = v.tmuxPane; b.viewerPid = v.pid; b.parkedJobId = j;
       if (v.nameSource === 'user' && v.name) b.name = v.name;
       if (b.tmuxPane != null) {
@@ -877,6 +887,7 @@ function loadSessions(paneByPid, jobs) {
     if (typeof j.cwd === 'string' && (j.cwd === probeDir || j.cwd.startsWith(probeDir))) continue;   // our own usage probe
     const a = newAgent(sid, pid, typeof j.name === 'string' ? j.name : prefixChars(sid, 8));
     a.nameSource = typeof j.nameSource === 'string' ? j.nameSource : null;
+    a.startedAt = typeof j.startedAt === 'number' ? j.startedAt : null;   // the pin rule's "created" before a transcript exists
     a.entrypoint = typeof j.entrypoint === 'string' ? j.entrypoint : null;
     // the CLI derives a name on --resume even when the conversation has a stored title: show the stored one
     if (a.nameSource === 'derived') { const tp = transcript(sid); const t = tp ? storedTitle(tp) : null; if (t != null) a.name = t; }
@@ -1742,6 +1753,7 @@ async function createSession(name, cwd, model, effort, teammates, task, bypass =
   if (prompt) argv.push(prompt);
   const tmuxName = await launchInTmux(clean, cwd, argv);
   if (tmuxName == null) return null;
+  pinLaunches[tmuxName] = now();          // made here: on the org chart from the start
   if (team.length) {
     const pane = (await Shell.tmux(['list-panes', '-t', tmuxName, '-F', '#{pane_id}'])).out.split('\n').filter(Boolean)[0];
     if (pane) startSpawnCheck(pane, team);
@@ -1906,6 +1918,7 @@ async function resume(a, model, effort, bypass = false, fork = false) {
   const argv = [Shell.claude, '--resume', sid, ...(fork ? ['--fork-session'] : []), '--model', model, '--effort', effort, ...(bypass ? ['--dangerously-skip-permissions'] : [])];
   const t = await launchInTmux(a.name, cwd, argv, null, { sid, model, effort, bypass });
   if (t == null) return null;
+  if (fork) pinLaunches[t] = now();       // a copy made here is a new session made here: pinned
   deleted.delete(sid);
   setNoticeValue(L("'%@' 다시 시작 (tmux: %@)", a.name, t) + (fork ? L(' — 복사본(새 세션 ID)으로 분기합니다. 원본 대화는 그대로 남습니다.') : '') + (a.teamName != null && !a.isLead ? L(' — 팀원 세션은 팀과 분리된 개별 세션으로 열립니다.') : ''));
   return t;
@@ -1948,6 +1961,7 @@ function resumeAsJob(sid, jobId, label, cwd, model, effort, bypass) {
     setNoticeValue(L("'%@' CLI 백그라운드 작업 %@(으)로 이어서 열었습니다 (claude --bg --resume + attach).", label, id)
       + ((got != null && got !== sid) ? L(' ⚠️ CLI가 같은 ID로 잇지 않고 복사본(%@)을 만들었습니다. 원본 기록은 그대로 남아 있습니다.', prefixChars(got, 8)) : ''));
     if (got != null && got !== sid && jobNames[id] == null) jobNames[id] = label;
+    if (got != null && got !== sid && Pins.inherit(pins(), sid, got, pinnedSid(sid))) savePins();   // the copy keeps the pin
     refreshSoon();
   })();
   return 'bg:' + sid;
@@ -2170,6 +2184,144 @@ async function resumeSavedSessions() {
   }
   setNoticeValue(L('지난번 종료 때 끈 세션 %@개를 다시 시작했습니다.', String(n)));
 }
+
+// ── org chart pins (pins.js) and the session list (listmeta.js) ─────────────────────────────────────────────────────
+// The org chart, the 개별 세션 tab and the team tabs show pinned sessions only; the 세션 목록 tab shows every one. The
+// store keeps building every card exactly as before (actions, lookups and the archive are unchanged); it only marks
+// each card `pinned` and names the teams the chart shows (S.pinnedTeams). The renderer filters.
+let pinState = null;
+let viewerPairs = [];          // [viewer sid, job sid] of parked viewers this refresh (mergeViewers)
+const pinLaunches = {};        // tmux session the board started a new conversation in -> when (pinned once it registers)
+/** pinned.json, loaded on first use; a first launch of this version writes its installedAt at once. */
+function pins() {
+  if (pinState) return pinState;
+  const r = Pins.load();
+  pinState = r.data;
+  if (r.created) Pins.save(pinState);
+  return pinState;
+}
+function savePins() { Pins.save(pins()); changed(); }
+/** When a conversation began: its transcript's first record, else the live session file's startedAt. */
+function createdOf(a) {
+  if (!a) return null;
+  const p = a.transcriptPath ?? transcript(a.sessionId);
+  if (p != null) { const t = ListMeta.created(p); if (t != null) return t; }
+  return a.startedAt ?? null;
+}
+function pinnedNow(a) { return Pins.isPinned(pins(), a.sessionId, createdOf(a)); }
+function pinnedSid(sid) { return pinnedNow(agent(sid) || newAgent(sid, null, '', 'ended')); }
+const explicitPin = (sid) => pins().pinned.includes(sid) || pins().unpinned.includes(sid);
+/** A team is on the chart when its lead is pinned (pinning a lead pins its team; teammates follow their lead); with no
+ *  lead card, when any member is. */
+function teamPinnedNow(t) {
+  const ms = t.members.filter((m) => !m.isSubagent);
+  const by = new Map(ms.map((m) => [m.sessionId, m]));
+  return Pins.teamPinned(pins(), ms, (sid) => createdOf(by.get(sid)));
+}
+/** Background parse order for this card's transcript (transcript.js PRIO): focused > pinned live > pinned ended > rest. */
+function warmPriority(a, wantEntries, pinnedHint) {
+  const P = (mod('transcript') || {}).PRIO || { focused: 0, pinnedLive: 1, pinnedEnded: 2, other: 3 };
+  if (wantEntries) return P.focused;
+  const on = pinnedHint ?? pinnedNow(a);
+  return !on ? P.other : a.state === 'ended' ? P.pinnedEnded : P.pinnedLive;
+}
+/** Pins that follow a conversation: a session the board just started (pinned at creation), a CLI job that resumed a
+ *  conversation under a new id (job.resumeSessionId → job.sessionId, the mapping the job cards use), a parked viewer's
+ *  job card. */
+function applyPinMappings(sessions, jobs, paneSess) {
+  const d = pins();
+  let dirty = false;
+  for (const [tn, at] of Object.entries(pinLaunches)) if (now() - at > 600 * 1000) delete pinLaunches[tn];
+  for (const a of Object.values(sessions)) {
+    const tn = a.tmuxPane != null ? paneSess[a.tmuxPane] : null;
+    if (tn && pinLaunches[tn] != null && !d.pinned.includes(a.sessionId)) dirty = Pins.pin(d, [a.sessionId]) || dirty;
+  }
+  for (const j of Object.values(jobs)) {
+    if (!j.resumeSessionId || j.resumeSessionId === j.sessionId || explicitPin(j.sessionId)) continue;
+    dirty = Pins.inherit(d, j.resumeSessionId, j.sessionId, pinnedSid(j.resumeSessionId)) || dirty;
+  }
+  for (const [from, to] of viewerPairs) {
+    if (explicitPin(to)) continue;
+    dirty = Pins.inherit(d, from, to, pinnedSid(from)) || dirty;
+  }
+  if (dirty) savePins();
+}
+/** Marks every card pinned or not and names the teams the chart shows. */
+function markPinned(teams, loose) {
+  const shown = [];
+  for (const t of teams) {
+    const on = teamPinnedNow(t);
+    if (on) shown.push(t.name);
+    for (const m of t.members) m.pinned = on;
+  }
+  for (const a of loose) a.pinned = pinnedNow(a);
+  S.pinnedTeams = shown;
+}
+/** The ids a pin / unpin of this card changes: a team member's team is its lead's pin (no lead card: pin this member,
+ *  unpin them all); anything else is itself. */
+function pinTargets(sid, on) {
+  const a = agent(sid);
+  const t = a && a.teamName != null && !a.solo ? S.teams.find((x) => x.name === a.teamName) : null;
+  if (!t) return [sid];
+  const ms = t.members.filter((m) => !m.isSubagent);
+  const lead = ms.find((m) => m.isLead);
+  if (lead) return [lead.sessionId];
+  return on ? [sid] : ms.map((m) => m.sessionId);
+}
+/** 조직도에 올리기 / 조직도에서 내리기. Only the pin changes: the session keeps running, stays in the list. */
+function setPinned(sid, on) {
+  const d = pins();
+  const ids = pinTargets(sid, on);
+  if (on ? Pins.pin(d, ids) : Pins.unpin(d, ids)) savePins();
+  refresh();
+}
+/** The units the first-launch picker offers: one row per team (its lead, else its first member) and per other session. */
+function pinUnits() {
+  const units = [];
+  for (const t of S.teams) {
+    const ms = t.members.filter((m) => !m.isSubagent);
+    if (!ms.length) continue;
+    units.push({ sid: (ms.find((m) => m.isLead) || ms[0]).sessionId, live: M.teamLiveCount(t) > 0, team: t, agent: null });
+  }
+  for (const a of S.loose) if (!a.isSubagent) units.push({ sid: a.sessionId, live: a.state !== 'ended', team: null, agent: a });
+  return units;
+}
+/** The first-launch picker's answer: `sids` = the units to show on the chart (the rest are taken off); null ("나중에")
+ *  = the live ones. Either way the picker is done (initialized). */
+function finishPinSetup(sids) {
+  const units = pinUnits();
+  const want = new Set(sids ?? units.filter((u) => u.live).map((u) => u.sid));
+  const d = pins();
+  for (const u of units) {
+    const cur = u.team ? teamPinnedNow(u.team) : pinnedNow(u.agent);
+    const on = want.has(u.sid);
+    if (cur === on) continue;
+    const ids = pinTargets(u.sid, on);
+    if (on) Pins.pin(d, ids); else Pins.unpin(d, ids);
+  }
+  d.initialized = true;
+  savePins(); refresh();
+}
+/** The 세션 목록 tab's metadata per session id (what is known now; the rest arrives in the background and moves the
+ *  snapshot's listMetaVersion). */
+function sessionListMeta() {
+  const out = {};
+  for (const a of allAgents()) {
+    if (a.isSubagent || a.transcriptPath == null) continue;
+    const e = ListMeta.meta(a.transcriptPath);
+    if (!e) continue;
+    out[a.sessionId] = { created: e.created ?? null, lastAt: e.lastAt ?? null, count: e.count ?? null, branch: e.branch ?? null,
+      cwd: e.cwd ?? null, customTitle: e.customTitle ?? null, aiTitle: e.aiTitle ?? null, firstPrompt: e.firstPrompt ?? null };
+  }
+  return out;
+}
+// the list's metadata moves often while a long history is counted: the snapshot follows at most once a second
+let listMetaShown = 0, listMetaTimer = null;
+ListMeta.setOnChange(() => {
+  if (listMetaTimer) return;
+  listMetaTimer = setTimeout(() => { listMetaTimer = null; listMetaShown = ListMeta.version(); changed(); }, 1000);
+  if (listMetaTimer.unref) listMetaTimer.unref();
+});
 
 // ── archive ───────────────────────────────────────────────────────────────────────────────────────────────────────
 /** Stops the session if running and hides it in the archive. Files stay; restorable. */
@@ -2492,6 +2644,10 @@ function snapshot() {
     emptyTeams: emptyTeams().map((t) => t.name),
     spawnable: { ...spawnable },
     readonly: RO,
+    pins: { initialized: pins().initialized, installedAt: pins().installedAt },
+    pinned: allAgents().filter((a) => a.pinned).map((a) => a.sessionId),
+    pinnedTeams: S.pinnedTeams,
+    listMetaVersion: listMetaShown,
   };
 }
 let pushTimer = null, lastPush = 0, lastJSON = '';
@@ -2589,6 +2745,9 @@ module.exports = {
   wakeSelected, quitSelected: (mode) => quitSelected(mode === 'whenIdle' ? 'whenIdle' : 'now'), archiveSelected,
   archive: byId((a, withTeammates) => archive(a, !!withTeammates)),
   restore: (ids) => restore(ids || []), purge: (ids) => purge(ids || []),
+  // org chart pins (pins.js) and the session list
+  setPinned: (sid, on) => setPinned(sid, !!on), finishPinSetup: (sids) => finishPinSetup(sids == null ? null : sids),
+  sessionListMeta,
   // launches (argument: the launch id = its tmux session name)
   trustFolder: launchById(trustFolder), cancelLaunch: launchById(cancelLaunch), openLaunchTerminal: launchById(openLaunchTerminal),
   // terminals

@@ -69,8 +69,25 @@ function looseTeam(s) {
   };
 }
 
+/** The org chart's view of the state: only pinned sessions and the teams whose lead is pinned (main/pins.js). The
+ *  team and 개별 세션 tabs also show what was opened from the 세션 목록 tab (or a notification) this run (`peek`).
+ *  A state without pin data (the dev fixture) is shown whole. */
+function chartState(s, peek) {
+  if (!s || !s.pins) return s;
+  const pinned = new Set(s.pinned || []), teamsOn = new Set(s.pinnedTeams || []);
+  const look = new Set(peek || []);
+  const teams = (s.teams || []).filter((t) => teamsOn.has(t.name) || (t.members || []).some((m) => look.has(m.sessionId)));
+  const loose = (s.loose || []).filter((a) => pinned.has(a.sessionId) || look.has(a.sessionId));
+  const count = (ts, ls) => ts.reduce((n, t) => n + (t.members || []).filter((m) => !m.isSubagent).length, 0) + ls.filter((a) => !a.isSubagent).length;
+  return { ...s, teams, loose, chartHidden: count(s.teams || [], s.loose || []) - count(teams, loose) };
+}
+
 function RootView() {
-  const s = useRootState();
+  const full = useRootState();
+  const [peek, setPeek] = useState([]);
+  const s = chartState(full, peek);
+  const chart = chartState(full, null);
+  const [pinSheetDone, setPinSheetDone] = useState(false);
   const [tab, setTab] = useState('home');
   const [searching, setSearching] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -80,7 +97,7 @@ function RootView() {
   const compact = useWindowHeight() < 700;
   const teams = (s && s.teams) || [], loose = (s && s.loose) || [];
 
-  const tabExists = (k) => k === 'home' || k === '__archive' || k === '__loose' || teams.some((t) => t.name === k);
+  const tabExists = (k) => k === 'home' || k === '__list' || k === '__archive' || k === '__loose' || teams.some((t) => t.name === k);
   const current = tabExists(tab) ? tab : 'home';
   // every tab visited stays built (hidden); a click only changes which one is visible
   useEffect(() => { if (!alive.includes(current)) setAlive([...alive, current]); }, [current]);
@@ -95,7 +112,13 @@ function RootView() {
     const r = seen.current;
     if (!r.launch) { r.launch = true; if (s.launchTab) setTab(s.launchTab); }
     const navToken = s.navRequest ? s.navRequest.token || JSON.stringify(s.navRequest) : null;
-    if (navToken !== r.nav) { r.nav = navToken; if (s.navRequest && navToken) setTab(s.navRequest.tab); }
+    if (navToken !== r.nav) {
+      r.nav = navToken;
+      // opening a session that is not on the org chart (the session list, a notification): its tab shows it this run
+      const sel = full && full.selectedAgent;
+      if (s.navRequest && navToken && sel && full.pins && !(full.pinned || []).includes(sel) && !peek.includes(sel)) setPeek([...peek, sel]);
+      if (s.navRequest && navToken) setTab(s.navRequest.tab);
+    }
     if (s.selectedAgent !== r.agent) {
       const first = r.agent === undefined;
       r.agent = s.selectedAgent;
@@ -113,14 +136,17 @@ function RootView() {
   // the store reads the notices switch for its desktop notifications (PromptNotifier)
   useEffect(() => { call('store.setPref', 'ui.showNotices', showNotices).catch(() => { }); }, [showNotices]);
   useShortcuts({ newSession: () => setCreating(true), search: () => setSearching(true) });
-  useTrayMark(s);
+  useTrayMark(full);
+  // the org chart's "세션 목록" link
+  useEffect(() => { const f = () => setTab('__list'); window.addEventListener('ab-open-list', f); return () => window.removeEventListener('ab-open-list', f); }, []);
 
   const tabContent = (k, active) => {
     if (k === '__archive') return html`<div class="area-box tab-fill"><${ArchiveView} s=${s} /></div>`;
+    if (k === '__list') return html`<${LazyView} file="sessionlist.js" name="SessionListView" s=${full} active=${active} />`;
     if (k === '__loose') return html`<${LazyView} file="teamdetail.js" name="TeamDetailView" team=${looseTeam(s)} isLoose=${true} active=${active} />`;
     const t = teams.find((x) => x.name === k);
     if (t) return html`<${LazyView} file="teamdetail.js" name="TeamDetailView" team=${t} isLoose=${false} active=${active} />`;
-    return html`<${OrgChartView} s=${s} />`;
+    return html`<${OrgChartView} s=${chart} />`;
   };
   const launches = (s && s.launches) || [];
   const archiveCount = s && s.archive ? Object.keys(s.archive).length : 0;
@@ -130,6 +156,7 @@ function RootView() {
       <div class="tab-row">
         <div class="tabs">
           <${TabButton} title=${L('조직도')} icon="rectangle.3.group" active=${tab === 'home'} onClick=${() => setTab('home')} />
+          ${full && full.pins ? html`<${TabButton} title=${L('세션 목록')} icon="list.bullet" active=${tab === '__list'} onClick=${() => setTab('__list')} />` : null}
           ${loose.length ? html`<${TabButton} title=${L('개별 세션')} icon="person" active=${tab === '__loose'} count=${loose.filter((a) => a.state !== 'ended').length} onClick=${() => setTab('__loose')} />` : null}
           ${teams.filter((t) => t.liveCount > 0 || t.name === tab).map((t) => html`<${TabButton} key=${t.name} title=${t.displayName} icon="person.3" active=${tab === t.name}
               count=${t.liveCount} attention=${t.members.some((m) => m.state === 'needsInput')} onClick=${() => { setTab(t.name); call('store.setSelectedTeam', t.name); }} />`)}
@@ -141,7 +168,7 @@ function RootView() {
           <${Button} kind="quiet" help=${L('창을 숨기고 백그라운드에서 계속 실행합니다. 메뉴 막대 아이콘이나 앱 아이콘으로 다시 엽니다.')} onClick=${() => call('tray.goBackground')}>
             <${Label} icon="moon.zzz" title=${L('백그라운드')} /><//>
           <${TabButton} title=${L('보관함')} icon="archivebox" active=${tab === '__archive'} count=${archiveCount} quiet=${true} onClick=${() => setTab('__archive')} />
-          ${s && (s.selection || []).length ? html`<${SelectionBar} s=${s} />` : null}
+          ${full && (full.selection || []).length ? html`<${SelectionBar} s=${full} />` : null}
           <${Button} kind="quiet" help=${L("홈 폴더에 'Memory Manager' 세션(Sonnet 5.5 · low)을 만들고 디스크 분석·정리 제안을 바로 지시합니다. 실제 정리는 승인 후에만 합니다.")} onClick=${() => call('store.createDiskManager')}>
             <${Label} icon="internaldrive" title=${L('디스크 관리자 생성')} /><//>
           <${Button} kind="quiet" help=${isDark ? L('화이트 모드로 바꿉니다') : L('다크 모드로 바꿉니다')} onClick=${() => applyAppearance(isDark ? 'light' : 'dark', true)}>
@@ -161,6 +188,8 @@ function RootView() {
     </div>
     ${creating ? html`<${LazyView} file="sheets.js" name="NewSessionSheet" sheet=${true} onClose=${() => setCreating(false)} />` : null}
     ${searching ? html`<${LazyView} file="search.js" name="ConvoSearchSheet" sheet=${true} onClose=${() => setSearching(false)} />` : null}
+    ${full && full.pins && !full.pins.initialized && full.firstScanDone && !full.rebooting && !pinSheetDone
+      ? html`<${LazyView} file="sessionlist.js" name="PinSetupSheet" sheet=${true} s=${full} onClose=${() => setPinSheetDone(true)} />` : null}
   </div>`;
 }
 

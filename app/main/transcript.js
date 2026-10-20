@@ -16,6 +16,11 @@ const { L } = require('./l10n');
  *  text cut (unfocused, live); `full`: complete entries (the focused session). */
 const Mode = { skip: 1, light: 2, full: 3 };
 const lightLimit = 4096;
+/** Background parse order: the focused file is parsed at once (its own worker); then pinned live sessions, pinned
+ *  ended ones, everything else. Unread files show "…" until their turn, so the ones on the org chart go first. */
+const PRIO = { focused: 0, pinnedLive: 1, pinnedEnded: 2, other: 3 };
+/** Unread bytes up to which a background parse runs on this thread instead of a worker (a few ms of work). */
+const inlineLimit = 256 * 1024;
 const modeOf = (m) => (typeof m === 'number' ? m : Mode[m] || Mode.full);
 
 /** ModelChoice raw values and labels (Models.swift). */
@@ -101,7 +106,8 @@ class TranscriptReader {
     this.tried = new Map();          // path -> "size|mtime" of the last read attempt: unchanged = do not retry
     this.holdPaths = new Set();      // files whose reader scrolled up: keep older rows past the cap
     this.recentFull = [];            // most recently focused files stay .full (re-focus must not re-parse)
-    this.queue = [];                 // pending background warms (not focused)
+    this.queue = [];                 // pending background warms (not focused), taken by priority (PRIO)
+    this.seq = 0;
     this.running = 0;
     // metadata shown before a file is parsed (model, tokens of the previous run)
     this.meta = {};
@@ -131,10 +137,15 @@ class TranscriptReader {
 
   /** True when the file must be (re)parsed in the background first; callers use peek() meanwhile and `done` runs
    *  when the parse is in. */
-  needsWarm(p, mode, done) {
+  needsWarm(p, mode, done, prio = PRIO.other) {
     mode = modeOf(mode);
     const st = TranscriptReader.stamp(p);
-    if (this.warming.has(p)) return true;
+    if (this.warming.has(p)) {
+      // already waiting: a session that became more important (pinned, focused elsewhere) moves up the queue
+      const q = this.queue.find((j) => j.p === p);
+      if (q && prio < q.prio) q.prio = prio;
+      return true;
+    }
     if ((this.levels.get(p) || 0) >= mode) return false;                                  // loaded at this level
     // a failed try at this level with the file unchanged: still not parsed here (the caller would parse inline), but
     // do not retry a broken file more than every 30 s. Only failures count: a successful light read used to count
@@ -142,14 +153,25 @@ class TranscriptReader {
     const key = st + '|' + mode;
     if (this.tried.get(p) === key && this.triedAt.has(p) && Date.now() - this.triedAt.get(p) < 30000) return true;
     this.warming.add(p);
-    const job = { p, mode, st, key, done };
+    const job = { p, mode, st, key, done, prio, seq: this.seq++ };
     if (mode === Mode.full) this.runWarm(job, true);
     else { this.queue.push(job); this.pump(); }
     return true;
   }
+  /** Starts queued warms, two at a time, most important first (lower prio), in arrival order within a level. */
   pump() {
-    while (this.running < 2 && this.queue.length) this.runWarm(this.queue.shift(), false);
+    while (this.running < 2 && this.queue.length) {
+      let best = 0;
+      for (let i = 1; i < this.queue.length; i++) {
+        const a = this.queue[i], b = this.queue[best];
+        if (a.prio < b.prio || (a.prio === b.prio && a.seq < b.seq)) best = i;
+      }
+      this.runWarm(this.queue.splice(best, 1)[0], false);
+    }
   }
+  /** True when something real can be shown for the file: a parse of it, or the numbers of a previous run. False =
+   *  its numbers are not read yet (the list shows "…", not 0). */
+  known(p) { this.loadMeta(); return this.files.has(p) || this.meta[p] != null; }
   runWarm(job, immediate) {
     if (!immediate) this.running++;
     const finish = (res) => {
@@ -162,10 +184,13 @@ class TranscriptReader {
     };
     const base = this.files.get(job.p) || newSnapshot();
     const hold = this.holdPaths.has(job.p);
-    warmInWorker(job.p, job.mode, base, hold).then(finish, () => {
-      // no worker available: parse here, after the caller has moved on
-      setImmediate(() => { let r = null; try { r = readInto(cloneSnapshot(base), job.p, job.mode, hold); } catch (e) { console.error(e); } finish(r); });
-    });
+    const here = () => setImmediate(() => { let r = null; try { r = readInto(cloneSnapshot(base), job.p, job.mode, hold); } catch (e) { console.error(e); } finish(r); });
+    // a small file is parsed here, after the caller has moved on: starting a worker costs more than the parse (a long
+    // history of small files took ~25 s to show its numbers, one worker per file). Same parse, same rules.
+    let size = Infinity; try { size = fs.statSync(job.p).size - (base.offset || 0); } catch { }
+    if (size <= inlineLimit) { here(); return; }
+    // no worker available: parse here too
+    warmInWorker(job.p, job.mode, base, hold).then(finish, here);
   }
 
   // ── metadata shown before a file is parsed ─────────────────────────────────────────────
@@ -617,11 +642,12 @@ function warmInWorker(p, mode, base, hold) {
 // ── module API: the shared reader (the store's `reader`) plus the static helpers ─────────
 const shared = new TranscriptReader();
 module.exports = {
-  Mode, TranscriptReader, shared, MODEL_CHOICES,
+  Mode, PRIO, TranscriptReader, shared, MODEL_CHOICES,
   snapshot: (p, mode) => shared.snapshot(p, mode),
   peek: (p) => shared.peek(p),
   effective: (p, mode) => shared.effective(p, mode),
-  needsWarm: (p, mode, done) => shared.needsWarm(p, mode, done),
+  needsWarm: (p, mode, done, prio) => shared.needsWarm(p, mode, done, prio),
+  known: (p) => shared.known(p),
   setHoldCap: (h, p) => shared.setHoldCap(h, p),
   teammateMessages, unwrapPaste, lastAnswer, recentAnswers,
   // internals for tests

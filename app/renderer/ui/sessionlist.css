@@ -1,0 +1,53 @@
+/* 세션 목록 tab and the first-launch pin picker (ui/sessionlist.js). Colours and type come from theme.css tokens. */
+.session-list { overflow: hidden; }
+.sl-toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px 0; flex: 0 0 auto; }
+.sl-filters { padding-top: 10px; padding-bottom: 10px; }
+.sl-search { display: flex; align-items: center; gap: 6px; min-width: 240px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line-hi); background: var(--field-bg); }
+.sl-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.sl-search input { flex: 1 1 auto; min-width: 0; font-size: 13px; height: 20px; }
+
+/* one grid for the header and the rows */
+.sl-head, .sl-row { display: grid; grid-template-columns: minmax(220px, 1fr) 76px 64px 112px 64px 82px 92px 300px; column-gap: 12px; align-items: center; }
+.sl-head { padding: 6px 16px 6px 20px; font-size: var(--fs-caption2); font-weight: 600; color: var(--secondary); text-transform: none;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+.sl-head .num, .sl-row .num { text-align: right; }
+
+.vlist { position: relative; overflow-y: auto; overflow-x: hidden; }
+.vlist-body { position: relative; }
+.vlist-item { position: absolute; left: 0; right: 0; }
+.sl-rows { flex: 1 1 auto; min-height: 0; padding: 0 8px 8px; }
+.sl-empty { flex: 1 1 auto; display: flex; min-height: 0; }
+
+.sl-row { height: 100%; padding: 0 8px 0 12px; border-radius: 6px; cursor: default; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent); }
+.sl-row:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.sl-row.ended .sl-name { color: var(--text-dim); }
+.sl-row.pinned { box-shadow: inset 3px 0 0 var(--accent); }
+.sl-title { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.sl-name { font-size: 13.5px; font-weight: 600; }
+.sl-sub { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.sl-sub .sep { margin: 0 4px; }
+.sl-actions { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.sl-pin { min-width: 128px; justify-content: center; }
+.sl-pin.on { color: var(--secondary); }
+.sl-row:not(:hover) .sl-pin.on { opacity: 0.75; }
+
+.sl-group { display: flex; align-items: center; gap: 8px; height: 100%; padding: 8px 10px 0 12px; font-size: 13px; color: var(--fg); min-width: 0; }
+.sl-group .t-caption { min-width: 0; }
+
+/* first-launch picker */
+.pin-setup .pin-list { height: 340px; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--fg) 2%, transparent); }
+.pin-row { display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 12px; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent); cursor: default; }
+.pin-row:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.pin-row > input { appearance: none; -webkit-appearance: none; margin: 0; width: 14px; height: 14px; flex: 0 0 14px; border-radius: 3px; border: 1px solid var(--line-hi); background: var(--field-bg); display: grid; place-content: center; }
+.pin-row > input:checked { background: var(--accent); border-color: var(--accent); }
+.pin-row > input:checked::after { content: ''; width: 8px; height: 4px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+
+/* a narrow window: the created column goes first, then the model */
+@media (max-width: 1240px) {
+  .sl-head, .sl-row { grid-template-columns: minmax(200px, 1fr) 76px 64px 112px 64px 82px 300px; }
+  .sl-head > :nth-child(7), .sl-row > :nth-child(7) { display: none; }
+}
+@media (max-width: 1080px) {
+  .sl-head, .sl-row { grid-template-columns: minmax(180px, 1fr) 76px 64px 64px 82px 300px; }
+  .sl-head > :nth-child(4), .sl-row > :nth-child(4) { display: none; }
+}

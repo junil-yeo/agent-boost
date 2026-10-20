@@ -77,7 +77,9 @@ function Chart({ s }) {
   const cols = Math.max(1, Math.min(teams.length, 3));
   return html`<div class="vstack" style=${{ gap: 'var(--gap)' }}>
     ${teams.length === 0 && loose.length === 0 ? html`<div class="area-box" style=${{ minHeight: '420px', display: 'flex' }}>
-      <${EmptyState} icon="person.3" title=${L('에이전트가 없습니다')} description=${keys(L("오른쪽 위 '새 세션'(⌘N)으로 시작하거나, tmux에서 Claude 팀을 띄우면 여기에 나타납니다."))} />
+      ${s.chartHidden > 0
+        ? html`<${EmptyState} icon="pin" title=${L('조직도에 올린 세션이 없습니다')} description=${L("세션 %@개가 '세션 목록' 탭에 있습니다. 거기서 조직도에 올리세요.", String(s.chartHidden))} />`
+        : html`<${EmptyState} icon="person.3" title=${L('에이전트가 없습니다')} description=${keys(L("오른쪽 위 '새 세션'(⌘N)으로 시작하거나, tmux에서 Claude 팀을 띄우면 여기에 나타납니다."))} />`}
     </div>` : null}
     ${launches.length ? html`<div class="area-box vstack" style=${{ gap: '10px', padding: '14px' }}>
       <span class="t-headline">${L('시작 중인 세션')}</span>
@@ -93,6 +95,11 @@ function Chart({ s }) {
       ${teams.map((t) => html`<${TeamCard} key=${t.name} team=${t} s=${s} sel=${sel} />`)}
     </div>` : null}
     ${loose.length ? html`<${LooseGroup} s=${s} loose=${loose} sel=${sel} />` : null}
+    ${s.chartHidden > 0 ? html`<div class="hstack t-caption fg-secondary" style=${{ gap: '8px', padding: '2px 4px 8px' }}>
+      <${Icon} name="list.bullet" />
+      <span>${L('조직도에 없는 세션 %@개', String(s.chartHidden))}</span>
+      <${Button} kind="raisedCompact" onClick=${() => window.dispatchEvent(new CustomEvent('ab-open-list'))}>${L('세션 목록')}<//>
+    </div>` : null}
   </div>`;
 }
 
@@ -233,14 +240,7 @@ export function NameCard({ agent, s, badge, selected }) {
   };
   const menu = (e) => {
     e.preventDefault();
-    showMenu([
-      ...(canResume(agent) ? [{ item: L('다시 시작…'), action: () => setResuming(true) }] : []),
-      { item: L('이름 변경…'), action: () => renameAgent(agent) },
-      ...(canQuit(agent) ? [{ item: L('종료…'), action: () => quitAgent(agent) }] : []),
-      ...(agent.tmuxSession != null && !ended ? [{ item: L('터미널에서 열기'), action: () => call('store.openTerminal', sid) }] : []),
-      '-',
-      { item: ended ? L('보관…') : L('종료하고 보관…'), action: () => setDeleting(true) },
-    ], e);
+    showMenu(cardMenuEntries(agent, { resume: () => setResuming(true), archive: () => setDeleting(true) }), e);
   };
   const stop = (f) => (e) => { e.stopPropagation(); f(); };
   const stateColor = Fmt.stateColor(agent.state);
@@ -275,13 +275,26 @@ export function NameCard({ agent, s, badge, selected }) {
     </div>
     <div class="hstack">
       <span class="t-digits" style=${{ fontSize: '12px', fontWeight: 500, color: 'var(--text-dim)', opacity: agent.isEstimated ? 0.55 : 1 }} title=${agent.isEstimated ? L('이전 실행 기준 추정값') : ''}>
-        ${L('출력 %@ · 합 %@', Fmt.tokens(agent.tokens ? agent.tokens.output : 0), Fmt.tokens(tokenTotal(agent.tokens)))}</span>
+        ${agent.tokensUnread ? L('출력 %@ · 합 %@', '…', '…') : L('출력 %@ · 합 %@', Fmt.tokens(agent.tokens ? agent.tokens.output : 0), Fmt.tokens(tokenTotal(agent.tokens)))}</span>
       <span class="spacer"></span>
       <span class="t-caption2 fg-tertiary">${Fmt.ago(agent.lastActivity)}</span>
     </div>
     ${resuming ? html`<span onClick=${(e) => e.stopPropagation()}><${LazyView} file="sheets.js" name="ResumeSheet" sheet=${true} sid=${sid} onClose=${() => setResuming(false)} /></span>` : null}
     ${deleting ? html`<span onClick=${(e) => e.stopPropagation()}><${DeleteSheetLazy} agent=${agent} onClose=${() => setDeleting(false)} /></span>` : null}
   </div>`;
+}
+
+/** A card's context menu (NameCard; the session list uses the same one). `resume` / `archive` open the card's sheets. */
+export function cardMenuEntries(agent, { resume, archive }) {
+  const ended = agent.state === 'ended';
+  return [
+    ...(canResume(agent) ? [{ item: L('다시 시작…'), action: resume }] : []),
+    { item: L('이름 변경…'), action: () => renameAgent(agent) },
+    ...(canQuit(agent) ? [{ item: L('종료…'), action: () => quitAgent(agent) }] : []),
+    ...(agent.tmuxSession != null && !ended ? [{ item: L('터미널에서 열기'), action: () => call('store.openTerminal', agent.sessionId) }] : []),
+    '-',
+    { item: ended ? L('보관…') : L('종료하고 보관…'), action: archive },
+  ];
 }
 
 /** Remote Control chip (Format.swift): on/off menu; disabled while switching or for a session without a pane. */
@@ -313,7 +326,7 @@ function agentAction(name, agent) {
 const renameAgent = (a) => agentAction('renameAgent', a);
 const quitAgent = (a) => agentAction('quitDialog', a);
 /** The archive sheet (agentactions.js DeleteSheet) with its message. */
-function DeleteSheetLazy({ agent, onClose }) {
+export function DeleteSheetLazy({ agent, onClose }) {
   const [msg, setMsg] = useState(null);
   useEffect(() => { loadModule('agentactions.js').then(({ m }) => setMsg(m && m.deleteMessage ? m.deleteMessage(agent) : '')); }, [agent.sessionId, agent.state]);
   return html`<${LazyView} file="agentactions.js" name="DeleteSheet" sheet=${true} agent=${agent} message=${msg || ''} onClose=${onClose} />`;
