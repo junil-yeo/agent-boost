@@ -15,14 +15,14 @@ struct UsageBanner: View {
                         Text("Boost").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(Theme.accent)
                     }
                 }
-                Link(destination: URL(string: "https://github.com/junil-yeo/agent_bridge")!) {
+                Link(destination: URL(string: "https://github.com/junil-yeo/agent-boost")!) {
                     HStack(alignment: .top, spacing: 1) {
                         Text("GitHub Page").font(.system(size: 11, weight: .semibold))
                         Image(systemName: "arrow.up.right").font(.system(size: 7, weight: .bold)).offset(y: -1)   // "opens a page"
                     }
                 }
                 .buttonStyle(TabFaceStyle(raised: true, small: true))
-                .help(L("github.com/junil-yeo/agent_bridge — 브라우저에서 엽니다"))
+                .help(L("github.com/junil-yeo/agent-boost — 브라우저에서 엽니다"))
             }
             .padding(.top, 12).fixedSize()
             if store.meters.isEmpty || store.rebooting {

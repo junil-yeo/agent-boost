@@ -5,11 +5,11 @@
     "zh": " · 上次 %@",
     "es": " · última %@"
   },
-  "github.com/junil-yeo/agent_bridge — 브라우저에서 엽니다": {
-    "en": "github.com/junil-yeo/agent_bridge — opens in your browser",
-    "ja": "github.com/junil-yeo/agent_bridge — ブラウザで開きます",
-    "zh": "github.com/junil-yeo/agent_bridge — 在浏览器中打开",
-    "es": "github.com/junil-yeo/agent_bridge — se abre en el navegador"
+  "github.com/junil-yeo/agent-boost — 브라우저에서 엽니다": {
+    "en": "github.com/junil-yeo/agent-boost — opens in your browser",
+    "ja": "github.com/junil-yeo/agent-boost — ブラウザで開きます",
+    "zh": "github.com/junil-yeo/agent-boost — 在浏览器中打开",
+    "es": "github.com/junil-yeo/agent-boost — se abre en el navegador"
   },
   "기간이 막 시작돼 아직 추세를 계산하지 않습니다": {
     "en": "The period just started, so the trend isn't calculated yet",

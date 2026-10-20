@@ -1,14 +1,14 @@
 #!/bin/bash
 # Agent Boost installer. Paste this one line into Terminal:
 #
-#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/junil-yeo/agent_bridge/main/install.sh)"
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/junil-yeo/agent-boost/main/install.sh)"
 #
 # It checks everything the app needs and installs what is missing (Command Line Tools, Homebrew, tmux, Claude Code,
 # GitHub CLI), signs you in to Claude if needed, builds the app for this Mac, puts it in Applications and opens it.
 # Run it again at any time to update to the latest source; running sessions keep running.
 set -euo pipefail
 
-REPO="${AGENT_BOOST_REPO:-junil-yeo/agent_bridge}"
+REPO="${AGENT_BOOST_REPO:-junil-yeo/agent-boost}"
 BRANCH="${AGENT_BOOST_BRANCH:-main}"
 SRC="$HOME/Library/Application Support/AgentBoost/source"
 APP_NAME="AgentBoost.app"
