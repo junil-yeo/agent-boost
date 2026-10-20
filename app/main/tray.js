@@ -125,9 +125,10 @@ function menuTemplate(s) {
   const all = [...(s.teams || []).flatMap((t) => t.members || []), ...(s.loose || [])];
   const live = all.filter((a) => a.state !== 'ended').length;
   const busy = all.filter((a) => a.state === 'busy').length;
-  const items = [{ label: L('실행 중 %@ · 작업 중 %@', String(live), String(busy)), enabled: false }];
-  const m = (s.meters || [])[0];
-  if (m) items.push({ label: `${m.label.split('Current session').join(L('현재 세션'))} ${m.percent}%`, enabled: false });
+  // status lines: enabled (a disabled item is drawn grey); a click opens the board
+  const items = [{ label: L('실행 중 %@ · 작업 중 %@', String(live), String(busy)), click: () => showBoard() }];
+  const m = (s.meters || []).find((x) => /current session/i.test(x.label)) || (s.meters || [])[0];
+  if (m) items.push({ label: L('현재 세션 사용량 %@%', String(m.percent)), click: () => showBoard() });
   const store = storeModule();
   items.push(
     { type: 'separator' },
