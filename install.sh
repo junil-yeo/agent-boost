@@ -147,8 +147,18 @@ install_linux() {
   if [ -f "$NEW/node_modules/electron/dist/chrome-sandbox" ] && $SUDO chown root:root "$NEW/node_modules/electron/dist/chrome-sandbox" </dev/tty 2>/dev/null \
      && $SUDO chmod 4755 "$NEW/node_modules/electron/dist/chrome-sandbox" 2>/dev/null; then :; else SANDBOX_FLAG="--no-sandbox"; fi
 
-  # replace the running copy (sessions keep running: they live in tmux)
-  pkill -f "$DEST/app/node_modules/electron/dist/electron" 2>/dev/null || true
+  # replace the running copy (sessions keep running: they live in tmux). The flag tells the app to quit without asking
+  # (and without stopping sessions); a copy that does not leave in 15 s is killed before its files are replaced.
+  local pat="$DEST/app/node_modules/electron/dist/electron"
+  if pgrep -f "$pat" >/dev/null 2>&1; then
+    say "Replacing the running Agent Boost (sessions keep running)"
+    mkdir -p "$HOME/.agent-boost"; touch "$HOME/.agent-boost/skip-shutdown-once"
+    pkill -TERM -f "$pat" 2>/dev/null || true
+    for _ in $(seq 1 30); do pgrep -f "$pat" >/dev/null 2>&1 || break; sleep 0.5; done
+    pkill -KILL -f "$pat" 2>/dev/null || true
+    sleep 0.5
+    rm -f "$HOME/.agent-boost/skip-shutdown-once"   # it must not skip a later real quit
+  fi
   rm -rf "$DEST/app"; mv "$NEW" "$DEST/app"
   ELECTRON="$DEST/app/node_modules/electron/dist/electron"
 
@@ -251,13 +261,18 @@ ok "Packaged"
 # Install into Applications (replacing a running copy: sessions keep running) and open
 DEST="/Applications"
 [ -w "$DEST" ] || { DEST="$HOME/Applications"; mkdir -p "$DEST"; }
-running() { pgrep -f "$DEST/$APP_NAME/Contents/MacOS/AgentBoost" >/dev/null; }
+# any running copy (this one, an older Swift build, or a copy started from elsewhere) is replaced: the flag makes it quit
+# without asking and without stopping sessions; one that does not leave in 15 s is killed before its files are replaced
+running() { pgrep -f "/AgentBoost.app/Contents/MacOS/AgentBoost" >/dev/null; }
 if running; then
   say "Replacing the running Agent Boost (sessions keep running)"
   mkdir -p "$HOME/.agent-boost"; touch "$HOME/.agent-boost/skip-shutdown-once"
   osascript -e 'tell application id "local.junil.agentboost" to quit' >/dev/null 2>&1 || true
   for _ in $(seq 1 30); do running || break; sleep 0.5; done
+  pkill -KILL -f "/AgentBoost.app/Contents/MacOS/AgentBoost" 2>/dev/null || true
+  sleep 0.5
 fi
+rm -f "$HOME/.agent-boost/skip-shutdown-once"   # used up or not needed: it must not skip a later real quit
 rm -rf "$DEST/$APP_NAME"
 ditto "$SRC/$APP_NAME" "$DEST/$APP_NAME"
 rm -rf "$SRC/$APP_NAME"
