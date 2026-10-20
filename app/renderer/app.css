@@ -1,0 +1,137 @@
+/* Styles of the app shell (app.js), the usage banner (ui/banner.js), the task cards (ui/todo.js), the rocket loading
+   screen (ui/rocket.js) and the org chart (ui/orgchart.js). Tokens come from theme.css; app.js adds this sheet. */
+
+/* ── RootView ──────────────────────────────────────────────────────────────────────────────────────────────────── */
+.root { display: flex; flex-direction: column; gap: var(--gap); padding: var(--gap); background: var(--base); height: 100%; min-width: 900px; min-height: 600px; }
+.top-box { flex: 0 0 auto; position: relative; z-index: 20; overflow: visible; }
+.tab-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; min-width: 0; }
+.tab-row .tabs { display: flex; align-items: center; gap: 8px; min-width: 0; overflow-x: auto; overflow-y: hidden; flex: 0 1 auto; scrollbar-width: none; }
+.tab-row .tabs::-webkit-scrollbar { display: none; }
+.tab-row .utility { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.tab-stack { position: relative; flex: 1 1 auto; min-height: 0; }
+.tab-layer { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; }
+.tab-layer.hidden { opacity: 0; pointer-events: none; visibility: hidden; z-index: 0; }
+.tab-layer.current { z-index: 1; }
+.tab-fill { flex: 1 1 auto; height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.lazy-placeholder { flex: 1 1 auto; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+/* AlertStrip */
+.alert-strip { flex: 0 0 auto; display: flex; align-items: flex-start; gap: 8px; padding: 6px 14px; box-shadow: inset 0 -1px 0 var(--line); }
+.alert-strip .log { flex: 1 1 auto; overflow-y: auto; transition: height .2s ease-out; }
+.alert-strip .log-row { display: flex; align-items: baseline; gap: 8px; }
+/* LaunchCard / SpawnCheckRow boxes */
+.launch-box { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; padding: 8px 12px; }
+.launch-card { padding: 10px; background: var(--surface1); border-radius: 6px; }
+.spawn-row { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; padding: 6px 14px; font-size: var(--fs-callout); }
+/* MiddleText: two halves that shrink together; the head ends in "…", the tail is cut at its start, so a short box reads
+   "/Users/ju…/app" as .truncationMode(.middle) does */
+.middle-text { display: inline-flex; min-width: 0; max-width: 100%; white-space: nowrap; overflow: hidden; flex: 0 1 auto; }
+.middle-text > .mt-head { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.middle-text > .mt-tail { flex: 0 1 auto; min-width: 0; overflow: hidden; direction: rtl; text-overflow: clip; }
+.middle-text > .mt-tail > span { direction: ltr; unicode-bidi: isolate; }
+
+/* ArchiveView */
+.archive { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.archive-head { display: flex; align-items: center; gap: 10px; padding: 16px; flex: 0 0 auto; }
+.archive-divider { height: 1px; background: var(--line); margin: 0 16px; flex: 0 0 auto; }
+.archive-list { flex: 1 1 auto; overflow-y: auto; padding: 6px 16px; }
+.archive-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
+.archive-row + .archive-row { border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+
+/* first launch: LanguagePickerView */
+.lang-picker { height: 100%; background: #000; display: flex; align-items: center; justify-content: center; }
+.lang-picker .inner { display: flex; flex-direction: column; align-items: center; gap: 28px; opacity: 0; transform: scale(.97); transition: opacity .6s ease-out, transform .6s ease-out; }
+.lang-picker .inner.shown { opacity: 1; transform: none; }
+.lang-picker .title { display: flex; gap: 10px; font: 700 40px var(--font-rounded); color: #fff; }
+.lang-picker .langs { display: flex; flex-direction: column; gap: 10px; padding-top: 8px; }
+.lang-picker .lang-btn { width: 220px; height: 40px; border-radius: 10px; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .18); color: #fff; font-size: 16px; font-weight: 600; cursor: default; }
+.lang-picker .lang-btn:hover { background: rgba(255, 255, 255, .14); }
+
+/* ── UsageBanner ───────────────────────────────────────────────────────────────────────────────────────────────── */
+.usage-banner { display: flex; align-items: center; gap: 14px; background: var(--strip); min-width: 0; }
+.usage-banner > * { flex: 0 0 auto; }
+.name-block { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding-top: 12px; }
+.name-words { gap: 0; font: 700 18px/22px var(--font-rounded); }
+.name-words > span + span { margin-top: -3px; }   /* VStack(spacing: -3) */
+.banner-todo { flex: 1 1 auto !important; min-width: 120px; display: flex; justify-content: flex-start; }
+
+.meter-card { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; background: var(--bezel); border: 1px solid var(--line); border-radius: 10px; }
+.meter-foot { font-size: 10px; font-weight: 500; white-space: nowrap; width: 168px; overflow: visible; }
+.meter-slim { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--card); border-radius: 8px; min-width: 0; }
+.selftest-slim { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--bezel); border-radius: 8px; }
+.selftest-row { height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 6%, transparent); overflow: hidden; }
+.selftest-row > i { display: block; height: 100%; border-radius: 2px; background: color-mix(in srgb, var(--busy) 35%, transparent); }
+.clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.dial { position: relative; flex: 0 0 auto; }
+.dial > canvas { position: absolute; inset: 0; }
+.dial-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; transform: translateY(2px); }
+.dial-value { font: 600 17px var(--font-mono); font-variant-numeric: tabular-nums; }
+.dial-value small { font-size: 9px; font-weight: 600; color: var(--text-dim); }
+.off-flag { font: 800 10px var(--font-mono); color: #fff; background: var(--error); border-radius: 2px; padding: 1px 4px; }
+.off-flag.small { font-size: 9px; padding: 0 3px; }
+
+.usage-bar { position: relative; }
+.usage-bar > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; }
+.usage-bar-track { right: 0; background: var(--quaternary); }
+.usage-bar-marker { position: absolute; overflow: visible; }
+
+.annunciator { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; padding: 0 6px; height: 89px; background: var(--bezel); border: 1px solid var(--line); border-radius: 8px; }
+.lamp { --c: var(--normal); width: 40px; height: 17px; border-radius: 3px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font-size: 10px; font-weight: 700; color: color-mix(in srgb, var(--c) 35%, transparent);
+  background: color-mix(in srgb, var(--c) 7%, transparent); border: 1px solid color-mix(in srgb, var(--c) 25%, transparent); }
+.lamp.lit { color: color-mix(in srgb, var(--lamp-fg) 85%, transparent); background: var(--c); border-color: transparent; }
+.fit-text { display: inline-block; white-space: nowrap; transform-origin: center; }
+.fit-line { display: block; width: 92px; overflow: hidden; white-space: nowrap; }   /* lineLimit(1).minimumScaleFactor */
+
+.banner-clock { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--normal); padding: 2px 8px; background: var(--bezel); border: 1px solid var(--line); border-radius: 6px; white-space: nowrap; line-height: 1.2; }
+
+/* ── TodoCard ──────────────────────────────────────────────────────────────────────────────────────────────────── */
+.todo-row { display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; min-width: 120px; max-width: 100%; scrollbar-width: none; }
+.todo-row::-webkit-scrollbar { display: none; }
+.todo-add { width: 34px; height: 90px; flex: 0 0 34px; border-radius: 10px; color: var(--secondary); background: color-mix(in srgb, var(--card) 60%, transparent); border: 1px solid var(--line); }
+.task-card { width: 180px; height: 90px; flex: 0 0 180px; display: flex; flex-direction: column; gap: 5px; padding: 8px 10px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.task-card.open { border-color: var(--line-hi); }
+.task-divider { height: 1px; background: var(--line); opacity: .5; }
+.task-list { display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow-y: auto; }
+.task-row { display: flex; align-items: center; gap: 8px; padding: 4px; }
+.task-text { flex: 1 1 auto; min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.task-add { gap: 6px; padding: 6px 8px; border-radius: 7px; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+
+/* ── RocketLaunch ──────────────────────────────────────────────────────────────────────────────────────────────── */
+.rocket-launch { position: relative; flex: 1 1 auto; height: 100%; overflow: hidden; }
+.rocket-launch > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.rocket-caption { position: absolute; left: 16px; top: 16px; font-size: 12px; font-weight: 500; color: var(--text-dim); }
+
+/* ── OrgChartView ──────────────────────────────────────────────────────────────────────────────────────────────── */
+.org-scroll { height: 100%; overflow: auto; }
+.org-scroll.fade-in { animation: ab-fade .25s ease-out; }
+.team-grid { display: grid; gap: var(--gap); align-items: start; }
+.fill-grid { display: grid; align-items: start; }
+.org-count { font-size: 12px; font-weight: 500; color: var(--text-dim); }
+.name-card { display: flex; flex-direction: column; gap: 6px; padding: 12px 12px 12px 16px; min-width: 0; cursor: default; }
+.name-card .card-actions { opacity: 0; pointer-events: none; transition: opacity .12s ease-out; }
+.name-card:hover .card-actions { opacity: 1; pointer-events: auto; }
+.state-label { --c: var(--secondary); font-size: var(--fs-caption); font-weight: 600; color: var(--c); padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+  background: color-mix(in srgb, var(--c) 12%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); }
+
+/* ── macOS window chrome (html.mac, set by lib.js) ─────────────────────────────────────────────────────────────────
+   The Swift window has a hidden title bar: the banner box is where the window is dragged, and everything in it that
+   reacts to the mouse stays clickable. A double-click zooms (per the system setting) only in the top title-bar strip,
+   which AppKit handles itself: Electron 33 (Chromium 130) neither zooms on a double-click in a drag region below it nor
+   lets the page see that click (Chromium added the zoom in NativeWidgetMacNSWindow -sendEvent: later). Layers drawn over it (menus,
+   popovers, sheets, alerts) are never drag area. Linux keeps its own title bar: none of this applies there. */
+html.mac .top-box { -webkit-app-region: drag; }
+html.mac .usage-banner > :not(.name-block):not(.banner-todo),
+html.mac .banner-todo > *,
+html.mac .name-block .btn,
+html.mac .tab-row .tabs > *,
+html.mac .tab-row .utility > *,
+html.mac .top-box .btn,
+html.mac .top-box button,
+html.mac .top-box input,
+html.mac .top-box [title],
+html.mac .portal, html.mac .menu-layer, html.mac .popover, html.mac .scrim { -webkit-app-region: no-drag; }
+/* the first-launch language screen: drag anywhere but the buttons */
+html.mac .lang-picker { -webkit-app-region: drag; }
+html.mac .lang-picker .lang-btn { -webkit-app-region: no-drag; }

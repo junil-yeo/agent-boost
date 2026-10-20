@@ -1,0 +1,420 @@
+/* Agent Boost — design tokens and shared styles, ported from Theme.swift (and the few colours other Swift files define).
+ *
+ * Visual language (Theme.swift): flat panels in the manner of VS Code (one bar colour, one editor colour, 1 px seams,
+ * small radii) and a cockpit's instruments. Dark and light ("White Mode") share every token.
+ * Layout as in VS Code: a near-black base, and every area (banner, tab row, side bar, header, chat, input, each section)
+ * a box of one shared colour with its own 1 px rounded edge (.area-box). Areas are told apart by the gap between the
+ * boxes (--gap), never by ruled lines; nothing inside an area takes a second background colour.
+ *
+ * Theme selection (AppearanceMode): <html data-theme="dark|light"> forces a scheme; without the attribute the page
+ * follows the system (prefers-color-scheme). app.js applies localStorage 'ui.appearance' (system | dark | light).
+ *
+ * Colour tokens are Theme.dyn(dark, light) pairs. Opacity variants are written with color-mix(), e.g. SwiftUI
+ * `Theme.accent.opacity(0.16)` → `color-mix(in srgb, var(--accent) 16%, transparent)`.
+ */
+
+/* ── light tokens (also the default before a theme is chosen) ───────────────────────────────────────────────────── */
+:root, :root[data-theme="light"] {
+  color-scheme: light;
+  --base: #E9E9EC;        /* behind everything, seen only in the gaps */
+  --area: #FFFFFF;        /* every area's box (= bgTop, bgBottom, strip, panel, cardTop, cardBot, screen) */
+  --bezel: #F4F4F6;       /* instrument glass, a shade off the box it sits in */
+  --line: #DCDCE0;        /* the 1 px edge of every box */
+  --line-hi: #BDBDC3;     /* hover / focus edge */
+  --surface1: #F3F3F5;    /* hover */
+  --surface2: #E9E9EC;    /* selected / filled control (= userBubble) */
+  --surface3: #DEDEE2;    /* filled control, hover */
+  --text-dim: #5F5F66;
+  --ink: #000000;         /* washes and hairlines over any surface: white in dark, black in light */
+  /* signal colours: glass-cockpit meanings, darker in light mode so they read on white */
+  --accent: #E4521F;      /* International Orange (brand) */
+  --attention: #B45309;   /* amber caution: "needs your answer", never error-red */
+  --error: #DC2626;       /* Theme.errorTone: warning */
+  --busy: #0E7490;        /* cyan: standby / lead */
+  --normal: #15803D;      /* green: running */
+  --bug: #A21CAF;         /* magenta target bug */
+  --model-tint: #6D28D9;
+  --effort-tint: #0F766E;
+  --accent-hover: #F26133;
+  --accent-down: #C2410C;
+  --spinner: #C2410C;     /* Spinner.tint: xterm 174, the CLI's spinner colour (TurnStatus.swift) */
+  --spinner-verb: #A14A0B;/* Spinner.verbTint: xterm 180 */
+  --rc-on: #1F8A5E;       /* RemoteChip "on" tint (Format.swift) */
+  --lamp-fg: #FFFFFF;     /* a lit annunciator lamp's text (Instruments.swift: dyn(0x000000, 0xFFFFFF)) */
+  /* macOS label colours (Color.primary / .secondary / .tertiary / .quaternary) */
+  --fg: rgba(0, 0, 0, 0.85);
+  --fg-solid: #000000;
+  --secondary: rgba(0, 0, 0, 0.50);
+  --tertiary: rgba(0, 0, 0, 0.26);
+  --quaternary: rgba(0, 0, 0, 0.10);
+  /* macOS system colours the Swift code names directly (.orange, .green, .red, .teal, .blue, .gray …) */
+  --sys-orange: #FF9500; --sys-green: #34C759; --sys-red: #FF3B30; --sys-teal: #30B0C7; --sys-blue: #007AFF;
+  --sys-gray: #8E8E93; --sys-purple: #AF52DE; --sys-yellow: #FFCC00; --sys-mint: #00C7BE; --sys-pink: #FF2D55;
+  /* menus, dialogs and tooltips (NSMenu / NSAlert look) */
+  --menu-bg: rgba(246, 246, 248, 0.98);
+  --menu-line: rgba(0, 0, 0, 0.14);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.10);
+  --scrim: rgba(0, 0, 0, 0.18);
+  --field-bg: #FFFFFF;
+}
+
+/* ── dark tokens: forced, or following a dark system ────────────────────────────────────────────────────────────── */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --base: #050506; --area: #101012; --bezel: #08080A; --line: #232327; --line-hi: #46464C;
+  --surface1: #1A1A1D; --surface2: #242428; --surface3: #2E2E33; --text-dim: #9D9DA3; --ink: #FFFFFF;
+  --accent: #F26133; --attention: #FCC24D; --error: #F87171; --busy: #5FD4F4; --normal: #4ADE80; --bug: #E879F9;
+  --model-tint: #CCADFF; --effort-tint: #73D1CC; --accent-hover: #FA7347; --accent-down: #D65229;
+  --spinner: #ED9480; --spinner-verb: #F2B88C; --rc-on: #5CCC9E; --lamp-fg: #000000;
+  --fg: rgba(255, 255, 255, 0.85); --fg-solid: #FFFFFF; --secondary: rgba(255, 255, 255, 0.55);
+  --tertiary: rgba(255, 255, 255, 0.25); --quaternary: rgba(255, 255, 255, 0.10);
+  --sys-orange: #FF9F0A; --sys-green: #30D158; --sys-red: #FF453A; --sys-teal: #40C8E0; --sys-blue: #0A84FF;
+  --sys-gray: #98989D; --sys-purple: #BF5AF2; --sys-yellow: #FFD60A; --sys-mint: #63E6E2; --sys-pink: #FF375F;
+  --menu-bg: rgba(36, 36, 40, 0.98); --menu-line: rgba(255, 255, 255, 0.14);
+  --shadow: 0 12px 34px rgba(0, 0, 0, 0.55), 0 0 0 0.5px rgba(255, 255, 255, 0.10);
+  --scrim: rgba(0, 0, 0, 0.45); --field-bg: #0B0B0D;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --base: #050506; --area: #101012; --bezel: #08080A; --line: #232327; --line-hi: #46464C;
+    --surface1: #1A1A1D; --surface2: #242428; --surface3: #2E2E33; --text-dim: #9D9DA3; --ink: #FFFFFF;
+    --accent: #F26133; --attention: #FCC24D; --error: #F87171; --busy: #5FD4F4; --normal: #4ADE80; --bug: #E879F9;
+    --model-tint: #CCADFF; --effort-tint: #73D1CC; --accent-hover: #FA7347; --accent-down: #D65229;
+    --spinner: #ED9480; --spinner-verb: #F2B88C; --rc-on: #5CCC9E; --lamp-fg: #000000;
+    --fg: rgba(255, 255, 255, 0.85); --fg-solid: #FFFFFF; --secondary: rgba(255, 255, 255, 0.55);
+    --tertiary: rgba(255, 255, 255, 0.25); --quaternary: rgba(255, 255, 255, 0.10);
+    --sys-orange: #FF9F0A; --sys-green: #30D158; --sys-red: #FF453A; --sys-teal: #40C8E0; --sys-blue: #0A84FF;
+    --sys-gray: #98989D; --sys-purple: #BF5AF2; --sys-yellow: #FFD60A; --sys-mint: #63E6E2; --sys-pink: #FF375F;
+    --menu-bg: rgba(36, 36, 40, 0.98); --menu-line: rgba(255, 255, 255, 0.14);
+    --shadow: 0 12px 34px rgba(0, 0, 0, 0.55), 0 0 0 0.5px rgba(255, 255, 255, 0.10);
+    --scrim: rgba(0, 0, 0, 0.45); --field-bg: #0B0B0D;
+  }
+}
+
+/* ── theme-independent tokens ───────────────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* aliases with Theme.swift's names */
+  --background: var(--base); --bg-top: var(--area); --bg-bottom: var(--area); --strip: var(--area);
+  --panel: var(--area); --card: var(--area); --card-top: var(--area); --card-bot: var(--area); --screen: var(--area);
+  --user-bubble: var(--surface2);
+  --peer-bubble: color-mix(in srgb, var(--ink) 4%, transparent);
+  --white: #FFFFFF;
+  /* older names used by the scaffold */
+  --bg: var(--base); --text: var(--fg);
+  /* layout */
+  --gap: 4px;             /* Theme.gap: boxes sit this far apart on the base colour */
+  --area-radius: 8px;     /* Theme.areaRadius */
+  --card-radius: 6px;     /* CardSurface default radius */
+  --control-radius: 4px;  /* raised / tab / quiet buttons, chips, count badges */
+  /* fonts (Linux: system-ui; Korean/CJK falls back to Noto Sans CJK) */
+  --font-ui: system-ui, -apple-system, "Segoe UI", "Cantarell", "Ubuntu", "Noto Sans", "Noto Sans CJK KR", "Noto Sans CJK JP", "Noto Sans CJK SC", sans-serif;
+  --font-mono: "JetBrains Mono", "DejaVu Sans Mono", "Noto Sans Mono", "Noto Sans Mono CJK KR", ui-monospace, monospace;
+  --font-rounded: ui-rounded, "Nunito", "Varela Round", var(--font-ui);
+  /* macOS text styles (points = px): .largeTitle .title .title2 .title3 .headline .body .callout .subheadline
+     .footnote .caption .caption2 */
+  --fs-large-title: 26px; --fs-title: 22px; --fs-title2: 17px; --fs-title3: 15px; --fs-headline: 13px;
+  --fs-body: 13px; --fs-callout: 12px; --fs-subheadline: 11px; --fs-footnote: 10px; --fs-caption: 10px;
+  --fs-caption2: 10px;
+}
+
+/* ── base ───────────────────────────────────────────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; background: var(--base); color: var(--fg);
+  font-family: var(--font-ui); font-size: var(--fs-body); line-height: 1.3;
+  -webkit-font-smoothing: antialiased; user-select: none; -webkit-user-select: none; overflow: hidden;
+}
+#root { height: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.selectable, .selectable * { user-select: text; -webkit-user-select: text; cursor: text; }   /* .textSelection(.enabled) */
+a { color: var(--accent); text-decoration: none; }
+::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent); outline-offset: 1px; }
+/* thin overlay-style scrollbars, as macOS shows them */
+::-webkit-scrollbar { width: 10px; height: 10px; background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 22%, transparent); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--ink) 35%, transparent); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* text helpers: SwiftUI fonts and foreground styles */
+.t-large-title { font-size: var(--fs-large-title); }
+.t-title { font-size: var(--fs-title); }
+.t-title2 { font-size: var(--fs-title2); }
+.t-title3 { font-size: var(--fs-title3); }
+.t-headline { font-size: var(--fs-headline); font-weight: 700; }
+.t-body { font-size: var(--fs-body); }
+.t-callout { font-size: var(--fs-callout); }
+.t-subheadline { font-size: var(--fs-subheadline); }
+.t-footnote { font-size: var(--fs-footnote); }
+.t-caption { font-size: var(--fs-caption); }
+.t-caption2 { font-size: var(--fs-caption2); }
+.t-mono { font-family: var(--font-mono); }
+.t-rounded { font-family: var(--font-rounded); }
+.t-digits { font-variant-numeric: tabular-nums; }      /* .monospacedDigit() */
+.t-medium { font-weight: 500; } .t-semibold { font-weight: 600; } .t-bold { font-weight: 700; } .t-heavy { font-weight: 800; }
+.fg { color: var(--fg); } .fg-secondary { color: var(--secondary); } .fg-tertiary { color: var(--tertiary); }
+.fg-dim { color: var(--text-dim); } .fg-accent { color: var(--accent); } .fg-attention { color: var(--attention); }
+.fg-error { color: var(--error); } .fg-busy { color: var(--busy); } .fg-normal { color: var(--normal); }
+.fg-bug { color: var(--bug); } .fg-model { color: var(--model-tint); } .fg-effort { color: var(--effort-tint); }
+.fg-orange { color: var(--sys-orange); } .fg-green { color: var(--sys-green); } .fg-red { color: var(--sys-red); }
+.fg-teal { color: var(--sys-teal); }
+.one-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }   /* .lineLimit(1) */
+.hstack { display: flex; flex-direction: row; align-items: center; }
+.vstack { display: flex; flex-direction: column; }
+.spacer { flex: 1 1 auto; min-width: 0; }
+.accent { color: var(--accent); }
+
+/* ── surfaces ───────────────────────────────────────────────────────────────────────────────────────────────────── */
+/* areaBox() / panelBox(): the shared area colour, its own 1 px rounded edge, contents clipped to it */
+.area-box { background: var(--area); border: 1px solid var(--line); border-radius: var(--area-radius); overflow: hidden; }
+/* the base colour with boxes --gap apart (the window's root: .padding(Theme.gap).background(Theme.base)) */
+.gap-layout { display: flex; flex-direction: column; gap: var(--gap); padding: var(--gap); background: var(--base); height: 100%; }
+/* cardSurface(radius:selected:hover:) — hover is automatic; add .selected */
+.card-surface { background: var(--card-top); border: 1px solid var(--line); border-radius: var(--card-radius); transition: border-color .15s ease-out; }
+.card-surface:hover { border-color: var(--line-hi); }
+.card-surface.selected { border: 1.5px solid var(--accent); }
+/* instrument glass */
+.bezel { background: var(--bezel); border: 1px solid var(--line); border-radius: 10px; }
+
+/* ── buttons ────────────────────────────────────────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px; margin: 0; padding: 0;
+  border: 0; background: none; color: inherit; font: inherit; cursor: default; white-space: nowrap;
+  -webkit-app-region: no-drag; flex: 0 0 auto;
+}
+.btn:disabled, .btn.disabled { opacity: .4; pointer-events: none; }
+.btn-plain { }   /* .buttonStyle(.plain): no chrome at all */
+
+/* RaisedButtonStyle (.raised / .raisedCompact / .raisedProminent / active) */
+.btn-raised {
+  font-size: 13px; font-weight: 500; color: color-mix(in srgb, var(--fg-solid) 88%, transparent);
+  padding: 0 14px; min-height: 32px; border-radius: 4px;
+  background: color-mix(in srgb, var(--ink) 7%, transparent); border: 1px solid var(--line);
+  transition: background-color .08s ease-out, opacity .08s ease-out;
+}
+.btn-raised:active { background: color-mix(in srgb, var(--ink) 12%, transparent); }
+.btn-raised.compact { padding: 0 10px; min-height: 28px; }
+.btn-raised.prominent, .btn-raised.active { background: var(--accent); color: #fff; font-weight: 600; border-color: transparent; }
+.btn-raised.prominent:active, .btn-raised.active:active { background: var(--accent); opacity: .85; }
+
+/* TabFaceStyle (raised = the open tab, strong = 새 세션, small = the GitHub link) */
+.btn-tab {
+  font-size: 13px; font-weight: 500; color: var(--text-dim); padding: 0 12px; min-height: 30px; border-radius: 4px;
+  background: transparent; border: 1px solid transparent; transition: background-color .12s ease-out;
+}
+.btn-tab:hover { background: var(--surface1); }
+.btn-tab:active { background: var(--surface2); }
+.btn-tab.raised { font-weight: 600; color: var(--fg); background: var(--surface2); }
+.btn-tab.raised:hover { background: var(--surface3); }
+.btn-tab.raised:active { background: var(--surface2); }
+.btn-tab.strong { font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.btn-tab.strong:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.btn-tab.strong:active { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+.btn-tab.small { font-size: 11px; padding: 0 8px; min-height: 20px; border-radius: 3px; }
+
+/* QuietButtonStyle: utility actions next to the tabs; text-weight, never competing with the tabs or 새 세션 */
+.btn-quiet {
+  font-size: 12px; font-weight: 500; color: var(--text-dim); padding: 0 8px; min-height: 28px; border-radius: 4px;
+  background: transparent; transition: background-color .15s ease-out, color .15s ease-out;
+}
+.btn-quiet:hover { color: var(--fg); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.btn-quiet:active { color: var(--fg); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.btn-quiet.active { color: var(--fg); background: var(--surface2); }
+
+/* IconButtonStyle (.icon): dim at rest, bright with a soft chip on hover/press */
+.btn-icon {
+  color: color-mix(in srgb, var(--fg-solid) 65%, transparent); padding: 3px; border-radius: 5px; background: transparent;
+}
+.btn-icon:hover { color: var(--fg-solid); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+.btn-icon:active { color: var(--fg-solid); background: color-mix(in srgb, var(--ink) 16%, transparent); }
+.btn-icon:disabled, .btn-icon.disabled { opacity: .35; }
+
+/* EditorTabStyle: VS Code editor tab — square, flush with the bar; the open tab takes the page colour with a 2 px
+   accent line on top and every tab a 1 px seam on its right */
+.btn-editor-tab {
+  font-size: 13px; font-weight: 400; color: var(--text-dim); padding: 0 14px; align-self: stretch; height: 100%;
+  background: transparent; box-shadow: inset -1px 0 0 var(--line);
+}
+.btn-editor-tab:hover { color: var(--fg); background: var(--surface1); }
+.btn-editor-tab.active { font-weight: 500; color: var(--fg); background: var(--bg-top); box-shadow: inset 0 2px 0 var(--accent), inset -1px 0 0 var(--line); }
+
+/* RefreshButton key (UsageBanner.swift): the size of an annunciator lamp */
+.btn-key {
+  width: 40px; height: 17px; border-radius: 3px; color: var(--text-dim);
+  background: color-mix(in srgb, var(--ink) 5%, transparent); border: 1px solid var(--line); transition: all .15s ease-out;
+}
+.btn-key:hover:not(:disabled) { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+/* disabled while it spins, but it keeps its tooltip (the last update time) as Swift's .disabled + .help does */
+.btn-key:disabled { opacity: 1; pointer-events: auto; cursor: default; }
+
+/* ── chips, badges, dots, avatars ───────────────────────────────────────────────────────────────────────────────── */
+/* Chip(text:tint:): set --tint to a colour; .neutral = Chip(tint: .white), a plain grey chip like the buttons */
+.chip {
+  --tint: var(--secondary);
+  display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; white-space: nowrap;
+  font-size: var(--fs-callout); font-weight: 500; line-height: 16px; padding: 3px 8px; border-radius: 4px;
+  color: var(--tint); background: color-mix(in srgb, var(--tint) 14%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--tint) 35%, transparent);
+}
+.chip.neutral { color: var(--fg); background: color-mix(in srgb, var(--ink) 5%, var(--panel)); border-color: var(--line); }
+button.chip { cursor: default; font-family: inherit; }
+/* RemoteChip (Format.swift): radius 6, 20 % / 10 % wash, 0.8 px edge */
+.chip.rc { border-radius: 6px; border-width: .8px; background: color-mix(in srgb, var(--tint) 10%, transparent); }
+.chip.rc.on { background: color-mix(in srgb, var(--tint) 20%, transparent); }
+
+/* CountBadge: opaque, high-contrast count pill */
+.count-badge {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1;
+  min-width: 18px; min-height: 18px; padding: 0 5px; border-radius: 4px; background: var(--accent); color: #fff;
+}
+
+/* StateDot: one look for every state, only the colour differs; needsInput = the raised hand, pulsing */
+.state-dot { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: 0 0 16px; }
+.state-dot > i { display: block; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+.state-dot.needs-input { color: var(--attention); font-size: 11px; animation: ab-pulse 1.2s ease-in-out infinite alternate; }
+@keyframes ab-pulse { from { opacity: .5; } to { opacity: 1; } }
+.pulse-wait { animation: ab-pulse-wait 1s ease-in-out infinite alternate; }   /* TurnStatusBar's hand: 0.45 ↔ 1 */
+@keyframes ab-pulse-wait { from { opacity: .45; } to { opacity: 1; } }
+
+/* Avatar: round initial for a speaker */
+.avatar {
+  --tint: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 26px; width: 26px; height: 26px;
+  border-radius: 7px; font-size: 12px; font-weight: 600; color: #fff;
+  background: color-mix(in srgb, var(--tint) 85%, transparent); border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+/* ── icons, labels, spinners ────────────────────────────────────────────────────────────────────────────────────── */
+.icon { display: inline-block; width: 1.05em; height: 1.05em; vertical-align: -0.17em; flex: 0 0 auto; overflow: visible; }
+.label { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.label > .label-text { min-width: 0; }
+.spinner-glyph { display: inline-block; width: 16px; text-align: center; font-size: 15px; font-weight: 700; color: var(--spinner); }
+.spinner-verb { font-size: 13px; font-weight: 600; color: var(--spinner-verb); }
+/* ProgressView().controlSize(.small): the macOS spoke spinner */
+.progress-small { display: inline-block; width: 14px; height: 14px; flex: 0 0 auto; position: relative; }
+.progress-small > i { position: absolute; left: 6.25px; top: 0; width: 1.5px; height: 4px; border-radius: 1px; background: var(--fg); transform-origin: 0.75px 7px; animation: ab-spoke 1s linear infinite; }
+.progress-small.large { width: 28px; height: 28px; }
+.progress-small.large > i { left: 12.5px; width: 3px; height: 8px; border-radius: 1.5px; transform-origin: 1.5px 14px; }
+@keyframes ab-spoke { from { opacity: 1; } to { opacity: .15; } }
+.chase-ring, .boot-canvas { display: inline-block; flex: 0 0 auto; }
+.boost-logo { display: inline-block; flex: 0 0 auto; overflow: visible; color: var(--accent); }
+
+/* ── menus (LazyMenu / Menu / context menus): NSMenu look ───────────────────────────────────────────────────────── */
+.menu-layer { position: fixed; inset: 0; z-index: 1000; }
+.menu {
+  position: fixed; min-width: 160px; max-width: 520px; max-height: calc(100vh - 16px); overflow-y: auto;
+  padding: 5px; border-radius: 7px; background: var(--menu-bg); border: 1px solid var(--menu-line);
+  box-shadow: var(--shadow); font-size: 13px; color: var(--fg-solid);
+  animation: ab-menu-in .08s ease-out;
+}
+@keyframes ab-menu-in { from { opacity: 0; } to { opacity: 1; } }
+.menu-item {
+  display: flex; align-items: center; gap: 6px; width: 100%; padding: 3px 10px; min-height: 22px; border: 0; border-radius: 4px;
+  background: none; text-align: left; white-space: pre; color: inherit; font: inherit; cursor: default;
+}
+.menu-item:not(:disabled):hover, .menu-item.hot { background: var(--accent); color: #fff; }
+.menu-item:disabled { color: var(--tertiary); }
+.menu-item .menu-check { width: 12px; flex: 0 0 12px; }
+.menu-header { padding: 4px 10px 2px; font-size: 12px; font-weight: 700; color: var(--accent); white-space: pre; }   /* a section title, not a greyed-out item */
+.menu-separator { height: 1px; margin: 5px 10px; background: var(--menu-line); }
+/* a Menu's trigger with .menuStyle(.borderlessButton): plain text, no chrome */
+.menu-trigger-borderless { color: var(--secondary); }
+.menu-trigger-borderless:hover { color: var(--fg); }
+
+/* ── popover (TodoCard / shortcut keys) ─────────────────────────────────────────────────────────────────────────── */
+.popover {
+  position: fixed; z-index: 900; background: var(--menu-bg); border: 1px solid var(--menu-line); border-radius: 10px;
+  box-shadow: var(--shadow); color: var(--fg); animation: ab-menu-in .1s ease-out;
+}
+.popover-arrow { position: absolute; width: 12px; height: 12px; background: var(--menu-bg); border: 1px solid var(--menu-line); transform: rotate(45deg); }
+
+/* ── sheets and dialogs ─────────────────────────────────────────────────────────────────────────────────────────── */
+.scrim { position: fixed; inset: 0; z-index: 800; background: var(--scrim); display: flex; align-items: center; justify-content: center; animation: ab-fade .15s ease-out; }
+@keyframes ab-fade { from { opacity: 0; } to { opacity: 1; } }
+/* a .sheet: Theme.background, padding set by the view (most use 20) */
+.sheet {
+  background: var(--background); color: var(--fg); border: 1px solid var(--line-hi); border-radius: 12px;
+  box-shadow: var(--shadow); max-width: calc(100vw - 40px); max-height: calc(100vh - 40px); overflow: auto;
+  animation: ab-sheet-in .18s ease-out;
+}
+@keyframes ab-sheet-in { from { opacity: 0; transform: translateY(-12px) scale(.98); } to { opacity: 1; transform: none; } }
+/* confirmationDialog / alert: the NSAlert look — app icon, bold title, small message, stacked buttons */
+.alert {
+  width: 280px; padding: 20px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center; background: var(--menu-bg); border-radius: 12px; border: 1px solid var(--menu-line);
+}
+.alert-title { font-size: 13px; font-weight: 700; color: var(--fg-solid); margin-top: 2px; overflow-wrap: anywhere; }
+.alert-message { font-size: 11px; color: var(--fg); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow-y: auto; }
+.alert-buttons { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 8px; }
+.alert-buttons.row { flex-direction: row; }
+.alert-buttons.row > .btn { flex: 1 1 0; }
+.alert-buttons > .btn { width: 100%; min-height: 26px; }
+.btn-raised.destructive { color: var(--sys-red); }
+.alert input.textfield { width: 100%; text-align: left; }
+
+/* ── form controls ──────────────────────────────────────────────────────────────────────────────────────────────── */
+/* TextField .roundedBorder */
+.textfield {
+  min-height: 24px; padding: 3px 7px; border-radius: 5px; border: 1px solid var(--line-hi); background: var(--field-bg);
+  color: var(--fg-solid); outline: none; font-size: 13px; user-select: text; -webkit-user-select: text;
+}
+.textfield:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.textfield::placeholder { color: var(--tertiary); }
+textarea.textfield { resize: none; line-height: 1.35; }
+/* TextField .plain */
+.textfield-plain { border: 0; outline: none; background: transparent; color: var(--fg-solid); padding: 0; user-select: text; -webkit-user-select: text; }
+.textfield-plain::placeholder { color: var(--tertiary); }
+/* Toggle .checkbox (the macOS default toggle) */
+.checkbox { display: inline-flex; align-items: center; gap: 6px; cursor: default; }
+.checkbox > input { appearance: none; -webkit-appearance: none; margin: 0; width: 14px; height: 14px; flex: 0 0 14px; border-radius: 3px; border: 1px solid var(--line-hi); background: var(--field-bg); display: grid; place-content: center; }
+.checkbox > input:checked { background: var(--accent); border-color: var(--accent); }
+.checkbox > input:checked::after { content: ""; width: 7px; height: 4px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+.checkbox > input:disabled { opacity: .4; }
+/* Toggle in a grouped Form: the macOS switch */
+.switch { display: inline-flex; align-items: center; gap: 8px; cursor: default; }
+.switch > input { appearance: none; -webkit-appearance: none; margin: 0; position: relative; width: 26px; height: 15px; flex: 0 0 26px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 18%, transparent); transition: background-color .15s; }
+.switch > input::after { content: ""; position: absolute; top: 1px; left: 1px; width: 13px; height: 13px; border-radius: 50%; background: #fff; box-shadow: 0 0 1px rgba(0,0,0,.4), 0 1px 1px rgba(0,0,0,.2); transition: transform .15s; }
+.switch > input:checked { background: var(--accent); }
+.switch > input:checked::after { transform: translateX(11px); }
+.switch > input:disabled { opacity: .4; }
+/* Picker (menu style): a pop-up button showing the choice and ⌃⌄ */
+.popup-button {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 22px; padding: 0 4px 0 9px;
+  border-radius: 5px; border: 1px solid var(--line-hi); background: color-mix(in srgb, var(--ink) 7%, var(--area));
+  color: var(--fg-solid); font-size: 13px; cursor: default; white-space: nowrap;
+}
+.popup-button:active { background: color-mix(in srgb, var(--ink) 12%, var(--area)); }
+.popup-button .popup-arrows { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 4px; background: var(--accent); color: #fff; font-size: 7px; line-height: 6px; }
+.popup-button:disabled { opacity: .4; }
+/* Picker .segmented */
+.segmented { display: inline-flex; padding: 2px; gap: 2px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 8%, transparent); border: 1px solid var(--line); }
+.segmented > button { display: inline-flex; align-items: center; gap: 5px; border: 0; padding: 2px 10px; min-height: 20px; border-radius: 4px; background: transparent; color: var(--fg); font-size: 13px; cursor: default; white-space: nowrap; }
+.segmented > button:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.segmented > button.on { background: var(--surface3); color: var(--fg-solid); box-shadow: 0 1px 1px rgba(0,0,0,.15); }
+/* Form .grouped: rows in a rounded group, label left, control right, hairlines between rows */
+.form-grouped { display: flex; flex-direction: column; border-radius: 8px; background: color-mix(in srgb, var(--ink) 4%, var(--area)); border: 1px solid var(--line); padding: 0 10px; }
+.form-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; padding: 6px 0; }
+.form-row + .form-row { border-top: 1px solid var(--line); }
+.form-row > .form-label { color: var(--fg); flex: 0 0 auto; }
+.form-row > .form-control { display: flex; align-items: center; gap: 6px; justify-content: flex-end; flex: 1 1 auto; min-width: 0; }
+/* ContentUnavailableView */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--secondary); padding: 24px; text-align: center; height: 100%; }
+.empty-state .icon { width: 36px; height: 36px; color: var(--tertiary); }
+.empty-state .empty-title { font-size: 17px; font-weight: 700; color: var(--fg); }
+
+/* ── language picker (first launch) ─────────────────────────────────────────────────────────────────────────────── */
+.picker { height: 100%; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.picker-title { font-size: 40px; font-weight: 700; margin-bottom: 20px; color: #fff; }
+.picker-btn { width: 220px; height: 40px; border-radius: 10px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+
+/* ── gallery (#gallery: every widget and icon, for snapshots) ───────────────────────────────────────────────────── */
+.gallery { height: 100%; overflow: auto; padding: var(--gap); display: flex; flex-direction: column; gap: var(--gap); background: var(--base); }
+.gallery section { padding: 12px 14px; flex: 0 0 auto; }
+.gallery h3 { margin: 0 0 10px; font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+.gallery .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 8px; }
+.gallery .swatch { display: flex; flex-direction: column; gap: 3px; width: 92px; font-size: 10px; color: var(--text-dim); }
+.gallery .swatch > i { display: block; height: 26px; border-radius: 4px; border: 1px solid var(--line); }
+.gallery .icon-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 104px; font-size: 9px; color: var(--text-dim); text-align: center; overflow-wrap: anywhere; }
+.gallery .icon-cell .icon { width: 18px; height: 18px; color: var(--fg); }

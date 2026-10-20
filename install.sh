@@ -3,11 +3,12 @@
 #
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/junil-yeo/agent-boost/main/install.sh)"
 #
-# macOS: checks and installs what is missing (Command Line Tools, Homebrew, tmux, Claude Code, GitHub CLI), signs you in
-# to Claude if needed, builds the app for this Mac, puts it in Applications and opens it.
-# Linux: installs tmux, the Electron app's system libraries, a private Node.js, Claude Code and the GitHub CLI, signs you
-# in, installs the Linux version under ~/.local/share/agent-boost with an app-menu entry and an `agent-boost` command,
-# and opens it.
+# One app (Electron, in app/) for macOS and Linux; this script detects which one it runs on.
+# macOS: installs what is missing (Homebrew for tmux and the GitHub CLI, a private Node.js, Claude Code), signs you in
+# to Claude if needed, packages the app, puts it in Applications and opens it.
+# Linux: installs tmux and the app window's system libraries through the package manager, a private Node.js, Claude Code
+# and the GitHub CLI, signs you in, installs the app under ~/.local/share/agent-boost with an app-menu entry and an
+# `agent-boost` command, and opens it.
 # Run it again at any time to update to the latest source; running sessions keep running.
 set -euo pipefail
 
@@ -34,6 +35,21 @@ download_source() {   # → $top: the unpacked source tree
   mkdir -p "$tmp/x" && tar -xzf "$tmp/src.tar.gz" -C "$tmp/x"
   top=$(find "$tmp/x" -mindepth 1 -maxdepth 1 -type d | head -1)
   ok "Source ready"
+}
+
+NODE_VER="v22.11.0"
+install_node() {   # $1: install dir — a private Node.js for the app's packages (no system change, no version conflicts)
+  local dir="$1" os arch
+  case "$(uname -s)" in Darwin) os=darwin ;; *) os=linux ;; esac
+  case "$(uname -m)" in x86_64|amd64) arch=x64 ;; aarch64|arm64) arch=arm64 ;; *) die "Unsupported CPU: $(uname -m) (x86_64 or arm64 needed)." ;; esac
+  if [ ! -x "$dir/bin/node" ] || [ "$("$dir/bin/node" -v)" != "$NODE_VER" ]; then
+    say "Installing Node.js $NODE_VER (private copy for Agent Boost)"
+    rm -rf "$dir"; mkdir -p "$dir"
+    curl -fsSL "https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-$os-$arch.tar.xz" | tar -xJ -C "$dir" --strip-components=1 \
+      || die "Could not download Node.js."
+  fi
+  export PATH="$dir/bin:$PATH"
+  ok "Node.js $(node -v)"
 }
 
 sign_in() {
@@ -80,16 +96,7 @@ install_linux() {
   # git and curl helpers some distros lack
   has git || pkg_install git >/dev/null 2>&1 || true
 
-  # Node.js for installing the app (a private copy: no system change, no version conflicts)
-  local NODE_VER="v22.11.0"
-  if [ ! -x "$NODE_DIR/bin/node" ] || [ "$("$NODE_DIR/bin/node" -v)" != "$NODE_VER" ]; then
-    say "Installing Node.js $NODE_VER (private copy for Agent Boost)"
-    rm -rf "$NODE_DIR"; mkdir -p "$NODE_DIR"
-    curl -fsSL "https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-linux-$arch.tar.xz" | tar -xJ -C "$NODE_DIR" --strip-components=1 \
-      || die "Could not download Node.js."
-  fi
-  export PATH="$NODE_DIR/bin:$PATH"
-  ok "Node.js $(node -v)"
+  install_node "$NODE_DIR"
 
   # Claude Code CLI (required)
   if has claude; then ok "Claude Code $(claude --version 2>/dev/null | cut -d' ' -f1)"
@@ -109,12 +116,12 @@ install_linux() {
 
   sign_in
   download_source
-  [ -f "$top/linux/package.json" ] || die "The downloaded source has no linux/ app."
+  [ -f "$top/app/package.json" ] || die "The downloaded source has no app/ folder."
 
-  say "Installing Agent Boost for Linux"
+  say "Installing Agent Boost"
   local NEW="$DEST/app.new"
   rm -rf "$NEW"; mkdir -p "$DEST"
-  cp -R "$top/linux" "$NEW"
+  cp -R "$top/app" "$NEW"
   cp -R "$top/Resources/l10n" "$NEW/l10n"
   ( cd "$NEW" && npm install --omit=optional --no-audit --no-fund --foreground-scripts >/dev/null 2>&1 \
       || npm install --no-audit --no-fund ) || die "Installing the app's packages failed. See the messages above."
@@ -178,28 +185,13 @@ DESKTOP
 [ "$(uname)" = "Linux" ] && install_linux
 
 # ════════════════════════════════════ macOS ════════════════════════════════════════════
-# ── 1. macOS 15 or later ────────────────────────────────────────────────────────────────
 say "Checking this Mac"
 [ "$(uname)" = "Darwin" ] || die "Agent Boost runs on macOS and Linux only."
 major=$(sw_vers -productVersion | cut -d. -f1)
-[ "$major" -ge 15 ] || die "macOS 15 or later is required (this Mac: $(sw_vers -productVersion))."
+[ "$major" -ge 12 ] || die "macOS 12 or later is required (this Mac: $(sw_vers -productVersion))."
 ok "macOS $(sw_vers -productVersion) ($(uname -m))"
 
-# ── 2. Command Line Tools (Swift compiler) ──────────────────────────────────────────────
-if xcode-select -p >/dev/null 2>&1 && xcrun --find swiftc >/dev/null 2>&1; then
-  ok "Command Line Tools"
-else
-  say "Installing Command Line Tools — click 'Install' in the window that opens"
-  xcode-select --install >/dev/null 2>&1 || true
-  for _ in $(seq 1 360); do                         # up to 30 minutes
-    xcode-select -p >/dev/null 2>&1 && xcrun --find swiftc >/dev/null 2>&1 && break
-    sleep 5
-  done
-  xcrun --find swiftc >/dev/null 2>&1 || die "Command Line Tools are not installed yet. Finish that install, then run the same command again."
-  ok "Command Line Tools"
-fi
-
-# ── 3. Homebrew (for tmux and the GitHub CLI) ───────────────────────────────────────────
+# Homebrew (for tmux and the GitHub CLI)
 need_brew=0
 has tmux || need_brew=1
 has gh || need_brew=1
@@ -214,7 +206,7 @@ if [ $need_brew = 1 ] && ! has brew; then
   for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -x "$b" ] && eval "$("$b" shellenv)" && break; done
 fi
 
-# ── 4. tmux (required: every session runs in it) ────────────────────────────────────────
+# tmux (required: every session runs in it)
 if has tmux; then
   ok "tmux $(tmux -V | cut -d' ' -f2)"
 else
@@ -224,7 +216,9 @@ else
   ok "tmux $(tmux -V | cut -d' ' -f2)"
 fi
 
-# ── 5. Claude Code CLI (required) ───────────────────────────────────────────────────────
+install_node "$HOME/Library/Application Support/AgentBoost/node"
+
+# Claude Code CLI (required)
 if has claude; then
   ok "Claude Code $(claude --version 2>/dev/null | cut -d' ' -f1)"
 else
@@ -234,7 +228,7 @@ else
   ok "Claude Code $(claude --version 2>/dev/null | cut -d' ' -f1)"
 fi
 
-# ── 6. GitHub CLI (optional: lists your repositories for cloud sessions) ────────────────
+# GitHub CLI (optional: lists your repositories for cloud sessions)
 if has gh; then
   ok "GitHub CLI"
 elif has brew; then
@@ -244,24 +238,20 @@ else
   warn "GitHub CLI not installed (optional; used to list repositories for cloud sessions)."
 fi
 
-# ── 7. Claude sign-in ───────────────────────────────────────────────────────────────────
 sign_in
-
-# ── 8. Source ───────────────────────────────────────────────────────────────────────────
 download_source
-[ -f "$top/build.sh" ] || die "The downloaded source has no build.sh."
+[ -f "$top/build.sh" ] && [ -f "$top/app/package.json" ] || die "The downloaded source has no app/."
 rm -rf "$SRC"; mkdir -p "$(dirname "$SRC")"; mv "$top" "$SRC"
 
-# ── 9. Build for this Mac (a few minutes) ───────────────────────────────────────────────
-say "Building — this takes a few minutes"
-( cd "$SRC" && /bin/zsh ./build.sh release ) || die "The build failed. See the messages above."
-[ -d "$SRC/$APP_NAME" ] || die "The built app ($APP_NAME) was not found."
-ok "Built"
+say "Packaging the app"
+( cd "$SRC" && /bin/zsh ./build.sh ) || die "Packaging failed. See the messages above."
+[ -d "$SRC/$APP_NAME" ] || die "The packaged app ($APP_NAME) was not found."
+ok "Packaged"
 
-# ── 10. Install into Applications and open ──────────────────────────────────────────────
+# Install into Applications (replacing a running copy: sessions keep running) and open
 DEST="/Applications"
 [ -w "$DEST" ] || { DEST="$HOME/Applications"; mkdir -p "$DEST"; }
-running() { pgrep -f "$DEST/$APP_NAME/Contents/MacOS/AgentBoost\$" >/dev/null; }
+running() { pgrep -f "$DEST/$APP_NAME/Contents/MacOS/AgentBoost" >/dev/null; }
 if running; then
   say "Replacing the running Agent Boost (sessions keep running)"
   mkdir -p "$HOME/.agent-boost"; touch "$HOME/.agent-boost/skip-shutdown-once"

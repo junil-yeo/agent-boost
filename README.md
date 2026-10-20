@@ -3,17 +3,16 @@
 Watch and drive teams of Claude Code agents from one window, on macOS and Linux.
 tmux is used only as an invisible engine underneath; you work in the app.
 
-- **macOS**: a native SwiftUI app (`Sources/`, built with `build.sh`).
-- **Linux**: a separate Electron app with the same features (`linux/`). It reads the same Claude Code files, uses the
-  same tmux engine and the same translations, and shows the same screens.
+One app, one codebase: an Electron app in `app/` for both systems. (The earlier SwiftUI version is kept in `Sources/`
+for reference while the Electron app takes over; it is no longer installed.)
 
 ## Install
 
 Paste one line into a terminal, on macOS or Linux. It checks and installs everything the app needs, signs you in to
 Claude, installs the app and opens it. Run it again to update.
 
-- **macOS**: Command Line Tools, Homebrew, tmux, Claude Code, GitHub CLI; builds the app for your Mac and puts it in
-  Applications.
+- **macOS** (12 or later): Homebrew for tmux and the GitHub CLI, a private Node.js, Claude Code; packages the app and
+  puts it in Applications.
 - **Linux** (Ubuntu/Debian, Fedora, Arch, openSUSE; x86_64 or arm64): tmux and the window's system libraries through
   your package manager (it asks for your password once), a private Node.js, Claude Code, GitHub CLI; installs the app
   under `~/.local/share/agent-boost` with an `agent-boost` command and an entry in your app menu.
@@ -25,24 +24,23 @@ Claude, installs the app and opens it. Run it again to update.
 Languages: English, 한국어, 日本語, 简体中文, Español. You pick one at first launch and can change it at any time from
 the menu above the clock.
 
-## Linux version
+## Develop
 
-- Start: `agent-boost`, or "Agent Boost" in the app menu.
-- Develop: `cd linux && npm install && npm start`. Tests: `npm test`.
-- Layout: `linux/main/` holds the logic (one module per Swift file, same function names: `TmuxControl.send` →
-  `tmux.send`), `linux/renderer/` the screens (Preact, no build step). Translations come from `Resources/l10n`.
+- Run from source: `cd app && npm install && npm start`. Tests: `npm test`.
+- Package the macOS app: `./build.sh` (seconds: no compile step), `./build.sh run` also restarts a running copy
+  (sessions keep running). On Linux the installer runs the app from `~/.local/share/agent-boost/app`.
+- Layout: `app/main/` holds the logic (one module per former Swift file, same function names: `TmuxControl.send` →
+  `tmux.send`), `app/renderer/` the screens (Preact, no build step). Translations: `Resources/l10n` (+ `app/l10n-extra`).
 - `AB_READONLY=1 npm start` runs it without changing any session or file (for trying it next to a running copy).
 
-## Run / build (macOS)
+## Legacy SwiftUI version (reference)
 
-- Run: double-click `AgentBoost.app`
-- Build: `./build.sh` (development, fast) / `./build.sh release` (optimized, for this Mac) / `./build.sh dist`
-  (optimized, for distribution)
+- Build: `./build-swift.sh` (development, fast) / `./build-swift.sh release` (optimized, for this Mac) /
+  `./build-swift.sh dist` (optimized, for distribution)
 - Requires macOS 15+, `tmux` and the `claude` CLI. Command Line Tools (Swift) only when building yourself.
 - Where the app looks for tools: `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/opt/local/bin`, then the
   login shell's PATH. If they live elsewhere, point to them with `BOARD_TMUX` and `BOARD_CLAUDE`.
-- `./build.sh dist` makes a universal binary for Intel and Apple Silicon (both compiled at the same time).
-  `./build.sh` and `./build.sh release` build for the kind of Mac they run on.
+- `./build-swift.sh dist` makes a universal binary for Intel and Apple Silicon (both compiled at the same time).
 
 ### First launch on another Mac
 

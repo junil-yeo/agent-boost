@@ -1,0 +1,20 @@
+{
+  "Agent Boost에 관하여": { "en": "About Agent Boost", "ja": "Agent Boostについて", "zh": "关于 Agent Boost", "es": "Acerca de Agent Boost" },
+  "서비스": { "en": "Services", "ja": "サービス", "zh": "服务", "es": "Servicios" },
+  "Agent Boost 가리기": { "en": "Hide Agent Boost", "ja": "Agent Boostを非表示", "zh": "隐藏 Agent Boost", "es": "Ocultar Agent Boost" },
+  "기타 가리기": { "en": "Hide Others", "ja": "ほかを非表示", "zh": "隐藏其他", "es": "Ocultar otros" },
+  "모두 보기": { "en": "Show All", "ja": "すべてを表示", "zh": "全部显示", "es": "Mostrar todo" },
+  "Agent Boost 종료": { "en": "Quit Agent Boost", "ja": "Agent Boostを終了", "zh": "退出 Agent Boost", "es": "Salir de Agent Boost" },
+  "편집": { "en": "Edit", "ja": "編集", "zh": "编辑", "es": "Edición" },
+  "실행 취소": { "en": "Undo", "ja": "取り消す", "zh": "撤销", "es": "Deshacer" },
+  "실행 복귀": { "en": "Redo", "ja": "やり直す", "zh": "重做", "es": "Rehacer" },
+  "오려두기": { "en": "Cut", "ja": "カット", "zh": "剪切", "es": "Cortar" },
+  "복사하기": { "en": "Copy", "ja": "コピー", "zh": "拷贝", "es": "Copiar" },
+  "붙여넣기": { "en": "Paste", "ja": "ペースト", "zh": "粘贴", "es": "Pegar" },
+  "모두 선택": { "en": "Select All", "ja": "すべてを選択", "zh": "全选", "es": "Seleccionar todo" },
+  "전체 화면 시작/종료": { "en": "Toggle Full Screen", "ja": "フルスクリーンにする/解除", "zh": "进入/退出全屏幕", "es": "Activar/desactivar pantalla completa" },
+  "윈도우": { "en": "Window", "ja": "ウインドウ", "zh": "窗口", "es": "Ventana" },
+  "최소화": { "en": "Minimize", "ja": "しまう", "zh": "最小化", "es": "Minimizar" },
+  "확대/축소": { "en": "Zoom", "ja": "拡大/縮小", "zh": "缩放", "es": "Zoom" },
+  "모두 앞으로 가져오기": { "en": "Bring All to Front", "ja": "すべてを手前に移動", "zh": "前置全部窗口", "es": "Traer todo al frente" }
+}
