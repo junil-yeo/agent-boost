@@ -48,6 +48,12 @@ function newAgent(sessionId, pid = null, name = '', state = 'unknown') {
     origin: null,            // "board" when this app started it
     isSubagent: false,       // an in-process helper the session spawned with its Agent tool (no pane: view only)
     parentSid: null,
+    inProcess: false,        // an in-process teammate (inprocess.js): runs inside its lead's process, no pane of its own
+    leadSid: null,           // in-process teammate: its lead's session id
+    leadPane: null,          // in-process teammate: the lead's pane, the only way to type to it
+    canMessage: false,       // in-process teammate: the lead's footer lists it now, so a message can be typed through the lead
+    description: null,       // in-process teammate: the description the lead gave it
+    viewingMate: null,       // a lead's pane that shows one of its in-process teammates' conversation (its footer list)
     solo: false,             // lead of an implicit one-person team: shown as an individual session
     pendingCommands: [],
     queued: 0,               // messages waiting in the CLI's own queue (transcript queue-operation records)
@@ -78,6 +84,11 @@ const isEstimated = (a) => a.modelIsGuess || a.tokensEstimated;
 /** Running a turn or stuck on a prompt: nothing may be typed into it. */
 const working = (a) => a.state === 'busy' || a.state === 'needsInput';
 const canReceiveInput = (a) => a.tmuxPane != null && a.state !== 'ended' && a.overlay == null;
+/** A live session started outside tmux (plain terminal, IDE …): the app can end it and reopen the same conversation in
+ *  its own tmux (store.adopt). Not the desktop app's sessions (ending one breaks the desktop app's conversation), CLI
+ *  background jobs, parked viewers, teammates or subagents. */
+const canAdopt = (a) => a.state !== 'ended' && a.tmuxPane == null && a.pid != null && !a.isBackgroundJob && a.parkedJobId == null
+  && !a.inProcess && !a.isSubagent && a.entrypoint !== 'claude-desktop' && !(a.teamName != null && !a.isLead && !a.solo);
 /** Context window of the model: 1M for "[1m]" variants, 200k otherwise. */
 const contextWindow = (a) => ((a.model || '').includes('[1m]') || (a.model || '').endsWith('-1m') ? 1000000 : 200000);
 /** Permission mode the CLI footer shows, in Korean ("기본" when the footer says nothing). */
@@ -94,7 +105,7 @@ function modeLabel(a) {
 }
 /** The agent as the renderer gets it: every field plus the computed values. */
 function agentJSON(a) {
-  return { ...a, displayModel: displayModel(a), isEstimated: isEstimated(a), working: working(a), canReceiveInput: canReceiveInput(a),
+  return { ...a, displayModel: displayModel(a), isEstimated: isEstimated(a), working: working(a), canReceiveInput: canReceiveInput(a), canAdopt: canAdopt(a),
     contextWindow: contextWindow(a), modeLabel: modeLabel(a) };
 }
 
@@ -251,7 +262,7 @@ function archivedToDisk(it) {
 
 module.exports = {
   uuid, tokenUsage, tokensTotal, tokensAdd, AgentStates,
-  newAgent, copyAgent, pretty, displayModel, isEstimated, working, canReceiveInput, contextWindow, modeLabel, agentJSON,
+  newAgent, copyAgent, pretty, displayModel, isEstimated, working, canReceiveInput, canAdopt, contextWindow, modeLabel, agentJSON,
   newTeam, teamLead, teamWorkers, teamLiveCount, teamTokens, teamIsSolo, teamDisplayName, teamJSON,
   ModelChoice, EffortChoice, isModelChoice, isEffortChoice, modelChoiceFor, effortChoiceFor,
   teammateSpec, nameIsValid,

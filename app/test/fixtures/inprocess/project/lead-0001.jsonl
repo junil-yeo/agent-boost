@@ -1,0 +1,6 @@
+{"type":"user","timestamp":"2026-10-20T10:00:00.000Z","sessionId":"lead-0001","message":{"role":"user","content":"start"}}
+{"type":"assistant","timestamp":"2026-10-20T10:00:01.000Z","message":{"id":"m1","role":"assistant","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"toolu_SYNC","name":"Agent","input":{"description":"Look for bugs"}}],"usage":{"input_tokens":1,"output_tokens":1}}}
+{"type":"assistant","timestamp":"2026-10-20T10:00:02.000Z","message":{"id":"m2","role":"assistant","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"toolu_DONE","name":"Task","input":{"description":"Count files"}}],"usage":{"input_tokens":1,"output_tokens":1}}}
+{"type":"user","timestamp":"2026-10-20T10:00:09.000Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_DONE","content":"42 files"}]}}
+{"type":"assistant","timestamp":"2026-10-20T10:00:10.000Z","message":{"id":"m3","role":"assistant","model":"claude-opus-5-5","content":[{"type":"tool_use","id":"toolu_BG","name":"Agent","input":{"description":"Long survey"}}],"usage":{"input_tokens":1,"output_tokens":1}}}
+{"type":"user","timestamp":"2026-10-20T10:00:10.500Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_BG","content":"Async agent launched"}]}}

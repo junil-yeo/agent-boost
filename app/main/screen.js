@@ -356,7 +356,63 @@ async function answer(p, expected, optionIndex) {
 }
 const PromptDriver = { answer };
 
+/** The in-process teammate list a team lead's CLI draws under its status line (Claude Code 2.1.304, teammateMode
+ *  in-process; there is no such list for tmux teammates, which have panes of their own):
+ *
+ *      ───────────────────────────────
+ *        ⏸ manual mode on · ? for shortcuts · ↓ to manage      <- "↓ to manage": the list can be entered with ↓
+ *        ⏺ main                                                <- ⏺ = the conversation the pane shows now
+ *        ◯ helper  says ok                         idle        <- name, description, state word at the right
+ *        ◯ tester  runs tests          12s · ↓ 3.1k tokens     <- working: elapsed time and tokens instead of "idle"
+ *
+ *  With the list entered the status line reads "↑/↓ to select" (+ "Enter to view · x to stop" on a teammate row) and
+ *  "❯ " marks the cursor row. ↑ on the first row leaves the list; Enter shows the cursor row's conversation in the pane
+ *  ("Viewing @helper · esc to return", the box reads "Message @helper…"). The CLI hides the whole list about 30 s after
+ *  every teammate went idle; ↓ then does nothing.
+ *  Returns null when no list is drawn, else {rows: [{name, description, word, state, viewing, cursor}], listMode,
+ *  manage, viewing (name of the ⏺ row), cursor (index of the ❯ row or -1)}. state: 'idle' | 'busy' | null (unknown word). */
+function teammateList(text) {
+  const raw = String(text || '').split('\n').map((l) => stripANSI(l).replace(/\s+$/u, ''));
+  let bottom = -1;
+  for (let i = raw.length - 1; i >= 0; i--) { if (rule(trimWS(raw[i]))) { bottom = i; break; } }
+  if (bottom < 0) return null;
+  const rows = [];
+  let statusLine = '';
+  for (const l of raw.slice(bottom + 1)) {
+    const t = trimWS(l);
+    if (!t) continue;
+    const m = /^(❯\s+)?([⏺◯])\s+(\S.*)$/u.exec(t);
+    if (!m) { if (rows.length === 0 && !statusLine) statusLine = t; continue; }
+    const parts = m[3].split(/\s{2,}/u).map(trimWS).filter(Boolean);
+    const name = parts[0];
+    let word = null, description = null;
+    if (parts.length >= 2) {
+      const last = parts[parts.length - 1];
+      if (mateWordState(last) !== undefined || parts.length >= 3) { word = last; description = parts.slice(1, -1).join('  ') || null; }
+      else description = parts.slice(1).join('  ');
+    }
+    const st = word == null ? null : mateWordState(word);
+    rows.push({ name, description, word, state: st === undefined ? null : st, viewing: m[2] === '⏺', cursor: !!m[1] });
+  }
+  // the lead's own row is always first and is called "main": anything else under the status line is not this list
+  if (rows.length < 2 || rows[0].name !== 'main') return null;
+  const v = rows.find((r) => r.viewing);
+  return {
+    rows,
+    listMode: statusLine.includes('↑/↓ to select') || statusLine.includes('Enter to view'),
+    manage: statusLine.includes('↓ to manage'),
+    viewing: v ? v.name : null,
+    cursor: rows.findIndex((r) => r.cursor),
+  };
+}
+/** The word at the right of a teammate row: 'idle', 'busy' (elapsed time / token count while it works), or undefined. */
+function mateWordState(w) {
+  if (/^idle$/iu.test(w)) return 'idle';
+  if (/^\d+\s*[smh]\b/u.test(w) || /tokens$/u.test(w)) return 'busy';
+  return undefined;
+}
+
 module.exports = {
   busy, needsInput, isSwitchModelPrompt, prompt, stripANSI, overlay, typedInput, hasInputBox, suggestion, status,
-  emptyStatus, statusIsEmpty, statusEqual, answer, PromptDriver,
+  emptyStatus, statusIsEmpty, statusEqual, answer, PromptDriver, teammateList,
 };

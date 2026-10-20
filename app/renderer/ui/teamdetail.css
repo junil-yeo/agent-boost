@@ -285,3 +285,18 @@ body.resizing, body.resizing * { user-select: none !important; }
 .turn-working .label { white-space: nowrap; flex: 0 0 auto; }
 .attach-missing { display: inline-block; background: color-mix(in srgb, var(--ink) 10%, transparent); }
 .term-blocks > .term-glyph { white-space: pre; flex: 0 0 auto; }
+
+/* ── 대화 / 서브에이전트 tabs (header) and the subagents tab ──────────────────────────────────────────────────────── */
+.header-tabs { gap: 4px; flex: 0 0 auto; }
+.header-tabs .term-tab { padding: 3px 8px; cursor: default; color: var(--fg); }
+.tab-count { font-size: var(--fs-caption2); font-weight: 600; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.subagent-list { padding: 8px 10px; box-sizing: border-box; }
+.subagent-empty { display: flex; align-items: center; justify-content: center; }
+.subagent-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: default; min-width: 0; }
+.subagent-row:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.subagent-row + .subagent-row { border-top: 1px solid var(--line); }
+.subagent-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 0 1 auto; }
+.subagent-desc { font-weight: 600; color: var(--fg-solid); min-width: 0; }
+.subagent-meta { gap: 5px; flex-wrap: wrap; }
+.subagent-chat { display: flex; flex-direction: column; min-height: 0; }
+.subagent-bar { gap: 8px; }

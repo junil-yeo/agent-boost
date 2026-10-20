@@ -19,7 +19,8 @@ import { ToolLine, MiddleText } from './toolline.js';
 import { PromptCard } from './promptcard.js';
 import { TurnStatusBar, ComposerFooter } from './turnstatus.js';
 import { SlashPaletteView, MentionPaletteView } from './slashpalette.js';
-import { useAgentActions, quitDialog } from './agentactions.js';
+import { useAgentActions, quitDialog, adoptDialog } from './agentactions.js';
+import { SubagentsPanel, useSubagentCount } from './subagents.js';
 import { usePathLinks, PathLinks } from './pathlinks.js';
 import { RemoteChip } from './orgchart.js';
 import { SlashController, routeAction, isTerminalOnly, setL as setSlashL } from '../logic/slash.mjs';
@@ -32,9 +33,11 @@ setSlashL(L); setSuggestL(L);
 /** BoardStore.canControl: the app can type into it. */
 const canControl = (a) => a.state !== 'ended' && a.tmuxPane != null;
 /** BoardStore.canQuit: a live session with a process to stop. */
-const canQuit = (a) => a.state !== 'ended' && a.pid != null;
+const canQuit = (a) => a.state !== 'ended' && (a.pid != null || !!a.inProcess);   // an in-process teammate quits through its lead
 /** BoardStore.canResume: an ended session with a conversation file. */
-const canResume = (a) => a.state === 'ended' && a.transcriptPath != null;
+const canResume = (a) => a.state === 'ended' && a.transcriptPath != null && !a.inProcess;
+/** The composer can type to it: a session with a CLI screen, or an in-process teammate through its lead's list. */
+const canType = (a) => !!(a.canReceiveInput || a.canMessage);
 const working = (a) => a.state === 'busy' || a.state === 'needsInput';
 const basename = (p) => { const s = String(p).replace(/\/+$/, ''); const i = s.lastIndexOf('/'); return i >= 0 ? s.slice(i + 1) || s : s; };
 const quotePath = (p) => (p.includes(' ') ? '"' + p + '"' : p);
@@ -286,6 +289,7 @@ export function MemberRow({ agent, selected, slotted, help, onClick }) {
   const stateColor = Fmt.stateColor(agent.state);
   const quickQuit = async (e) => {
     e.stopPropagation();
+    if (agent.teamName != null && !agent.solo) { quitDialog(agent); return; }        // the team's own confirmation (quitplan.mjs)
     if (await confirm(L("'%@' 세션을 종료할까요?", agent.name), L('보드에 남아 다시 시작할 수 있습니다.'))) act('store.quit', agent.sessionId, 'now');
   };
   const quickArchive = async (e) => {
@@ -310,6 +314,7 @@ export function MemberRow({ agent, selected, slotted, help, onClick }) {
     <div class="member-text">
       <div class="hstack" style=${{ gap: '4px', minWidth: 0 }}>
         ${agent.isSubagent ? html`<span class="sub-badge" title=${L('팀장이 Agent 도구로 띄운 서브에이전트 — 보기 전용')}>${L('서브')}</span>` : null}
+        ${agent.inProcess ? html`<span class="sub-badge" title=${L('팀장 프로세스 안에서 도는 팀원 (in-process) — 창이 따로 없어 팀장 화면을 통해서만 입력됩니다')}>${L('인프로세스')}</span>` : null}
         <span class="member-name one-line">${agent.name}</span>
       </div>
       <div class="hstack" style=${{ gap: '4px', minWidth: 0 }}>
@@ -319,11 +324,12 @@ export function MemberRow({ agent, selected, slotted, help, onClick }) {
     </div>
     <span class="spacer"></span>
     ${hover ? html`<span class="hstack member-quick" style=${{ gap: '2px' }}>
-      ${agent.state !== 'ended' && agent.pid != null
+      ${agent.state !== 'ended' && canQuit(agent)
         ? html`<${Button} kind="icon" help=${L('종료 (/exit)')} onClick=${quickQuit}><${Icon} name="power" /><//>`
-        : agent.state === 'ended' && agent.transcriptPath != null && !agent.isSubagent
+        : agent.state === 'ended' && agent.transcriptPath != null && !agent.isSubagent && !agent.inProcess
           ? html`<${Button} kind="icon" help=${L('다시 시작 — 같은 세션 ID로 이어서 엽니다')} onClick=${revive}><${Icon} name="power" /><//>`   // same place and size as 종료: power, then 보관
           : null}
+      ${agent.canAdopt ? html`<${Button} kind="icon" help=${L('앱으로 가져오기 — 바깥 터미널의 CLI를 끝내고 앱 안에서 같은 대화로 다시 엽니다')} onClick=${(e) => { e.stopPropagation(); adoptDialog(agent, board()); }}><${Icon} name="macwindow.badge.plus" /><//>` : null}
       <${Button} kind="icon" help=${L('보관')} onClick=${quickArchive}><${Icon} name="archivebox" /><//>
     </span>` : null}
     <span class="state-capsule" style=${{ '--tint': stateColor, opacity: agent.stateUnconfirmed ? 0.7 : 1 }}
@@ -353,6 +359,11 @@ export function AgentPanel({ agent }) {
   const cwd = useWorkingDirectory(agent);
   const entries = useChat(sid);
   const header = useRef(null), panel = useRef(null);
+  // 대화 / 서브에이전트 tabs (the second only when the session has subagents, or while it is open)
+  const [view, setView] = useState('chat');
+  const subCount = useSubagentCount(agent);
+  useEffect(() => { setView('chat'); }, [sid]);
+  const subTab = view === 'subagents';
   const dragTerm = (d) => setTermWidth((w) => {
     const total = panel.current ? panel.current.getBoundingClientRect().width : 1e6;
     return Math.max(360, Math.min(w - d, total - 380 - 4));
@@ -465,17 +476,34 @@ export function AgentPanel({ agent }) {
         ${agent.state === 'needsInput' && (agent.pendingCommands || []).length ? html`<${Button} kind="raisedCompact" onClick=${forceSend} help=${L('질문 대기로 보이지만 대기 중인 명령을 지금 보냅니다')}>${L('그래도 보내기')}<//>` : null}
         ${(agent.pendingCommands || []).includes('/exit') ? html`<span class="t-caption fg-orange" style=${{ flex: '0 0 auto' }}>${L('작업 끝나면 종료')}</span>` : null}
         ${headerWidth >= 1000 && cwd ? html`<${Label} class="t-caption fg-secondary header-folder" icon="folder" title=${basename(cwd)} help=${cwd} />` : null}
-        ${agent.tmuxPane == null && agent.state !== 'ended' ? html`<${Label} class="t-caption fg-secondary" style=${{ flex: '0 0 auto' }} icon="eye"
+        ${agent.inProcess && agent.state !== 'ended'
+          ? html`<${Label} class="t-caption fg-secondary" style=${{ flex: '0 0 auto' }} icon=${agent.canMessage ? 'keyboard' : 'eye'}
+              title=${agent.canMessage ? L('팀장 화면으로 입력') : L('팀장을 통해 지시하세요')}
+              help=${agent.canMessage ? L('팀장 프로세스 안에서 도는 팀원입니다. 보낸 메시지는 팀장 CLI의 팀원 목록에서 이 팀원을 골라 입력합니다.')
+                : L('팀장 프로세스 안에서 도는 팀원이라 창이 따로 없습니다. 팀장 CLI가 팀원 목록을 보여 줄 때(작업 중이거나 막 끝났을 때)만 직접 보낼 수 있습니다.')} />`
+          : agent.tmuxPane == null && agent.state !== 'ended' ? html`<${Label} class="t-caption fg-secondary" style=${{ flex: '0 0 auto' }} icon="eye"
             title=${agent.entrypoint === 'claude-desktop' ? L('데스크톱 앱 세션 · 보기 전용') : L('보기 전용')}
             help=${agent.entrypoint === 'claude-desktop' ? L('Claude 데스크톱 앱의 세션이라 이 앱에서는 입력할 수 없습니다') : L('이 앱에서 입력할 수 없는 세션입니다')} />` : null}
+        ${agent.canAdopt ? (((s && s.adopting) || []).includes(sid)
+          ? html`<span class="hstack t-caption fg-secondary" style=${{ gap: '5px', flex: '0 0 auto' }}><${ChaseRing} size=${11} />${L('가져오는 중…')}</span>`
+          : html`<${Button} kind="raisedCompact" onClick=${() => adoptDialog(agent, s)} help=${L('바깥 터미널에서 실행 중인 CLI를 끝내고 앱 안(tmux)에서 같은 대화로 다시 엽니다')}><${Label} icon="macwindow.badge.plus" title=${L('앱으로 가져오기')} /><//>`) : null}
         <span class="spacer" style=${{ minWidth: '8px' }}></span>
-        ${!showPane ? html`
+        ${!showPane && !subTab ? html`
           <${Checkbox} class="t-caption" checked=${showTools} onChange=${setShowTools} label=${L('도구 펼침')} />
           <${Checkbox} class="t-caption" checked=${showThinking} onChange=${setShowThinking} label=${L('생각')} />` : null}
+        ${subCount.total > 0 || subTab ? html`<span class="hstack header-tabs">
+          <button type="button" class=${'term-tab' + (!subTab ? ' selected' : '')} onClick=${() => setView('chat')}><${Icon} name="doc.text" class="t-caption" /><span>${L('대화')}</span></button>
+          <button type="button" class=${'term-tab' + (subTab ? ' selected' : '')} onClick=${() => setView('subagents')}
+              title=${L('이 세션이 Agent 도구로 띄운 서브에이전트 %@개 (실행 중 %@개)', String(subCount.total), String(subCount.running))}>
+            <${Icon} name="branch" class="t-caption" /><span>${L('서브에이전트')}</span>
+            ${subCount.total > 0 ? html`<span class="tab-count">${subCount.running > 0 ? `${subCount.running}/${subCount.total}` : subCount.total}</span>` : null}
+          </button>
+        </span>` : null}
         ${actionButtons}
       </div>
       <div class="agent-chat">
-        ${showPane
+        ${subTab ? html`<${SubagentsPanel} key=${'subs-' + sid} agent=${agent} />`
+          : showPane
           ? html`<${PaneDrop} sid=${sid}><${Lazy} key=${sid} file="panechat.js" name="PaneChatView" pane=${agent.tmuxPane} sid=${sid} placeholder=${panePlaceholder} /></${PaneDrop}>`   // the CLI's own screen (conversation part)
           : html`<${ChatView} key=${sid} entries=${entries || []} showThinking=${showThinking} showTools=${showTools}
               agentName=${agent.name} userLabel=${agent.teamName != null && !agent.isLead && !agent.solo ? L('팀장 지시') : L('나')} leadName=${leadAlias}
@@ -700,7 +728,7 @@ export function ComposerBar({ agent, openTerminal }) {
   }, [s && s.bounce && s.bounce.gen]);
   // files dropped on the chat above
   useEffect(() => {
-    const f = (e) => { const d = e.detail || {}; if (d.sid === sid && agentRef.current.canReceiveInput && d.paths) addAttachments(d.paths); };
+    const f = (e) => { const d = e.detail || {}; if (d.sid === sid && canType(agentRef.current) && d.paths) addAttachments(d.paths); };
     window.addEventListener('ab-attach-to-composer', f);
     return () => window.removeEventListener('ab-attach-to-composer', f);
   }, []);
@@ -852,7 +880,7 @@ export function ComposerBar({ agent, openTerminal }) {
       return filePaths(files).then((ps) => { if (ps.length) addAttachments(ps); return ps.length > 0; });
     }, () => false);
   };
-  const dropFiles = (files) => { if (agentRef.current.canReceiveInput) filePaths(files).then((p) => { if (p.length) addAttachments(p); }); };
+  const dropFiles = (files) => { if (canType(agentRef.current)) filePaths(files).then((p) => { if (p.length) addAttachments(p); }); };
   // ⌘↩ (Ctrl+Enter on Linux) sends from anywhere in this session's view, not only from the box (Swift: the send
   // button's .keyboardShortcut(.return, modifiers: .command)). The box itself handles it in keyHook.
   const rootRef = useRef(null);
@@ -869,7 +897,7 @@ export function ComposerBar({ agent, openTerminal }) {
       else { const st = board(); if (!st || st.selectedAgent !== sid) return; }          // nothing focused: the selected session
       const a = agentRef.current;
       const empty = !draftRef.current.trim() && !attRef.current.length;
-      if (!a.canReceiveInput || empty) return;                                           // the button is disabled then
+      if (!canType(a) || empty) return;                                                  // the button is disabled then
       e.preventDefault();
       send();
     };
@@ -885,8 +913,11 @@ export function ComposerBar({ agent, openTerminal }) {
   };
 
   const empty = !draft.trim() && !attachments.length;
-  const enabled = agent.canReceiveInput;
-  const placeholder = enabled ? L('메시지 입력 — Enter 전송 · ⇧Enter 줄바꿈 · / 명령')
+  const enabled = canType(agent);
+  const placeholder = agent.inProcess
+    ? (enabled ? L('%@에게 메시지 — 팀장 화면의 팀원 목록으로 보냅니다 · Enter 전송', agent.name)
+      : L('팀장을 통해 지시하세요 (팀원 목록이 보일 때만 직접 전송)'))
+    : enabled ? L('메시지 입력 — Enter 전송 · ⇧Enter 줄바꿈 · / 명령')
     : agent.overlay ? L('입력 불가: CLI가 %@ 화면입니다 — CLI에서 Esc로 대화로 돌아오면 입력할 수 있습니다', overlayName(agent.overlay))
       : L('입력 불가: 종료됐거나 이 앱에서 입력할 수 없는 세션');
   const queued = agent.tmuxPane != null && agent.state !== 'ended' ? agent.queued || 0 : entries.filter((e) => e.toolName === '전송 중').length;
@@ -895,7 +926,7 @@ export function ComposerBar({ agent, openTerminal }) {
 
   return html`<div class="composer-bar" ref=${rootRef} onMouseDownCapture=${keepFocus}
       onDragOver=${(e) => {
-        if (!agent.canReceiveInput || !dropAcceptable(e.dataTransfer)) return;
+        if (!canType(agent) || !dropAcceptable(e.dataTransfer)) return;
         if (!hasFiles(e.dataTransfer) && e.target instanceof Element && e.target.closest('textarea')) return;   // the box's own text drop
         e.preventDefault(); if (hasFiles(e.dataTransfer)) setDropping(true);
       }}
@@ -924,13 +955,13 @@ export function ComposerBar({ agent, openTerminal }) {
         <div class="composer-field-wrap">
           <${Composer} text=${draft} onText=${setDraft} placeholder=${placeholder} enabled=${enabled} onSend=${send}
             onPaste=${onPaste} keyHook=${(e) => { const r = handleKey(e); if (!r && e.key === 'Enter' && modKey(e)) { send(); return true; } return r; }}
-            ghost=${ghost} onDropFiles=${dropFiles} onDragOver=${(over) => { if (agent.canReceiveInput) setDropping(over); }} />
+            ghost=${ghost} onDropFiles=${dropFiles} onDragOver=${(over) => { if (canType(agent)) setDropping(over); }} />
         </div>
         <button type="button" class=${'send-btn' + (empty || busy ? ' idle' : '')} disabled=${!enabled || empty || busy}
             title=${busy ? L('앞 메시지를 CLI에 넣는 중입니다 (첨부 이미지 처리 중). 끝나면 다시 보낼 수 있습니다.') : keys(L('보내기 (Enter, ⌘↩)'))} onClick=${send}>
           ${busy ? html`<${ChaseRing} size=${14} />` : html`<${Icon} name="arrow.up" size=${15} strokeWidth=${3} />`}
         </button>
-        ${agent.state === 'busy' ? html`<button type="button" class="stop-btn" title=${L('지금 하던 작업만 멈춥니다 (Esc)')} onClick=${() => act('store.interrupt', sid)}>
+        ${agent.state === 'busy' && !agent.inProcess ? html`<button type="button" class="stop-btn" title=${L('지금 하던 작업만 멈춥니다 (Esc)')} onClick=${() => act('store.interrupt', sid)}>
           <${Icon} name="stop.fill" size=${12} /></button>` : null}
       </div>
       <${ComposerFooter} agent=${agent} ghost=${ghost} pendingCommands=${(agent.pendingCommands || []).length} />

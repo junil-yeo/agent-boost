@@ -20,6 +20,7 @@ const { L } = require('./l10n');
 const M = require('./models');
 const { newAgent, copyAgent, working } = M;
 const Pins = require('./pins');
+const InProc = require('./inprocess');
 const ListMeta = require('./listmeta');
 
 // ── sibling modules (ported from their Swift files in parallel; loaded lazily: some require this one) ────────────────
@@ -355,6 +356,7 @@ const Cache = {
   expectModelConfirm: (p) => TmuxCache().expectModelConfirm(p),
   markSent: (p, busy) => TmuxCache().markSent(p, busy),
   isSettled: (p) => !!TmuxCache().isSettled(p),
+  mates: (p) => (typeof TmuxCache().mates === 'function' ? TmuxCache().mates(p) : null) ?? null,
   probe: (p) => TmuxCache().probe(p),
 };
 
@@ -911,6 +913,8 @@ function loadSessions(paneByPid, jobs) {
     if (a.tmuxPane != null) {
       const p = a.tmuxPane;
       a.overlay = Cache.overlay(p);                       // a list / picker on screen: the file's status stands
+      const ml = Cache.mates(p);                          // a lead whose pane shows an in-process teammate's conversation
+      a.viewingMate = ml && ml.viewing && ml.viewing !== 'main' ? ml.viewing : null;
       const st = a.overlay == null ? Cache.state(p) : null;
       if (st != null) {
         const file = a.state;
@@ -1024,6 +1028,8 @@ function canSpawnTeammates(a) {
   const pid = a.pid;
   if (pid == null) return false;
   if (spawnable[pid] != null) return spawnable[pid];
+  // teammates in-process (the app's own launches, withInProcessTeams): they run inside the lead, no tmux needed
+  if (cmdline(pid).includes('"teammateMode":"in-process"')) { spawnable[pid] = true; return true; }
   // called from view bodies: never block here. Answer "yes" for now, look it up in the background.
   if (!spawnProbing.has(pid)) {
     spawnProbing.add(pid);
@@ -1104,6 +1110,27 @@ function loadTeams(sessions, panes, hidden = new Set()) {
         // teammates never register in ~/.claude/sessions; their transcript
         // carries teamName/agentName, and the config carries their pane
         sid = `${name}/${mname}`;
+        if (InProc.isInProcessMember(m)) {
+          // an in-process teammate (inprocess.js): it lives inside the lead's process, so it is live while the lead is
+          // and the config lists it; its conversation is in the lead's subagents folder
+          const tf = InProc.teammateFile(leadSid != null ? transcript(leadSid) : null, name, mname);
+          if (tf) transcriptIndex[sid] = tf.path;
+          const lead = leadSid != null ? sessions[leadSid] : null;
+          if (lead) {
+            const list = lead.tmuxPane != null ? Cache.mates(lead.tmuxPane) : null;
+            const row = list ? list.rows.find((r) => r.name === mname) || null : null;
+            const a = newAgent(sid, null, mname);
+            a.inProcess = true; a.leadSid = leadSid; a.leadPane = lead.tmuxPane ?? null;
+            a.state = InProc.stateOf(row, tf);
+            a.description = (row && row.description) || (tf && typeof tf.meta.description === 'string' ? tf.meta.description : null);
+            a.model = tf && typeof tf.meta.model === 'string' ? tf.meta.model : (typeof m.model === 'string' ? m.model : null);
+            a.cwd = typeof m.cwd === 'string' ? m.cwd : lead.cwd;
+            a.remoteControl = null;
+            // typing reaches it only through the lead's footer list (drawn while a teammate works or just finished)
+            a.canMessage = row != null && lead.tmuxPane != null && lead.overlay == null && !(lead.state === 'needsInput' && lead.prompt != null);
+            liveMates[sid] = a;
+          }
+        } else {
         let procStart = null;
         const lp = typeof m.tmuxPaneId === 'string' ? panes[m.tmuxPaneId] : undefined;
         if (lp != null) {
@@ -1129,11 +1156,13 @@ function loadTeams(sessions, panes, hidden = new Set()) {
           if (tpath) transcriptIndex[sid] = tpath;
           liveMates[sid] = a;
         } else if (tpath) transcriptIndex[sid] = tpath;
+        }
       }
       if (sid == null) continue;
       const sm = bucket[sid] || { sessionId: sid, name: typeof m.name === 'string' ? m.name : aid, agentType: typeof m.agentType === 'string' ? m.agentType : null,
         teamAddress: aid, isLead, firstSeen: t0, lastSeen: t0 };
       sm.lastSeen = t0; sm.teamAddress = aid; sm.isLead = isLead;
+      if (!isLead && InProc.isInProcessMember(m)) sm.inProcess = true;
       const live = sessions[sid];
       if (live) { if (live.name && live.name !== prefixChars(sid, 8)) sm.name = live.name; sm.origin = live.origin ?? sm.origin; }
       bucket[sid] = sm;
@@ -1154,6 +1183,15 @@ function loadTeams(sessions, panes, hidden = new Set()) {
       if (!sessions[sid] && !liveMates[sid]) a.state = 'ended';
       a.teamAddress = sm.teamAddress ?? null; a.teamName = name; a.agentType = sm.agentType ?? null; a.isLead = !!sm.isLead; a.origin = a.origin ?? sm.origin ?? null;
       if (a.nameSource !== 'user' && (a.name === prefixChars(sid, 8) || !a.name)) a.name = sm.name;
+      if (sm.inProcess) {
+        a.inProcess = true;
+        // an ended one (its lead gone, the config folder removed with it): its conversation is still in the lead's folder
+        if (transcriptIndex[sid] == null) {
+          const ls = Object.values(bucket).find((x) => x.isLead);
+          const tf = ls ? InProc.teammateFile(transcript(ls.sessionId), name, sm.name) : null;
+          if (tf) transcriptIndex[sid] = tf.path;
+        }
+      }
       team.members.push(a); claimed.add(sid);
     }
     // every member deleted: nothing left to show — forget the team instead of drawing an empty box
@@ -1268,7 +1306,11 @@ function send(text, a) {
   return r;
 }
 function sendChecked(text, a) {
+  if (a.inProcess) return sendToMate(text, a);
   const p = a.tmuxPane;
+  if (a.viewingMate != null && p != null && a.state !== 'ended' && !S.sending.has('mate:' + a.sessionId)) {
+    setNoticeValue(L("'%@'의 CLI가 팀원 '%@'의 화면을 보여 주는 중이라 보내지 않았습니다. CLI에서 팀원 목록(↓)으로 main을 고른 뒤 다시 보내세요.", a.name, a.viewingMate)); return false;
+  }
   if (p == null || a.state === 'ended') { setNoticeValue(L("'%@'은(는) 종료됐거나 tmux 화면이 없는 세션이라 보낼 수 없습니다.", a.name)); return false; }
   if (a.overlay != null) { setNoticeValue(L("'%@'의 CLI가 %@ 화면이라 보낼 수 없습니다. CLI에서 Esc를 눌러 대화로 돌아온 뒤 다시 보내세요.", a.name, overlayName(a.overlay))); return false; }
   if (a.state === 'needsInput' && a.prompt != null) {
@@ -1283,6 +1325,41 @@ function sendChecked(text, a) {
   S.sending.add(a.sessionId);
   TmuxControl().send(text, p, a.sessionId);     // queued per pane, off the main thread
   for (const d of [0.5]) setTimeout(refreshSoon, d * 1000);   // pick up the new state without waiting for the 2 s tick (coalesced)
+  changed();
+  return true;
+}
+/** A message to an in-process teammate: typed through its lead's pane with the CLI's own teammate list (inprocess.js),
+ *  with the lead's send checks (CLI list on screen, question waiting, someone typing there). Only while the lead's
+ *  footer lists the teammate: the CLI hides that list ~30 s after its teammates went idle, and then no key reaches it. */
+function sendToMate(text, a) {
+  const lead = a.leadSid != null ? agent(a.leadSid) : null;
+  const p = lead ? lead.tmuxPane : null;
+  const viaLead = L('팀장을 통해 지시하세요');
+  if (!lead || p == null || lead.state === 'ended' || a.state === 'ended') { setNoticeValue(L("'%@'은(는) 팀장 프로세스 안에서 도는 팀원이라 팀장의 tmux 화면으로만 보낼 수 있습니다. %@.", a.name, viaLead)); return false; }
+  if (text.startsWith('/')) { setNoticeValue(L("'%@'에는 슬래시 명령을 보낼 수 없습니다 (팀장 프로세스 안의 팀원). %@.", a.name, viaLead)); return false; }
+  if (!a.canMessage) { setNoticeValue(L("팀장 '%@'의 화면에 팀원 목록이 보이지 않아 '%@'에게 보낼 수 없습니다 (CLI는 팀원이 쉬고 30초쯤 지나면 목록을 숨깁니다). %@.", lead.name, a.name, viaLead)); return false; }
+  if (lead.overlay != null) { setNoticeValue(L("'%@'의 CLI가 %@ 화면이라 보낼 수 없습니다. CLI에서 Esc를 눌러 대화로 돌아온 뒤 다시 보내세요.", lead.name, overlayName(lead.overlay))); return false; }
+  if (lead.state === 'needsInput' && lead.prompt != null) { setNoticeValue(L("'%@'의 CLI가 질문에 대한 답을 기다리는 중이라 보내지 않았습니다. 질문 카드에서 먼저 답하거나 Esc로 취소한 뒤 다시 보내세요.", lead.name)); return false; }
+  if (Cache.foreignTyped(p)) { setNoticeValue(L("'%@'의 CLI 입력창에 입력 중인 글이 있어 보내지 않았습니다 (터미널에서 같이 쓰는 중). 그 글을 보내거나 지운 뒤 다시 시도하세요.", lead.name)); return false; }
+  if (ro(`sendToMate ${a.sessionId} ${JSON.stringify(prefixChars(text, 40))}`, lead)) return false;
+  const sid = a.sessionId;
+  S.lastSentAt = now();
+  addEcho(text, sid, 90);
+  Cache.markSent(p, false);          // the keys below are the app's own: not "someone typing in the terminal"
+  S.sending.add(sid); S.sending.add('mate:' + lead.sessionId);
+  InProc.send(p, a.name, text, a.transcriptPath ?? transcript(sid)).then((r) => {
+    S.sending.delete(sid); S.sending.delete('mate:' + lead.sessionId);
+    if (!r || !r.ok) {
+      if (echoes[sid]) echoes[sid] = echoes[sid].filter((e) => e.text !== text);
+      if (chat[sid]) setChat(sid, chat[sid].filter((e) => !(e.toolName === '전송 중' && e.text === text)));
+      S.bounce = { sid, gen: S.bounce.gen + 1 };     // back into the composer (it keeps lastSentDraft)
+      setNoticeValue(r && r.why === 'hidden'
+        ? L("팀장 '%@'의 화면에서 팀원 목록이 사라져 '%@'에게 보내지 못했습니다. 입력창에 되돌려 놓았습니다. %@.", lead.name, a.name, viaLead)
+        : r && r.typed ? L("'%@'에게 입력했지만 팀원 기록에서 확인되지 않습니다. 팀장 CLI 화면을 확인해 주세요.", a.name)
+          : L("'%@'에게 보내지 못했습니다 (팀장 화면에서 팀원을 고르지 못함). 입력창에 되돌려 놓았습니다. %@.", a.name, viaLead));
+    }
+    changed(); refreshSoon();
+  });
   changed();
   return true;
 }
@@ -1604,6 +1681,57 @@ function quit(a, mode = 'now') {
   exitWatchdog(pid, a.name);
   setNoticeValue(L("'%@'에 /exit 을 보냈습니다.", a.name));
 }
+/** A team member's lead (an in-process teammate knows it; others through their team), or null. */
+function leadOf(a) {
+  if (a.inProcess && a.leadSid != null) return agent(a.leadSid);
+  if (a.teamName == null || a.isLead) return null;
+  const t = S.teams.find((x) => x.name === a.teamName);
+  return t ? t.members.find((m) => m.isLead) || null : null;
+}
+const leadControllable = (l) => !!l && l.state !== 'ended' && l.tmuxPane != null;
+/** Quitting a team member (quitplan.mjs picks the confirmation; `how` is its answer):
+ *  - 'stop': a teammate is shut down through its lead — an in-process one with the CLI's own x in the lead's agent panel
+ *    (inprocess.stop; when the panel is hidden the lead is asked instead), a tmux one by asking the lead
+ *    ("%@ 팀원에게 종료를 요청해 줘", the documented way); with no live lead, the direct quit as before.
+ *  - 'report': the lead is asked to collect the teammate's results and then shut it down; for the lead itself, to collect
+ *    every teammate's results, after which /exit waits in the queue until that turn ends. A teammate whose lead is gone
+ *    is asked to sum up its results itself, with /exit queued behind.
+ *  - 'now': the lead itself, quit as usual. */
+function quitVia(a, how) {
+  if (a.state === 'ended') return;
+  const queueExit = (x) => { (pendingCommands[x.sessionId] = pendingCommands[x.sessionId] || []).push('/exit'); refresh(); };
+  if (a.isLead) {
+    if (how === 'report' && leadControllable(a)) {
+      if (send(L('팀원들에게 지금까지의 결과를 모두 보고받아 정리해 줘. 정리가 끝나면 종료할게.'), a)) {
+        queueExit(a); setNoticeValue(L("'%@'에게 팀원 결과 정리를 요청했습니다. 그 작업이 끝나면 종료합니다.", a.name));
+      }
+      return;
+    }
+    quit(a, 'now'); return;
+  }
+  const lead = leadOf(a);
+  if (leadControllable(lead)) {
+    if (how === 'report') { if (send(L('%@ 팀원에게 지금까지의 결과를 보고받은 뒤 종료를 요청해 줘', a.name), lead)) setNoticeValue(L("팀장 '%@'에게 '%@'의 결과 보고와 종료를 요청했습니다.", lead.name, a.name)); return; }
+    const askLead = () => { if (send(L('%@ 팀원에게 종료를 요청해 줘', a.name), lead)) setNoticeValue(L("팀장 '%@'에게 '%@'의 종료를 요청했습니다.", lead.name, a.name)); };
+    if (a.inProcess && a.canMessage) {
+      if (ro(`stopMate ${a.sessionId}`, lead)) return;
+      setNoticeValue(L("'%@'을(를) 팀장 화면의 팀원 목록에서 종료합니다 (x).", a.name));
+      InProc.stop(lead.tmuxPane, a.name).then((r) => {
+        if (r && r.ok) setNoticeValue(L("'%@'을(를) 종료했습니다.", a.name));
+        else { const l = agent(lead.sessionId); if (l) askLeadLater(l); }
+        refreshSoon();
+      });
+      const askLeadLater = (l) => { if (send(L('%@ 팀원에게 종료를 요청해 줘', a.name), l)) setNoticeValue(L("팀장 화면에서 '%@'을(를) 고르지 못해 팀장 '%@'에게 종료를 요청했습니다.", a.name, l.name)); };
+      return;
+    }
+    askLead(); return;
+  }
+  if (how === 'report' && a.tmuxPane != null && !a.inProcess) {
+    if (send(L('지금까지의 결과를 정리해서 알려 줘. 그다음 종료할게.'), a)) queueExit(a);
+    return;
+  }
+  quit(a, 'now');
+}
 /** ctrl+c twice: how the CLI quits an interactive viewer of a background job (its /exit only returns to the agents screen). */
 function closeViewer(pane, pid) {
   if (ro(`closeViewer ${pane}`, pane)) return;
@@ -1870,7 +1998,16 @@ function cancelLaunch(l) {
   S.launches = S.launches.filter((x) => x.id !== l.id);
   setNoticeValue(L("'%@' 시작을 취소했습니다.", l.name));
 }
+/** Teams the app's sessions create run their teammates in-process (inside the lead, the CLI's default outside tmux):
+ *  the flag goes on every session the app starts, for that session only. ~/.claude/settings.json (which may say
+ *  teammateMode "tmux") is never edited; teams made elsewhere keep whatever mode they have. */
+const IN_PROCESS_SETTINGS = '{"teammateMode":"in-process"}';
+function withInProcessTeams(argv) {
+  if (argv[0] !== Shell.claude || argv[1] === 'attach' || argv.includes('--settings')) return argv;
+  return [argv[0], '--settings', IN_PROCESS_SETTINGS, ...argv.slice(1)];
+}
 async function launchInTmux(label, cwd, argv, attachJob = null, resume = null) {
+  argv = withInProcessTeams(argv);
   if (ro(`launchInTmux ${label} ${argv.slice(1).join(' ').slice(0, 80)}`, { name: label, cwd })) return null;
   let slug = Array.from(label).map((ch) => (/^[A-Za-z0-9]$/.test(ch) ? ch : '-')).slice(0, 24).join('').replace(/^-+|-+$/g, '');
   if (!slug) slug = 'session';
@@ -1895,7 +2032,7 @@ function workingDirectory(a) {
   const p = a.transcriptPath ?? transcript(a.sessionId);
   return p == null ? null : transcriptCwd(p);
 }
-const canResume = (a) => a.state === 'ended' && (a.transcriptPath ?? transcript(a.sessionId)) != null;
+const canResume = (a) => a.state === 'ended' && !a.inProcess && (a.transcriptPath ?? transcript(a.sessionId)) != null;
 /** Reopens an ended conversation the CLI's way: `claude --resume <id>` in a background tmux session; `--bg --resume` and
  *  `claude attach` for a conversation that belongs to a CLI background job. Model/effort are launch flags, so the user's
  *  defaults are untouched. Never a copy unless asked (`fork`): one conversation is one session id, in the CLI and here. */
@@ -1923,6 +2060,45 @@ async function resume(a, model, effort, bypass = false, fork = false) {
   setNoticeValue(L("'%@' 다시 시작 (tmux: %@)", a.name, t) + (fork ? L(' — 복사본(새 세션 ID)으로 분기합니다. 원본 대화는 그대로 남습니다.') : '') + (a.teamName != null && !a.isLead ? L(' — 팀원 세션은 팀과 분리된 개별 세션으로 열립니다.') : ''));
   return t;
 }
+// ── adopt: a session started outside tmux comes into the app ───────────────────────────────────────────────────────
+const adopting = new Set();
+/** "앱으로 가져오기": a live session the app cannot type into because it runs outside tmux (plain terminal, IDE …) is
+ *  ended the way Ctrl+C ends it (SIGINT twice; quit's watchdog sends SIGTERM if it is still there after 30 s), and once
+ *  the process is gone and its transcript has stopped growing, the same conversation is reopened inside the app's tmux
+ *  with the store's resume path (same session id, the model / effort / bypass it ran with; its pin stays, being keyed
+ *  by that id). A lead's in-process teammates do not come back (the CLI does not restore teammates on --resume). */
+async function adopt(a) {
+  if (!M.canAdopt(a) || adopting.has(a.sessionId)) return false;
+  if (ro(`adopt ${a.sessionId}`, a)) return false;
+  const pid = a.pid, sid = a.sessionId, name = a.name;
+  const cl = cmdline(pid);
+  const fm = flag('--model', cl);
+  const model = a.model || (fm ? expandModelAlias(fm) : null) || 'claude-sonnet-5-5';
+  const effort = a.effort || flag('--effort', cl) || 'medium';
+  const pm = flag('--permission-mode', cl);
+  const bypass = cl.split(' ').includes('--dangerously-skip-permissions') || pm === 'bypassPermissions' || a.screen?.mode === 'bypass permissions';
+  adopting.add(sid); changed();
+  try {
+    setNoticeValue(L("'%@'을(를) 앱으로 가져오는 중 — 바깥에서 실행 중인 CLI를 끝내는 중입니다 (Ctrl+C)…", name));
+    signal(pid, 'SIGINT');
+    await sleep(600);
+    if (alive(pid)) signal(pid, 'SIGINT');
+    exitWatchdog(pid, name);
+    for (let i = 0; i < 180 && alive(pid); i++) await sleep(250);   // the watchdog's SIGTERM comes at 30 s
+    if (alive(pid)) { setNoticeValue(L("'%@'이(가) 끝나지 않아 앱으로 가져오지 못했습니다. 바깥 터미널에서 직접 종료한 뒤 다시 시작하세요.", name)); return false; }
+    // the CLI writes its last records on the way out: wait until the transcript stops growing (≤ 10 s)
+    const tp = transcript(sid);
+    let last = -2;
+    for (let i = 0; i < 20; i++) { const st = tp ? stat(tp) : null; const sz = st ? st.size : -1; if (sz === last) break; last = sz; await sleep(500); }
+    refresh();
+    const e = agent(sid) || (() => { const x = newAgent(sid, null, name, 'ended'); x.cwd = a.cwd; return x; })();
+    if (e.state !== 'ended') { setNoticeValue(L("'%@'이(가) 아직 실행 중으로 보여 다시 열지 않았습니다.", name)); return false; }
+    if (e.cwd == null) e.cwd = a.cwd;
+    const t = await resume(e, model, effort, bypass);
+    if (t != null) setNoticeValue(L("'%@'을(를) 앱 안에서 같은 대화로 다시 열었습니다 (tmux: %@).", name, t));
+    return t != null;
+  } finally { adopting.delete(sid); changed(); }
+}
 /** The id of the conversation behind a card: its transcript's name, else the card's own id. */
 function conversationId(a) { const p = a.transcriptPath ?? transcript(a.sessionId); return p != null ? basenameNoExt(p) : a.sessionId; }
 /** The CLI's job record for a conversation (also a stopped one: the record outlives the process until `claude rm`). */
@@ -1945,7 +2121,7 @@ function resumeAsJob(sid, jobId, label, cwd, model, effort, bypass) {
     // a stopped job's record left in place makes the CLI start a COPY under a new id (verified); without the record
     // it continues under the same id. The record is only the CLI's list entry: the transcript stays.
     if (jobId != null) await Shell.run([Shell.claude, 'rm', jobId], { timeout: 30 });
-    const argv = [Shell.claude, '--bg', '--resume', sid, '--model', model, '--effort', effort];
+    const argv = withInProcessTeams([Shell.claude, '--bg', '--resume', sid, '--model', model, '--effort', effort]);
     if (bypass) argv.push('--dangerously-skip-permissions');
     const r = await Shell.run(argv, { timeout: 60, cwd });
     const text = r.out + '\n' + r.err;
@@ -2648,6 +2824,7 @@ function snapshot() {
     pinned: allAgents().filter((a) => a.pinned).map((a) => a.sessionId),
     pinnedTeams: S.pinnedTeams,
     listMetaVersion: listMetaShown,
+    adopting: [...adopting],
   };
 }
 let pushTimer = null, lastPush = 0, lastJSON = '';
@@ -2681,6 +2858,7 @@ function start() {
 
 module.exports = {
   // lifecycle
+  withInProcessTeams,
   start, refresh: () => refresh(), refreshSoon, manualRefresh, shutdownAll, resumeSavedSessions, requestQuit, confirmQuit, finishQuit,
   fetchUsage, updateClaude, createDiskManager, pruneEmptyTeams: (silent) => pruneEmptyTeams(!!silent),
   // state access
@@ -2727,6 +2905,7 @@ module.exports = {
   toggleRemote: byId(toggleRemote),
   canControl: byId(canControl), canQuit: byId(canQuit), canResume: byId(canResume), canSpawnTeammates: byId(canSpawnTeammates),
   quit: byId((a, mode) => quit(a, mode === 'whenIdle' ? 'whenIdle' : 'now')),
+  quitVia: byId((a, how) => quitVia(a, how === 'report' ? 'report' : how === 'now' ? 'now' : 'stop')),
   setModel: (m, sid) => { const a = agent(sid); if (a) setModel(m, a); },
   setEffort: (e, sid) => { const a = agent(sid); if (a) setEffort(e, a); },
   addTeammates: (specs, sid) => { const a = agent(sid); if (a) addTeammates(specs, a); },
@@ -2734,6 +2913,7 @@ module.exports = {
   createSession,
   workingDirectory: byId(workingDirectory),
   resume: byId((a, model, effort, bypass, fork) => resume(a, model, effort, !!bypass, !!fork)),
+  adopt: byId(adopt),
   conversationId: byId(conversationId),
   jobRecord: (sid) => jobRecord(sid),
   runningJob: (sid) => runningJob(sid),

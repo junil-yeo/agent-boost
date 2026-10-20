@@ -311,6 +311,7 @@ const C = {
   _status: {},      // spinner / done line / footer of the last capture
   _overlay: {},     // pane -> CLI screen covering the conversation ("agents" / "resume")
   _typed: {},       // pane -> text sits in the CLI's input box (someone is typing there)
+  _mates: {},       // pane -> a lead's in-process teammate list under its status line (Screen.teammateList)
   _modelSentAt: {}, // pane -> when the app sent /model (a "Switch model?" prompt may follow)
   _sentAt: {},
   _wanted: new Set(),
@@ -341,6 +342,8 @@ const cache = {
     return true;
   },
   status(pane) { return C._status[pane] || null; },
+  /** The in-process teammate list the lead's footer shows (Screen.teammateList), or null. */
+  mates(pane) { return C._mates[pane] || null; },
   busy(pane) { return has(C._busy, pane) ? C._busy[pane] : null; },
   /** Only these panes (Claude sessions) get a capture-pane; empty = all (first run). */
   setWanted(p) { C._wanted = new Set(p || []); },
@@ -377,7 +380,7 @@ const cache = {
       const wantAll = C._wanted.size === 0;
       const oldPanes = C._panes, oldSessions = C._sessions;
       const p = (await panesChecked()) || oldPanes, s = (await paneSessionsChecked()) || oldSessions;   // a timed-out list keeps the old map
-      const b = {}, inp = {}, prm = {}, sts = {}, failed = new Set(), ov = {}, ty = {};
+      const b = {}, inp = {}, prm = {}, sts = {}, failed = new Set(), ov = {}, ty = {}, mt = {};
       for (const pane of Object.keys(p)) {
         if (!(wantAll || wanted.has(pane))) continue;
         // with colours (-e): the CLI's suggestion differs from typed text only by being dim; everything else reads plain text
@@ -386,7 +389,7 @@ const cache = {
         const out = Screen.stripANSI(raw.out);
         const stat = Screen.status(out); stat.suggestion = Screen.suggestion(raw.out);
         b[pane] = Screen.busy(out); inp[pane] = Screen.needsInput(out); put(prm, pane, Screen.prompt(out)); sts[pane] = stat;
-        put(ov, pane, Screen.overlay(out)); ty[pane] = Screen.typedInput(raw.out);
+        put(ov, pane, Screen.overlay(out)); ty[pane] = Screen.typedInput(raw.out); put(mt, pane, Screen.teammateList(out));
         // auto-yes ONLY to the exact "Switch model?" window, within 20 s of a /model the app sent itself
         const sent = C._modelSentAt[pane];
         if (sent !== undefined && now() - sent < 20000 && Screen.isSwitchModelPrompt(out)) {
@@ -397,28 +400,28 @@ const cache = {
       }
       for (const pane of failed) {
         put(b, pane, C._busy[pane]); put(inp, pane, C._input[pane]); put(prm, pane, C._prompt[pane]); put(sts, pane, C._status[pane]);
-        put(ov, pane, C._overlay[pane]); put(ty, pane, C._typed[pane]);
+        put(ov, pane, C._overlay[pane]); put(ty, pane, C._typed[pane]); put(mt, pane, C._mates[pane]);
       }
       for (const pane of Object.keys(C._sentAt)) {
         const t = C._sentAt[pane];
         if (t > started) put(b, pane, C._busy[pane]);                       // sent during this update: its capture predates the send
         else if (now() - t < 1500) b[pane] = true;                          // claude has not drawn its footer yet
       }
-      C._panes = p; C._sessions = s; C._busy = b; C._input = inp; C._prompt = prm; C._status = sts; C._overlay = ov; C._typed = ty; C._at = now();
+      C._panes = p; C._sessions = s; C._busy = b; C._input = inp; C._prompt = prm; C._status = sts; C._overlay = ov; C._typed = ty; C._mates = mt; C._at = now();
       return true;
     } finally { C.running = false; }
   },
 };
 
 Object.assign(T, {
-  SendLog, valid, queue, exec, keys, send, pullQueue, clearInput, command, interrupt, rename,
+  SendLog, valid, queue, exec, keys, send, sendNow, pullQueue, clearInput, command, interrupt, rename,
   paneSessions, paneSessionsChecked, panes, panesChecked,
   // hooks (settable)
   onWarning: null, onDone: null, onLost: null,
   // TmuxCache
   cache,
   cachedPanes: () => cache.panes, cachedPaneSessions: () => cache.paneSessions,
-  state: cache.state, prompt: cache.prompt, overlay: cache.overlay, foreignTyped: cache.foreignTyped, status: cache.status,
+  state: cache.state, prompt: cache.prompt, overlay: cache.overlay, foreignTyped: cache.foreignTyped, status: cache.status, mates: cache.mates,
   busy: cache.busy, setWanted: cache.setWanted, expectModelConfirm: cache.expectModelConfirm, markSent: cache.markSent,
   isSettled: cache.isSettled, probe: cache.probe, update: cache.update,
 });

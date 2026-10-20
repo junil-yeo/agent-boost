@@ -126,7 +126,7 @@ app.whenReady().then(() => {
   }
   // modules register themselves on load; the store starts its refresh loop
   const l10n = require('./l10n'); register('l10n', l10n);
-  for (const m of ['shell', 'tmux', 'screen', 'transcript', 'search', 'suggest', 'slash', 'attach', 'todo', 'clicheck', 'store', 'platform', 'panes', 'cloud', 'tray']) {
+  for (const m of ['shell', 'tmux', 'screen', 'transcript', 'search', 'suggest', 'slash', 'attach', 'todo', 'clicheck', 'store', 'platform', 'panes', 'cloud', 'tray', 'subagents']) {
     try { register(m, require('./' + m)); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND' || !String(e.message).includes(`'./${m}'`)) console.error(m, e); }
   }
   // log.note(text): the page's SendLog lines (the composer's open / close / send trail, TeamDetailView.swift) go to the

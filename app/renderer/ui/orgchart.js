@@ -12,9 +12,9 @@ const selSet = (s) => new Set((s && s.selection) || []);
 
 // ── store checks the views need synchronously (BoardStore.canQuit / canResume) ──────────────────────────────────────
 /** BoardStore.canQuit: a live session with a process to stop. */
-export const canQuit = (a) => a.state !== 'ended' && a.pid != null;
+export const canQuit = (a) => a.state !== 'ended' && (a.pid != null || !!a.inProcess);   // an in-process teammate quits through its lead
 /** BoardStore.canResume: an ended session with a conversation file (the snapshot carries its transcriptPath). */
-export const canResume = (a) => a.state === 'ended' && a.transcriptPath != null;
+export const canResume = (a) => a.state === 'ended' && a.transcriptPath != null && !a.inProcess;
 
 // ── modules other agents write (dynamic import, neutral placeholder until they load) ───────────────────────────────
 const modCache = {};
@@ -258,6 +258,7 @@ export function NameCard({ agent, s, badge, selected }) {
       <span class="card-actions hstack" style=${{ gap: '6px' }}>
         ${canResume(agent) ? html`<${Button} kind="icon" help=${L('다시 시작')} onClick=${stop(() => setResuming(true))}><${Icon} name="power" /><//>` : null}
         ${canQuit(agent) ? html`<${Button} kind="icon" help=${L('종료 (/exit)')} onClick=${stop(() => quitAgent(agent))}><${Icon} name="power" /><//>` : null}
+        ${agent.canAdopt ? html`<${Button} kind="icon" help=${L('앱으로 가져오기 — 바깥 터미널의 CLI를 끝내고 앱 안에서 같은 대화로 다시 엽니다')} onClick=${stop(() => agentAction('adoptDialog', agent))}><${Icon} name="macwindow.badge.plus" /><//>` : null}
         <${Button} kind="icon" help=${L('이름 변경')} onClick=${stop(() => renameAgent(agent))}><${Icon} name="pencil" /><//>
         <${Button} kind="icon" help=${L('보관')} onClick=${stop(() => setDeleting(true))}><${Icon} name="archivebox" /><//>
       </span>
@@ -291,6 +292,7 @@ export function cardMenuEntries(agent, { resume, archive }) {
     ...(canResume(agent) ? [{ item: L('다시 시작…'), action: resume }] : []),
     { item: L('이름 변경…'), action: () => renameAgent(agent) },
     ...(canQuit(agent) ? [{ item: L('종료…'), action: () => quitAgent(agent) }] : []),
+    ...(agent.canAdopt ? [{ item: L('앱으로 가져오기…'), action: () => agentAction('adoptDialog', agent) }] : []),
     ...(agent.tmuxSession != null && !ended ? [{ item: L('터미널에서 열기'), action: () => call('store.openTerminal', agent.sessionId) }] : []),
     '-',
     { item: ended ? L('보관…') : L('종료하고 보관…'), action: archive },

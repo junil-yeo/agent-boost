@@ -7,9 +7,11 @@
 import { html, useState, useEffect, useRef, L } from '../lib.js';
 import { Sheet, Button, Checkbox, Label, confirm, prompt } from './widgets.js';
 import { overlayName } from '../fmt.js';
-import { act, useAppStorage, ensureStyles } from './board.js';
+import { quitPlan, setL as setQuitL } from '../logic/quitplan.mjs';
+import { act, board, useAppStorage, ensureStyles } from './board.js';
 
 ensureStyles();
+setQuitL(L);
 
 const working = (a) => a.state === 'busy' || a.state === 'needsInput';
 
@@ -63,14 +65,36 @@ export function quitMessage(agent) {
   return s + '\n' + L('대화 기록은 남고, 나중에 다시 시작할 수 있습니다.');
 }
 
-/** Quit confirmation. Idle: one button. Busy: interrupt now, or exit when the turn ends. */
+/** Quit confirmation. Idle: one button. Busy: interrupt now, or exit when the turn ends. A team member (a teammate, or
+ *  a lead with live teammates) gets the team's confirmation instead (logic/quitplan.mjs → store.quitVia). */
 export async function quitDialog(agent) {
+  const plan = quitPlan(agent, board());
+  if (plan) {
+    const v = await confirm(plan.title, plan.message, plan.buttons);
+    if (v === 'stop' || v === 'report' || v === 'now') act('store.quitVia', agent.sessionId, v);
+    return;
+  }
   const buttons = working(agent)
     ? [{ label: L('지금 종료 (작업 중단)'), role: 'destructive', value: 'now' }, { label: L('작업 끝나면 종료'), value: 'whenIdle' }]
     : [{ label: L('종료'), role: 'destructive', value: 'now' }];
   buttons.push({ label: L('취소'), role: 'cancel' });
   const v = await confirm(L("'%@' 종료", agent.name), quitMessage(agent), buttons);
   if (v === 'now' || v === 'whenIdle') act('store.quit', agent.sessionId, v);
+}
+
+// ── adopt ("앱으로 가져오기") ──────────────────────────────────────────────────────────────────────────────────────
+
+/** The confirmation for store.adopt: the outside CLI is ended and the same conversation reopens inside the app. A lead
+ *  with in-process teammates is warned that they do not come back. `s`: the board snapshot (to find those teammates). */
+export async function adoptDialog(agent, s) {
+  s = s || board();
+  const team = agent.teamName != null ? ((s && s.teams) || []).find((t) => t.name === agent.teamName) : null;
+  const mates = team ? team.members.filter((m) => m.inProcess && m.state !== 'ended') : [];
+  let msg = L('터미널에서 실행 중인 이 세션을 종료하고 앱 안에서 같은 대화로 다시 엽니다. 바깥 터미널의 CLI는 Ctrl+C처럼 끝나고(30초 안에 끝나지 않으면 SIGTERM), 대화 기록이 저장된 뒤 같은 세션 ID·모델·effort로 이 앱의 tmux에서 이어집니다.');
+  if (working(agent)) msg += '\n' + L('⚠️ 지금 작업 중입니다. 진행 중인 응답은 중단됩니다.');
+  if (mates.length) msg += '\n' + L('⚠️ 이 팀장의 팀원 %@명(%@)은 팀장 프로세스 안에서 돌고 있어 함께 끝나며, 다시 열어도 돌아오지 않습니다 (Claude Code는 재개 시 팀원을 복원하지 않음).', String(mates.length), mates.map((m) => m.name).join(', '));
+  const v = await confirm(L("'%@' 앱으로 가져오기", agent.name), msg, [{ label: L('취소'), role: 'cancel' }, { label: L('가져오기'), value: 'adopt' }]);
+  if (v === 'adopt') act('store.adopt', agent.sessionId);
 }
 
 // ── DeleteSheet ────────────────────────────────────────────────────────────────────────────────────────────────────

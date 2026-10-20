@@ -1,0 +1,46 @@
+
+
+› Message from @helper (ctrl+o to expand)
+
+⏺ Helper agent completed the sleep command and replied done.
+
+
+⏺ Teammate @helper finished
+  Sleep command completed and message sent to team lead.
+
+⏺ Helper agent is idle and available.
+
+❯ Tell helper: reply hi.
+
+⏺ Message sent to helper.
+
+
+› Message from @helper (ctrl+o to expand)
+
+⏺ Helper agent replied hi.
+
+
+⏺ Teammate @helper finished
+  Message sent.
+
+⏺ Helper agent is idle and available.
+
+❯ Tell helper: run the bash command sleep 6, then reply done.
+
+⏺ Message sent to helper.
+
+
+› Message from @helper (ctrl+o to expand)
+
+⏺ Helper agent completed the sleep command and replied done.
+
+
+⏺ Teammate @helper finished
+  Sleep command completed and message sent.
+
+⏺ Helper agent is idle and available.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── abtest-lead ─
+❯ 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏸ manual mode on · ? for shortcuts

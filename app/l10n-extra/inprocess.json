@@ -1,0 +1,434 @@
+{
+  "팀원 목록 열기(↓)": {
+    "en": "Open the teammate list (↓)",
+    "ja": "チームメイト一覧を開く(↓)",
+    "zh": "打开队友列表(↓)",
+    "es": "Abrir la lista de compañeros (↓)"
+  },
+  "팀원 선택(↓)": {
+    "en": "Select teammate (↓)",
+    "ja": "チームメイトを選択(↓)",
+    "zh": "选择队友(↓)",
+    "es": "Seleccionar compañero (↓)"
+  },
+  "팀원 선택(↑)": {
+    "en": "Select teammate (↑)",
+    "ja": "チームメイトを選択(↑)",
+    "zh": "选择队友(↑)",
+    "es": "Seleccionar compañero (↑)"
+  },
+  "팀원 화면 보기(Enter)": {
+    "en": "View teammate (Enter)",
+    "ja": "チームメイトを表示(Enter)",
+    "zh": "查看队友(Enter)",
+    "es": "Ver compañero (Enter)"
+  },
+  "팀원 목록 닫기(↑)": {
+    "en": "Leave the teammate list (↑)",
+    "ja": "チームメイト一覧を閉じる(↑)",
+    "zh": "离开队友列表(↑)",
+    "es": "Salir de la lista de compañeros (↑)"
+  },
+  "'%@'의 CLI가 팀원 '%@'의 화면을 보여 주는 중이라 보내지 않았습니다. CLI에서 팀원 목록(↓)으로 main을 고른 뒤 다시 보내세요.": {
+    "en": "Not sent: '%@''s CLI is showing teammate '%@'. Pick main in the CLI's teammate list (↓), then send again.",
+    "ja": "'%@' の CLI がチームメイト '%@' の画面を表示中のため送信しませんでした。CLI のチームメイト一覧(↓)で main を選んでから再送してください。",
+    "zh": "未发送:'%@' 的 CLI 正在显示队友 '%@' 的界面。请在 CLI 的队友列表(↓)中选择 main 后再发送。",
+    "es": "No enviado: la CLI de '%@' muestra al compañero '%@'. Elige main en la lista de compañeros de la CLI (↓) y vuelve a enviar."
+  },
+  "팀장을 통해 지시하세요": {
+    "en": "Instruct it through the team lead",
+    "ja": "チームリーダー経由で指示してください",
+    "zh": "请通过组长下达指示",
+    "es": "Dale instrucciones a través del líder del equipo"
+  },
+  "'%@'은(는) 팀장 프로세스 안에서 도는 팀원이라 팀장의 tmux 화면으로만 보낼 수 있습니다. %@.": {
+    "en": "'%@' is a teammate running inside its lead's process, so messages can only go through the lead's tmux screen. %@.",
+    "ja": "'%@' はリーダーのプロセス内で動くチームメイトのため、リーダーの tmux 画面からしか送れません。%@。",
+    "zh": "'%@' 是在组长进程内运行的队友,只能通过组长的 tmux 界面发送。%@。",
+    "es": "'%@' es un compañero que se ejecuta dentro del proceso del líder; solo se le puede escribir a través de la pantalla tmux del líder. %@."
+  },
+  "'%@'에는 슬래시 명령을 보낼 수 없습니다 (팀장 프로세스 안의 팀원). %@.": {
+    "en": "Slash commands cannot be sent to '%@' (a teammate inside its lead's process). %@.",
+    "ja": "'%@' にはスラッシュコマンドを送れません(リーダーのプロセス内のチームメイト)。%@。",
+    "zh": "无法向 '%@' 发送斜杠命令(组长进程内的队友)。%@。",
+    "es": "No se pueden enviar comandos de barra a '%@' (compañero dentro del proceso del líder). %@."
+  },
+  "팀장 '%@'의 화면에 팀원 목록이 보이지 않아 '%@'에게 보낼 수 없습니다 (CLI는 팀원이 쉬고 30초쯤 지나면 목록을 숨깁니다). %@.": {
+    "en": "Cannot send to '%@': lead '%@' is not showing its teammate list (the CLI hides it about 30 s after the teammates go idle). %@.",
+    "ja": "リーダー '%@' の画面にチームメイト一覧が表示されていないため '%@' に送れません(CLI はチームメイトが待機して約 30 秒で一覧を隠します)。%@。",
+    "zh": "组长 '%@' 的界面没有显示队友列表,无法发送给 '%@'(队友空闲约 30 秒后 CLI 会隐藏列表)。%@。",
+    "es": "No se puede enviar a '%@': el líder '%@' no muestra la lista de compañeros (la CLI la oculta unos 30 s después de que queden inactivos). %@."
+  },
+  "팀장 '%@'의 화면에서 팀원 목록이 사라져 '%@'에게 보내지 못했습니다. 입력창에 되돌려 놓았습니다. %@.": {
+    "en": "The teammate list disappeared from lead '%@''s screen, so the message to '%@' was not sent. It is back in the input box. %@.",
+    "ja": "リーダー '%@' の画面からチームメイト一覧が消えたため '%@' に送れませんでした。入力欄に戻しました。%@。",
+    "zh": "组长 '%@' 界面上的队友列表消失了,未能发送给 '%@'。已放回输入框。%@。",
+    "es": "La lista de compañeros desapareció de la pantalla del líder '%@' y no se envió a '%@'. Se devolvió al cuadro de texto. %@."
+  },
+  "'%@'에게 입력했지만 팀원 기록에서 확인되지 않습니다. 팀장 CLI 화면을 확인해 주세요.": {
+    "en": "Typed to '%@', but it does not show up in the teammate's record. Check the lead's CLI screen.",
+    "ja": "'%@' に入力しましたが、チームメイトの記録で確認できません。リーダーの CLI 画面を確認してください。",
+    "zh": "已向 '%@' 输入,但在队友记录中未确认。请检查组长的 CLI 界面。",
+    "es": "Se escribió a '%@', pero no aparece en el registro del compañero. Revisa la pantalla de la CLI del líder."
+  },
+  "'%@'에게 보내지 못했습니다 (팀장 화면에서 팀원을 고르지 못함). 입력창에 되돌려 놓았습니다. %@.": {
+    "en": "Could not send to '%@' (the teammate could not be selected on the lead's screen). It is back in the input box. %@.",
+    "ja": "'%@' に送れませんでした(リーダーの画面でチームメイトを選べませんでした)。入力欄に戻しました。%@。",
+    "zh": "未能发送给 '%@'(无法在组长界面选中该队友)。已放回输入框。%@。",
+    "es": "No se pudo enviar a '%@' (no se pudo seleccionar al compañero en la pantalla del líder). Se devolvió al cuadro de texto. %@."
+  },
+  "'%@'을(를) 앱으로 가져오는 중 — 바깥에서 실행 중인 CLI를 끝내는 중입니다 (Ctrl+C)…": {
+    "en": "Bringing '%@' into the app — ending the CLI running outside (Ctrl+C)…",
+    "ja": "'%@' をアプリに取り込み中 — 外で動いている CLI を終了しています(Ctrl+C)…",
+    "zh": "正在将 '%@' 导入应用 — 正在结束外部运行的 CLI(Ctrl+C)…",
+    "es": "Trayendo '%@' a la app — cerrando la CLI que se ejecuta fuera (Ctrl+C)…"
+  },
+  "'%@'이(가) 끝나지 않아 앱으로 가져오지 못했습니다. 바깥 터미널에서 직접 종료한 뒤 다시 시작하세요.": {
+    "en": "'%@' did not exit, so it was not brought into the app. Quit it in its terminal, then resume it.",
+    "ja": "'%@' が終了しなかったためアプリに取り込めませんでした。外のターミナルで終了してから再開してください。",
+    "zh": "'%@' 没有退出,未能导入应用。请在外部终端中退出后再重新启动。",
+    "es": "'%@' no terminó y no se pudo traer a la app. Ciérrala en su terminal y luego reanúdala."
+  },
+  "'%@'이(가) 아직 실행 중으로 보여 다시 열지 않았습니다.": {
+    "en": "'%@' still looks running, so it was not reopened.",
+    "ja": "'%@' がまだ実行中に見えるため再度開きませんでした。",
+    "zh": "'%@' 似乎仍在运行,未重新打开。",
+    "es": "'%@' parece seguir en ejecución; no se volvió a abrir."
+  },
+  "'%@'을(를) 앱 안에서 같은 대화로 다시 열었습니다 (tmux: %@).": {
+    "en": "Reopened '%@' inside the app with the same conversation (tmux: %@).",
+    "ja": "'%@' をアプリ内で同じ会話として開き直しました(tmux: %@)。",
+    "zh": "已在应用内以同一对话重新打开 '%@'(tmux: %@)。",
+    "es": "'%@' se reabrió dentro de la app con la misma conversación (tmux: %@)."
+  },
+  "%@초": {
+    "en": "%@s",
+    "ja": "%@秒",
+    "zh": "%@秒",
+    "es": "%@ s"
+  },
+  "%@분 %@초": {
+    "en": "%@m %@s",
+    "ja": "%@分%@秒",
+    "zh": "%@分%@秒",
+    "es": "%@ min %@ s"
+  },
+  "%@시간 %@분": {
+    "en": "%@h %@m",
+    "ja": "%@時間%@分",
+    "zh": "%@小时%@分",
+    "es": "%@ h %@ min"
+  },
+  "서브에이전트 \"%@\"(%@)를 중단해 줘": {
+    "en": "Please stop the subagent \"%@\" (%@)",
+    "ja": "サブエージェント「%@」(%@)を中断して",
+    "zh": "请停止子代理“%@”(%@)",
+    "es": "Detén el subagente \"%@\" (%@)"
+  },
+  "중단 요청": {
+    "en": "Ask to stop",
+    "ja": "中断を依頼",
+    "zh": "请求停止",
+    "es": "Pedir que se detenga"
+  },
+  "'%@'의 입력창에 다음 메시지를 보냅니다. 서브에이전트를 직접 끄지는 않습니다.\n\n%@": {
+    "en": "This message goes to '%@''s input box. The subagent itself is not killed.\n\n%@",
+    "ja": "'%@' の入力欄に次のメッセージを送ります。サブエージェントを直接止めることはしません。\n\n%@",
+    "zh": "将向 '%@' 的输入框发送以下消息。不会直接终止子代理。\n\n%@",
+    "es": "Se enviará este mensaje al cuadro de entrada de '%@'. El subagente no se detiene directamente.\n\n%@"
+  },
+  "부모 세션이 기다리지 않고 띄운 서브에이전트": {
+    "en": "A subagent the parent session started without waiting for it",
+    "ja": "親セッションが待たずに起動したサブエージェント",
+    "zh": "父会话未等待即启动的子代理",
+    "es": "Subagente que la sesión principal lanzó sin esperarlo"
+  },
+  "시작 %@": {
+    "en": "Started %@",
+    "ja": "開始 %@",
+    "zh": "开始 %@",
+    "es": "Inicio %@"
+  },
+  "%@째": {
+    "en": "for %@",
+    "ja": "%@経過",
+    "zh": "已 %@",
+    "es": "desde hace %@"
+  },
+  "입력 %@ · 캐시 쓰기 %@ · 캐시 읽기 %@ · 출력 %@": {
+    "en": "Input %@ · cache write %@ · cache read %@ · output %@",
+    "ja": "入力 %@ · キャッシュ書込 %@ · キャッシュ読取 %@ · 出力 %@",
+    "zh": "输入 %@ · 缓存写入 %@ · 缓存读取 %@ · 输出 %@",
+    "es": "Entrada %@ · escritura caché %@ · lectura caché %@ · salida %@"
+  },
+  "부모 세션에 이 서브에이전트를 멈춰 달라고 메시지를 보냅니다": {
+    "en": "Sends the parent session a message asking it to stop this subagent",
+    "ja": "親セッションにこのサブエージェントを止めるよう依頼するメッセージを送ります",
+    "zh": "向父会话发送消息,请求停止此子代理",
+    "es": "Envía a la sesión principal un mensaje pidiéndole que detenga este subagente"
+  },
+  "부모 세션에 입력할 수 없어 보낼 수 없습니다": {
+    "en": "The parent session cannot be typed into, so nothing can be sent",
+    "ja": "親セッションに入力できないため送れません",
+    "zh": "无法向父会话输入,不能发送",
+    "es": "No se puede escribir en la sesión principal, así que no se puede enviar"
+  },
+  "완료": {
+    "en": "Done",
+    "ja": "完了",
+    "zh": "完成",
+    "es": "Terminado"
+  },
+  "불러오는 중…": {
+    "en": "Loading…",
+    "ja": "読み込み中…",
+    "zh": "加载中…",
+    "es": "Cargando…"
+  },
+  "서브에이전트가 없습니다": {
+    "en": "No subagents",
+    "ja": "サブエージェントはありません",
+    "zh": "没有子代理",
+    "es": "No hay subagentes"
+  },
+  "이 세션이 Agent 도구로 띄운 서브에이전트가 여기에 나옵니다. 팀원은 팀 화면에 나옵니다.": {
+    "en": "Subagents this session starts with its Agent tool appear here. Teammates appear in the team view.",
+    "ja": "このセッションが Agent ツールで起動したサブエージェントがここに表示されます。チームメイトはチーム画面に表示されます。",
+    "zh": "此会话用 Agent 工具启动的子代理会显示在这里。队友显示在团队界面中。",
+    "es": "Aquí aparecen los subagentes que esta sesión lanza con su herramienta Agent. Los compañeros aparecen en la vista del equipo."
+  },
+  "서브에이전트 목록으로": {
+    "en": "Back to the subagent list",
+    "ja": "サブエージェント一覧へ",
+    "zh": "返回子代理列表",
+    "es": "Volver a la lista de subagentes"
+  },
+  "목록": {
+    "en": "List",
+    "ja": "一覧",
+    "zh": "列表",
+    "es": "Lista"
+  },
+  "부모 세션": {
+    "en": "Parent session",
+    "ja": "親セッション",
+    "zh": "父会话",
+    "es": "Sesión principal"
+  },
+  "팀장 프로세스 안에서 도는 팀원 (in-process) — 창이 따로 없어 팀장 화면을 통해서만 입력됩니다": {
+    "en": "A teammate running inside its lead's process (in-process) — it has no pane of its own; input goes through the lead's screen",
+    "ja": "リーダーのプロセス内で動くチームメイト(in-process) — 専用のペインがなく、リーダーの画面経由でのみ入力されます",
+    "zh": "在组长进程内运行的队友(in-process)— 没有自己的窗格,只能通过组长界面输入",
+    "es": "Compañero que se ejecuta dentro del proceso del líder (in-process): no tiene panel propio y solo recibe texto a través de la pantalla del líder"
+  },
+  "인프로세스": {
+    "en": "In-process",
+    "ja": "インプロセス",
+    "zh": "进程内",
+    "es": "En proceso"
+  },
+  "앱으로 가져오기 — 바깥 터미널의 CLI를 끝내고 앱 안에서 같은 대화로 다시 엽니다": {
+    "en": "Bring into the app — ends the CLI in the outside terminal and reopens the same conversation inside the app",
+    "ja": "アプリに取り込む — 外のターミナルの CLI を終了し、アプリ内で同じ会話として開き直します",
+    "zh": "导入应用 — 结束外部终端中的 CLI,并在应用内以同一对话重新打开",
+    "es": "Traer a la app: cierra la CLI de la terminal externa y reabre la misma conversación dentro de la app"
+  },
+  "팀장 화면으로 입력": {
+    "en": "Typed via the lead's screen",
+    "ja": "リーダーの画面経由で入力",
+    "zh": "通过组长界面输入",
+    "es": "Se escribe a través de la pantalla del líder"
+  },
+  "팀장 프로세스 안에서 도는 팀원입니다. 보낸 메시지는 팀장 CLI의 팀원 목록에서 이 팀원을 골라 입력합니다.": {
+    "en": "A teammate running inside its lead's process. Messages are typed by picking this teammate in the lead CLI's teammate list.",
+    "ja": "リーダーのプロセス内で動くチームメイトです。送ったメッセージは、リーダー CLI のチームメイト一覧でこのチームメイトを選んで入力します。",
+    "zh": "这是在组长进程内运行的队友。发送的消息会在组长 CLI 的队友列表中选中该队友后输入。",
+    "es": "Compañero que se ejecuta dentro del proceso del líder. Los mensajes se escriben eligiéndolo en la lista de compañeros de la CLI del líder."
+  },
+  "팀장 프로세스 안에서 도는 팀원이라 창이 따로 없습니다. 팀장 CLI가 팀원 목록을 보여 줄 때(작업 중이거나 막 끝났을 때)만 직접 보낼 수 있습니다.": {
+    "en": "This teammate runs inside its lead's process and has no pane of its own. It can be messaged directly only while the lead's CLI shows its teammate list (while working or just after).",
+    "ja": "リーダーのプロセス内で動くチームメイトのため専用のペインがありません。リーダー CLI がチームメイト一覧を表示している間(作業中または終了直後)だけ直接送れます。",
+    "zh": "该队友在组长进程内运行,没有自己的窗格。只有当组长 CLI 显示队友列表时(工作中或刚结束时)才能直接发送。",
+    "es": "Este compañero se ejecuta dentro del proceso del líder y no tiene panel propio. Solo se le puede escribir directamente mientras la CLI del líder muestra la lista de compañeros (mientras trabaja o justo después)."
+  },
+  "가져오는 중…": {
+    "en": "Bringing in…",
+    "ja": "取り込み中…",
+    "zh": "正在导入…",
+    "es": "Trayendo…"
+  },
+  "바깥 터미널에서 실행 중인 CLI를 끝내고 앱 안(tmux)에서 같은 대화로 다시 엽니다": {
+    "en": "Ends the CLI running in the outside terminal and reopens the same conversation inside the app (tmux)",
+    "ja": "外のターミナルで動いている CLI を終了し、アプリ内(tmux)で同じ会話として開き直します",
+    "zh": "结束在外部终端中运行的 CLI,并在应用内(tmux)以同一对话重新打开",
+    "es": "Cierra la CLI que se ejecuta en la terminal externa y reabre la misma conversación dentro de la app (tmux)"
+  },
+  "앱으로 가져오기": {
+    "en": "Bring into app",
+    "ja": "アプリに取り込む",
+    "zh": "导入应用",
+    "es": "Traer a la app"
+  },
+  "대화": {
+    "en": "Conversation",
+    "ja": "会話",
+    "zh": "对话",
+    "es": "Conversación"
+  },
+  "이 세션이 Agent 도구로 띄운 서브에이전트 %@개 (실행 중 %@개)": {
+    "en": "%@ subagents started by this session's Agent tool (%@ running)",
+    "ja": "このセッションが Agent ツールで起動したサブエージェント %@ 件(実行中 %@ 件)",
+    "zh": "此会话用 Agent 工具启动的子代理 %@ 个(运行中 %@ 个)",
+    "es": "%@ subagentes lanzados por la herramienta Agent de esta sesión (%@ en ejecución)"
+  },
+  "서브에이전트": {
+    "en": "Subagents",
+    "ja": "サブエージェント",
+    "zh": "子代理",
+    "es": "Subagentes"
+  },
+  "%@에게 메시지 — 팀장 화면의 팀원 목록으로 보냅니다 · Enter 전송": {
+    "en": "Message %@ — sent through the lead's teammate list · Enter to send",
+    "ja": "%@ へのメッセージ — リーダー画面のチームメイト一覧から送ります · Enter で送信",
+    "zh": "给 %@ 的消息 — 通过组长界面的队友列表发送 · Enter 发送",
+    "es": "Mensaje para %@: se envía mediante la lista de compañeros del líder · Enter para enviar"
+  },
+  "터미널에서 실행 중인 이 세션을 종료하고 앱 안에서 같은 대화로 다시 엽니다. 바깥 터미널의 CLI는 Ctrl+C처럼 끝나고(30초 안에 끝나지 않으면 SIGTERM), 대화 기록이 저장된 뒤 같은 세션 ID·모델·effort로 이 앱의 tmux에서 이어집니다.": {
+    "en": "This ends the session running in the terminal and reopens the same conversation inside the app. The outside CLI is ended as with Ctrl+C (SIGTERM if it is still there after 30 s); once its history is saved it continues in this app's tmux with the same session ID, model and effort.",
+    "ja": "ターミナルで実行中のこのセッションを終了し、アプリ内で同じ会話として開き直します。外の CLI は Ctrl+C と同様に終了し(30 秒以内に終わらなければ SIGTERM)、会話記録が保存された後、同じセッション ID・モデル・effort でこのアプリの tmux で続きます。",
+    "zh": "将结束在终端中运行的此会话,并在应用内以同一对话重新打开。外部 CLI 会像 Ctrl+C 一样结束(30 秒内未结束则发送 SIGTERM),对话记录保存后,以相同的会话 ID、模型和 effort 在本应用的 tmux 中继续。",
+    "es": "Esto cierra la sesión que se ejecuta en la terminal y reabre la misma conversación dentro de la app. La CLI externa se cierra como con Ctrl+C (SIGTERM si sigue tras 30 s); cuando su historial está guardado, continúa en el tmux de esta app con el mismo ID de sesión, modelo y effort."
+  },
+  "⚠️ 지금 작업 중입니다. 진행 중인 응답은 중단됩니다.": {
+    "en": "⚠️ It is working now. The reply in progress will be interrupted.",
+    "ja": "⚠️ 現在作業中です。進行中の応答は中断されます。",
+    "zh": "⚠️ 正在工作中。进行中的回复将被中断。",
+    "es": "⚠️ Está trabajando ahora. La respuesta en curso se interrumpirá."
+  },
+  "⚠️ 이 팀장의 팀원 %@명(%@)은 팀장 프로세스 안에서 돌고 있어 함께 끝나며, 다시 열어도 돌아오지 않습니다 (Claude Code는 재개 시 팀원을 복원하지 않음).": {
+    "en": "⚠️ This lead's %@ teammate(s) (%@) run inside its process: they end with it and do not come back when it is reopened (Claude Code does not restore teammates on resume).",
+    "ja": "⚠️ このリーダーのチームメイト %@ 人(%@)はリーダーのプロセス内で動いているため一緒に終了し、開き直しても戻りません(Claude Code は再開時にチームメイトを復元しません)。",
+    "zh": "⚠️ 该组长的 %@ 名队友(%@)在组长进程内运行,会一起结束,重新打开后也不会恢复(Claude Code 恢复会话时不会恢复队友)。",
+    "es": "⚠️ Los %@ compañeros de este líder (%@) se ejecutan dentro de su proceso: terminan con él y no vuelven al reabrirlo (Claude Code no restaura compañeros al reanudar)."
+  },
+  "'%@' 앱으로 가져오기": {
+    "en": "Bring '%@' into the app",
+    "ja": "'%@' をアプリに取り込む",
+    "zh": "将 '%@' 导入应用",
+    "es": "Traer '%@' a la app"
+  },
+  "가져오기": {
+    "en": "Bring in",
+    "ja": "取り込む",
+    "zh": "导入",
+    "es": "Traer"
+  },
+  "앱으로 가져오기…": {
+    "en": "Bring into app…",
+    "ja": "アプリに取り込む…",
+    "zh": "导入应用…",
+    "es": "Traer a la app…"
+  },
+  "팀장을 통해 지시하세요 (팀원 목록이 보일 때만 직접 전송)": {
+    "en": "Instruct it through the team lead (direct only while the list is shown)",
+    "ja": "チームリーダー経由で指示してください(一覧表示中のみ直接送信)",
+    "zh": "请通过组长下达指示(仅在显示列表时可直接发送)",
+    "es": "Dale instrucciones a través del líder (directo solo con la lista visible)"
+  },
+  "팀원 종료(x)": {
+    "en": "Stop teammate (x)",
+    "ja": "チームメイトを停止(x)",
+    "zh": "停止队友(x)",
+    "es": "Detener compañero (x)"
+  },
+  "팀원들에게 지금까지의 결과를 모두 보고받아 정리해 줘. 정리가 끝나면 종료할게.": {
+    "en": "Collect every teammate's results so far and summarize them. I will quit once that is done.",
+    "ja": "チームメイト全員からこれまでの結果を報告してもらい、まとめて。まとめ終わったら終了します。",
+    "zh": "请让所有队友汇报目前的结果并整理。整理完后我会结束会话。",
+    "es": "Reúne los resultados de todos los compañeros hasta ahora y resúmelos. Cerraré cuando termines."
+  },
+  "'%@'에게 팀원 결과 정리를 요청했습니다. 그 작업이 끝나면 종료합니다.": {
+    "en": "Asked '%@' to collect its teammates' results. It quits when that turn ends.",
+    "ja": "'%@' にチームメイトの結果のまとめを依頼しました。その作業が終わったら終了します。",
+    "zh": "已请 '%@' 整理队友的结果。该任务结束后将退出。",
+    "es": "Se pidió a '%@' que reúna los resultados de sus compañeros. Se cerrará al terminar ese turno."
+  },
+  "%@ 팀원에게 지금까지의 결과를 보고받은 뒤 종료를 요청해 줘": {
+    "en": "Get teammate %@'s results so far, then ask it to shut down",
+    "ja": "%@ チームメイトからこれまでの結果を報告してもらってから、終了を依頼して",
+    "zh": "请先让队友 %@ 汇报目前的结果,然后请它结束",
+    "es": "Pide al compañero %@ sus resultados hasta ahora y luego pídele que se cierre"
+  },
+  "팀장 '%@'에게 '%@'의 결과 보고와 종료를 요청했습니다.": {
+    "en": "Asked lead '%@' to get '%@''s results and shut it down.",
+    "ja": "リーダー '%@' に '%@' の結果報告と終了を依頼しました。",
+    "zh": "已请组长 '%@' 收集 '%@' 的结果并结束它。",
+    "es": "Se pidió al líder '%@' que obtenga los resultados de '%@' y lo cierre."
+  },
+  "%@ 팀원에게 종료를 요청해 줘": {
+    "en": "Ask teammate %@ to shut down",
+    "ja": "%@ チームメイトに終了を依頼して",
+    "zh": "请让队友 %@ 结束",
+    "es": "Pide al compañero %@ que se cierre"
+  },
+  "팀장 '%@'에게 '%@'의 종료를 요청했습니다.": {
+    "en": "Asked lead '%@' to shut '%@' down.",
+    "ja": "リーダー '%@' に '%@' の終了を依頼しました。",
+    "zh": "已请组长 '%@' 结束 '%@'。",
+    "es": "Se pidió al líder '%@' que cierre a '%@'."
+  },
+  "'%@'을(를) 팀장 화면의 팀원 목록에서 종료합니다 (x).": {
+    "en": "Stopping '%@' from the lead's teammate list (x).",
+    "ja": "リーダー画面のチームメイト一覧から '%@' を停止します(x)。",
+    "zh": "正在从组长界面的队友列表停止 '%@'(x)。",
+    "es": "Deteniendo '%@' desde la lista de compañeros del líder (x)."
+  },
+  "'%@'을(를) 종료했습니다.": {
+    "en": "Stopped '%@'.",
+    "ja": "'%@' を停止しました。",
+    "zh": "已停止 '%@'。",
+    "es": "'%@' detenido."
+  },
+  "팀장 화면에서 '%@'을(를) 고르지 못해 팀장 '%@'에게 종료를 요청했습니다.": {
+    "en": "Could not select '%@' on the lead's screen, so lead '%@' was asked to shut it down.",
+    "ja": "リーダーの画面で '%@' を選べなかったため、リーダー '%@' に終了を依頼しました。",
+    "zh": "无法在组长界面选中 '%@',已请组长 '%@' 结束它。",
+    "es": "No se pudo seleccionar '%@' en la pantalla del líder; se pidió al líder '%@' que lo cierre."
+  },
+  "지금까지의 결과를 정리해서 알려 줘. 그다음 종료할게.": {
+    "en": "Summarize your results so far. I will quit after that.",
+    "ja": "これまでの結果をまとめて教えて。その後で終了します。",
+    "zh": "请整理并告诉我目前的结果。之后我会结束。",
+    "es": "Resume tus resultados hasta ahora. Después cerraré."
+  },
+  "팀장을 종료하면 팀원 %@명도 함께 종료되며, 다시 시작해도 팀원은 돌아오지 않습니다.": {
+    "en": "Quitting the lead also ends its %@ teammate(s); they do not come back when it is restarted.",
+    "ja": "リーダーを終了するとチームメイト %@ 人も一緒に終了し、再開してもチームメイトは戻りません。",
+    "zh": "结束组长会同时结束 %@ 名队友,重新启动后队友也不会回来。",
+    "es": "Cerrar al líder también termina a sus %@ compañeros; no vuelven al reiniciarlo."
+  },
+  "팀장에게 보고 후 종료": {
+    "en": "Report to the lead, then quit",
+    "ja": "リーダーに報告してから終了",
+    "zh": "先向组长汇报再结束",
+    "es": "Informar al líder y cerrar"
+  },
+  "그냥 종료": {
+    "en": "Just quit",
+    "ja": "そのまま終了",
+    "zh": "直接结束",
+    "es": "Cerrar sin más"
+  },
+  "팀장이 다시 메시지를 보내면 대화를 이어서 돌아옵니다.": {
+    "en": "If the lead messages it again, it comes back and continues its conversation.",
+    "ja": "リーダーが再びメッセージを送ると、会話を続けて戻ってきます。",
+    "zh": "组长再次发消息时,它会接着之前的对话回来。",
+    "es": "Si el líder vuelve a escribirle, regresa y continúa su conversación."
+  },
+  "이 팀원은 다시 팀장과 연결할 수 없습니다. 필요한 결과를 팀장에게 보고했는지 확인하세요.": {
+    "en": "This teammate cannot be reconnected to its lead. Make sure it has reported the results the lead needs.",
+    "ja": "このチームメイトは再びリーダーとつなげられません。必要な結果をリーダーに報告したか確認してください。",
+    "zh": "此队友无法再与组长连接。请确认它已向组长汇报所需的结果。",
+    "es": "Este compañero no se puede volver a conectar con su líder. Asegúrate de que haya informado los resultados necesarios."
+  }
+}
