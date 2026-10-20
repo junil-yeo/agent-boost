@@ -28,8 +28,7 @@
 .sl-sub .sep { margin: 0 4px; }
 .sl-actions { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
 .sl-pin { min-width: 128px; justify-content: center; }
-.sl-pin.on { color: var(--secondary); }
-.sl-row:not(:hover) .sl-pin.on { opacity: 0.75; }
+/* pinned and unpinned keys look equally active (a dimmed key read as disabled); the row's accent bar shows the state */
 
 .sl-group { display: flex; align-items: center; gap: 8px; height: 100%; padding: 8px 10px 0 12px; font-size: 13px; color: var(--fg); min-width: 0; }
 .sl-group .t-caption { min-width: 0; }
