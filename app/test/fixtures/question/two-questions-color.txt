@@ -1,0 +1,44 @@
+
+ ▐▛███▛█   Claude Code v2.1.316
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   /…/scratchpad/askq · /rc
+
+
+❯ Use the AskUserQuestion tool right now to ask me two questions: (1) favorite color with options Red, Green, Blue each
+  with a short description; (2) which pets, multiSelect true, options Cat, Dog, Fish. Do nothing else.
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+←  ☐ Color  ☐ Pets  ✔ Submit  →
+
+What is your favorite color?
+
+❯ 1. Red
+     A bold, warm color
+  2. Green
+     A calm, natural color
+  3. Blue
+     A cool, steady color
+  4. Type something.
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5. Chat about this
+
+Enter to select · Tab/Arrow keys to navigate · Esc to cancel
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

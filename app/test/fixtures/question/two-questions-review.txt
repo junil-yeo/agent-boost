@@ -1,0 +1,44 @@
+
+ ▐▛███▛█   Claude Code v2.1.316
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   /…/scratchpad/askq · /rc
+
+
+❯ Use the AskUserQuestion tool right now to ask me two questions: (1) favorite color with options Red, Green, Blue each
+  with a short description; (2) which pets, multiSelect true, options Cat, Dog, Fish. Do nothing else.
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+←  ☒ Color  ☒ Pets  ✔ Submit  →
+
+Review your answers
+
+ ● What is your favorite color?
+   → Red
+ ● Which pets do you have or like?
+   → Cat
+
+Ready to submit your answers?
+
+❯ 1. Submit answers
+  2. Cancel
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

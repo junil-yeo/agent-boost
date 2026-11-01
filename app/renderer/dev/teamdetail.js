@@ -2,6 +2,7 @@
 // are only logged). Open renderer/dev/teamdetail.html; options in the hash, e.g.
 //   #td-fixture&view=split&lang=en&theme=light&width=900
 // view: single (lead, rebuilt chat) | split (lead + two teammates) | prompt (a question waiting, "/" palette, files)
+//       | question (an AskUserQuestion window: descriptions, checkboxes, free-text row)
 //       | pane (live CLI screen view) | loose (individual sessions) | empty (team without teammates)
 // Snapshot: AB_SNAPSHOT_JS="if(!location.pathname.includes('/dev/'))location.href='dev/teamdetail.html#td-fixture&view=split'"
 import { html, render, loadL10n, setLang } from '../lib.js';
@@ -118,6 +119,13 @@ if (view === 'pane') states.selectedAgent = lead.sessionId;
 if (view === 'prompt') {
   states.selectedAgent = reviewer.sessionId;
   fixture.drafts[reviewer.sessionId] = { text: '/co', paths: [`${CWD}/benches/ingest.rs`, `${HOME}/Pictures/flame graph.png`] };
+}
+if (view === 'question') {      // an AskUserQuestion window (multiSelect, free-text row)
+  states.selectedAgent = reviewer.sessionId;
+  reviewer.prompt = { kind: 'question', title: 'Which pets do you have or like?', detail: '☒ Color  ☐ Pets  ✔ Submit', preview: null, cursor: 0, numbered: true,
+    options: ['Cat', 'Dog', 'Fish', 'Type something', 'Submit', 'Chat about this'],
+    descs: ['An independent feline companion', 'A loyal, energetic companion', 'A low-maintenance aquatic pet', null, null, null],
+    checked: [true, false, false, false, null, null], textOption: 3 };
 }
 if (view === 'loose') { teamProp = { name: '', members: loose }; isLoose = true; states.selectedAgent = desktop.sessionId; }
 if (view === 'empty') {

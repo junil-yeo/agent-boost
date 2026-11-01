@@ -825,7 +825,7 @@ export function ComposerBar({ agent, openTerminal }) {
     const a = agentRef.current, d = draftRef.current;
     const st = board();
     if (a.state === 'needsInput' && a.prompt && !d.startsWith('/')
-      && PromptCard.handleKey(e, { optionCount: a.prompt.options.length, sending: ((st && st.promptSending) || []).includes(sid), composerEmpty: !d,
+      && PromptCard.handleKey(e, { optionCount: a.prompt.options.length, textOption: a.prompt.textOption ?? -1, sending: ((st && st.promptSending) || []).includes(sid), composerEmpty: !d,
         onChoose: (i) => act('store.answerPrompt', sid, i), onCancel: () => act('store.cancelPrompt', sid) })) return true;
     const key = ['ArrowDown', 'ArrowUp', 'Escape', 'Tab', 'Enter'].includes(e.key) ? e.key : null;
     if (key) {
@@ -940,8 +940,9 @@ export function ComposerBar({ agent, openTerminal }) {
       <${TurnStatusBar} agent=${agent} lastTool=${currentTool} queued=${queued}
         onInterrupt=${() => act('store.interrupt', sid)} onPushQueue=${() => act('store.pushQueue', sid)} onPullQueue=${() => act('store.pullQueue', sid)} />
       ${agent.state === 'needsInput' && agent.prompt ? html`<div class="prompt-in"><${PromptCard} title=${agent.prompt.title} detail=${agent.prompt.detail} preview=${agent.prompt.preview}
-          options=${agent.prompt.options || []} cursor=${agent.prompt.cursor} sending=${promptSending}
-          onChoose=${(i) => act('store.answerPrompt', sid, i)} onCancel=${() => act('store.cancelPrompt', sid)} /></div>` : null}
+          options=${agent.prompt.options || []} descs=${agent.prompt.descs || null} checked=${agent.prompt.checked || null} textOption=${agent.prompt.textOption ?? -1}
+          cursor=${agent.prompt.cursor} sending=${promptSending}
+          onChoose=${(i, text) => act('store.answerPrompt', sid, i, text ?? null)} onCancel=${() => act('store.cancelPrompt', sid)} /></div>` : null}
       ${attachments.length ? html`<${AttachmentStrip} paths=${attachments} onRemove=${(p) => setAttachments(attRef.current.filter((x) => x !== p))} />` : null}
       ${refused ? html`<div class="hstack refused-row">
         <${Label} class="t-callout" icon="exclamationmark.triangle.fill" iconColor="var(--attention)" style=${{ color: 'var(--attention)', whiteSpace: 'normal' }} title=${refused} />

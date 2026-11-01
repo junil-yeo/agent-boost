@@ -92,6 +92,12 @@
 .todo-add { width: 34px; height: 90px; flex: 0 0 34px; border-radius: 10px; color: var(--secondary); background: color-mix(in srgb, var(--card) 60%, transparent); border: 1px solid var(--line); }
 .task-card { width: 180px; height: 90px; flex: 0 0 180px; display: flex; flex-direction: column; gap: 5px; padding: 8px 10px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .task-card.open { border-color: var(--line-hi); }
+.task-card { position: relative; }
+.task-card-x { position: absolute; top: 5px; right: 5px; width: 16px; height: 16px; padding: 0; border: none; border-radius: 50%; display: none;
+  align-items: center; justify-content: center; cursor: pointer; color: var(--secondary); background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.task-card:hover .task-card-x { display: inline-flex; }
+.task-card:hover > .hstack:first-child { padding-right: 16px; }   /* the × covers the done/total count otherwise */
+.task-card-x:hover { color: var(--fg-solid); background: color-mix(in srgb, var(--ink) 26%, transparent); }
 .task-divider { height: 1px; background: var(--line); opacity: .5; }
 .task-list { display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow-y: auto; }
 .task-row { display: flex; align-items: center; gap: 8px; padding: 4px; }

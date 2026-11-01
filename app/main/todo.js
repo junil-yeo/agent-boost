@@ -7,7 +7,7 @@ const path = require('path');
 const os = require('os');
 const crypto = require('crypto');
 
-const COUNT = 3;   // at least three cards; more with the + button
+const COUNT = 3;   // cards on first launch; more with the + button, any of them can be deleted
 // AB_TODOS_FILE: tests point the store at a scratch file
 const file = process.env.AB_TODOS_FILE || path.join(os.homedir(), '.agent-boost', 'todos.json');
 let boards = null;
@@ -30,16 +30,17 @@ function decodeBoard(x) {
 function load() {
   if (boards) return boards;
   let b = [];
-  let raw = null;
+  let raw = null, fresh = true;
   try { raw = fs.readFileSync(file); } catch { }
   if (raw) {
     let j;
     try { j = JSON.parse(raw.toString('utf8')); } catch { j = undefined; }
-    let ok = false;
+    let ok = false, migrated = false;
     if (Array.isArray(j)) {
       try { b = j.map(decodeBoard); ok = true; } catch { }
-      if (!ok) { try { b = [{ id: newId(), title: '', items: j.map(decodeItem) }]; ok = true; } catch { } }   // the single list moves into card 1
+      if (!ok) { try { b = [{ id: newId(), title: '', items: j.map(decodeItem) }]; ok = migrated = true; } catch { } }   // the single list moves into card 1
     }
+    fresh = !ok || migrated;
     if (!ok) {
       // keep the unreadable file
       if (readonly()) console.log('[readonly] todo.backupUnreadable');
@@ -47,7 +48,8 @@ function load() {
       b = [];
     }
   }
-  while (b.length < COUNT) b.push({ id: newId(), title: '', items: [] });
+  // three empty cards to start with; once the file exists a deleted card stays deleted
+  if (fresh) while (b.length < COUNT) b.push({ id: newId(), title: '', items: [] });
   boards = b;
   return boards;
 }

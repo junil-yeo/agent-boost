@@ -2,11 +2,9 @@
 // three or more cards the size of the usage cards; clicking one unfolds its full checklist in a popover.
 // Compact banner: one checklist icon with the open-item count, every card in one popover.
 import { html, useState, useEffect, useRef, call, on, L } from '../lib.js';
-import { Icon, Button, Popover } from './widgets.js';
+import { Icon, Button, Popover, confirm } from './widgets.js';
 import { Bar } from './banner.js';
 
-/** TodoStore.count: at least three cards; more with the + button. */
-const COUNT = 3;
 const remaining = (b) => b.items.filter((x) => !x.done).length;
 
 // one shared copy of the boards for every card on screen; main pushes 'todos' after each change
@@ -52,7 +50,19 @@ export function TodoCard({ forceIcon = false }) {
   </div>`;
 }
 
-/** Folded card (usage-card size). A click opens the full panel in a popover below it without moving anything. */
+/** Deletes a whole card; one that still has items asks first. */
+async function deleteBoard(board, index, act) {
+  if (board.items.length) {
+    const name = board.title || L('과제 %@', String(index));
+    const ok = await confirm(L("'%@' 카드를 삭제할까요?", name), L('항목 %@개도 함께 지워집니다.', String(board.items.length)),
+      [{ label: L('취소'), role: 'cancel' }, { label: L('삭제'), value: true }]);
+    if (ok !== true) return;
+  }
+  act('removeBoard', board.id);
+}
+
+/** Folded card (usage-card size). A click opens the full panel in a popover below it without moving anything.
+ *  Hovering shows an × in the top right corner that deletes the card. */
 function TaskCardView({ board, index, count, act }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -63,6 +73,8 @@ function TaskCardView({ board, index, count, act }) {
       <span class="spacer" style=${{ minWidth: '4px' }}></span>
       ${board.items.length ? html`<span class="t-caption2 t-digits fg-secondary">${done}/${board.items.length}</span>` : null}
     </div>
+    <button type="button" class="task-card-x" title=${L('이 과제 카드 삭제')}
+      onClick=${(e) => { e.stopPropagation(); setOpen(false); deleteBoard(board, index, act); }}><${Icon} name="xmark" size=${8} strokeWidth=${3} /></button>
     <${Bar} value=${board.items.length ? done / board.items.length : 0} tint="color-mix(in srgb, var(--accent) 85%, transparent)" height=${4} />
     ${board.items.length === 0
       ? html`<span class="t-caption2 fg-tertiary one-line">${L('클릭해서 할 일 추가')}</span>`
@@ -87,7 +99,7 @@ function TaskPanel({ board, index, count, act }) {
         value=${title} onInput=${(e) => setTitle(e.currentTarget.value)} onBlur=${commitTitle}
         onKeyDown=${(e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); commitTitle(); } }} />
       ${board.items.some((x) => x.done) ? html`<${Button} kind="plain" class="t-caption fg-secondary" onClick=${() => act('clearDone', board.id)}>${L('완료 지우기')}<//>` : null}
-      ${count > COUNT ? html`<${Button} kind="icon" help=${L('이 과제 카드 삭제')} onClick=${() => act('removeBoard', board.id)}><${Icon} name="trash" /><//>` : null}
+      <${Button} kind="icon" help=${L('이 과제 카드 삭제')} onClick=${() => deleteBoard(board, index, act)}><${Icon} name="trash" /><//>
     </div>
     <div class="task-divider"></div>
     <div class="task-list">

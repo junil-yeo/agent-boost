@@ -270,6 +270,10 @@ body.resizing, body.resizing * { user-select: none !important; }
 .prompt-option { width: 100%; justify-content: flex-start; gap: 8px; text-align: left; white-space: normal; }
 .prompt-num { width: 18px; height: 18px; flex: 0 0 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: var(--fs-caption); font-weight: 700; }
 .prompt-label { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.prompt-text { min-width: 0; gap: 1px; align-items: flex-start; }
+.prompt-desc { font-size: var(--fs-caption); color: var(--secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.btn-raised.prominent .prompt-desc { color: rgba(255, 255, 255, .75); }
+.prompt-free { gap: 8px; padding: 4px 4px 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 5%, transparent); }
 .prompt-default { flex: 0 0 auto; }
 .btn-raised.prominent .prompt-default { color: rgba(255, 255, 255, .75); }
 .prompt-preview { display: flex; flex-direction: column; gap: 4px; }

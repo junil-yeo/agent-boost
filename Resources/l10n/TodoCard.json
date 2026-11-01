@@ -1,4 +1,10 @@
 {
+  "'%@' 카드를 삭제할까요?": {
+    "en": "Delete the card '%@'?",
+    "ja": "カード「%@」を削除しますか?",
+    "zh": "删除卡片「%@」?",
+    "es": "¿Eliminar la tarjeta «%@»?"
+  },
   "과제": {
     "en": "Tasks",
     "ja": "タスク",
@@ -52,6 +58,12 @@
     "ja": "クリックして ToDo を追加",
     "zh": "点击添加待办",
     "es": "Haz clic para añadir una tarea"
+  },
+  "항목 %@개도 함께 지워집니다.": {
+    "en": "Its %@ items are deleted too.",
+    "ja": "%@ 件の項目も削除されます。",
+    "zh": "其中的 %@ 个项目也会一并删除。",
+    "es": "También se eliminarán sus %@ elementos."
   },
   "항목 추가 후 Enter": {
     "en": "Add an item, then press Enter",

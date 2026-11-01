@@ -590,15 +590,19 @@ function attachSubagents(teams, loose) {
 // ── answering Claude Code's choice windows from inside the app ──────────────────────────────────────────────────────
 /** Picks option `optionIndex` (0-based) of the prompt the agent waits on: re-reads the pane first, walks the cursor with
  *  Up/Down (number keys behave differently between versions) and presses Enter; then checks the prompt is gone. */
-function answerPrompt(a, optionIndex) {
+function answerPrompt(a, optionIndex, text = null) {
   const p = a.tmuxPane, expected = a.prompt;
   if (p == null || !expected || !(optionIndex >= 0 && optionIndex < expected.options.length) || S.promptSending.has(a.sessionId)) return;
+  // a question's free-text row takes its text (Enter on the empty row would answer nothing); other rows take none
+  const free = expected.kind === 'question' && optionIndex === expected.textOption;
+  text = free && typeof text === 'string' ? text.replace(/\r?\n/g, ' ').trim() : null;
+  if (free && !text) return;
   if (ro(`answerPrompt ${a.sessionId} ${optionIndex}`, a)) return;
   S.promptSending.add(a.sessionId); changed();
   const sid = a.sessionId;
   TmuxControl().queue(p, async () => {
     let msg = null;
-    try { msg = await Screen().answer(p, expected, optionIndex); } catch (e) { msg = String(e.message || e); }
+    try { msg = await Screen().answer(p, expected, optionIndex, text); } catch (e) { msg = String(e.message || e); }
     S.promptSending.delete(sid); if (msg) setNoticeValue(msg); changed(); refreshSoon();
   });
 }

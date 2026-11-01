@@ -15,12 +15,18 @@ const test = (name, f) => { try { f(); console.log('ok   ' + name); } catch (e) 
 const fresh = () => { delete require.cache[require.resolve('../main/todo')]; return require('../main/todo'); };
 const U = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
-test('reads the macOS format; at least three cards', () => {
-  fs.writeFileSync(file, JSON.stringify([{ title: 'A', items: [{ id: U(1), text: 'x', done: true }], id: U(9) }]));
-  const T = fresh();
-  const b = T.boards();
-  assert.strictEqual(b.length, 3); assert.strictEqual(b[0].title, 'A'); assert.strictEqual(b[0].items[0].done, true);
+test('first launch: three empty cards', () => {
+  fs.rmSync(file, { force: true });
+  const b = fresh().boards();
+  assert.strictEqual(b.length, 3); assert.ok(b.every((x) => x.title === '' && x.items.length === 0));
   assert.ok(/^[0-9A-F-]{36}$/.test(b[1].id));
+});
+test('reads the macOS format; a deleted card stays deleted (no refill to three)', () => {
+  fs.writeFileSync(file, JSON.stringify([{ title: 'A', items: [{ id: U(1), text: 'x', done: true }], id: U(9) }]));
+  const b = fresh().boards();
+  assert.strictEqual(b.length, 1); assert.strictEqual(b[0].title, 'A'); assert.strictEqual(b[0].items[0].done, true);
+  fs.writeFileSync(file, '[]');
+  assert.strictEqual(fresh().boards().length, 0);
 });
 test('migrates the old single list into card 1', () => {
   fs.writeFileSync(file, JSON.stringify([{ id: U(1), text: 'old', done: false }]));
@@ -54,6 +60,9 @@ test('edits: add, toggle, edit, move, clearDone, remove, titles, cards; saved in
   T.setTitle(bid, '  Paper  ');
   T.addBoard(); assert.strictEqual(T.boards().length, 4);
   T.removeBoard(T.boards()[3].id); assert.strictEqual(T.boards().length, 3);
+  T.addBoard(); T.removeBoard(T.boards()[1].id); T.removeBoard(T.boards()[1].id);
+  assert.strictEqual(T.boards().length, 2);                               // any card can go, below three too
+  assert.strictEqual(fresh().boards().length, 2);
   const saved = JSON.parse(fs.readFileSync(file, 'utf8'));
   assert.deepStrictEqual(saved, T.boards());
   assert.deepStrictEqual(Object.keys(saved[0]).sort(), ['id', 'items', 'title']);

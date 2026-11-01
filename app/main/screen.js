@@ -74,6 +74,7 @@ function busy(text) {
  *  cannot push the options out of range and old answers in the scrollback cannot trigger it. */
 function needsInput(text) {
   if (busy(text)) return false;
+  if (question(text)) return true;
   const ls = clean(text);
   if (isAgentList(ls)) return false;
   const r = lastIndex(ls, isAnyRule);
@@ -110,9 +111,68 @@ function isSwitchModelPrompt(text) {
     && b.some((t) => t.startsWith('2. No, go back'));
 }
 
+/** The window of the AskUserQuestion tool (Claude Code 2.1.316). A rule, the question tabs, the question, the options
+ *  with their descriptions, a second rule, "Chat about this" and the footer:
+ *      ────────────────────
+ *      ←  ☐ Color  ☐ Pets  ✔ Submit  →        (one question: " ☐ DB")
+ *      What is your favorite color?
+ *      ❯ 1. Red                                (multiSelect: "1. [ ] Cat" … then an unnumbered "Submit" row)
+ *           A bold, warm color
+ *        2. Type something.                    (free text: typed while the cursor is on it)
+ *      ────────────────────
+ *        3. Chat about this
+ *      Enter to select · ↑/↓ to navigate · Esc to cancel
+ *  With several questions a review page follows ("Review your answers" … "❯ 1. Submit answers  2. Cancel").
+ *  The cursor walks the rows in screen order, so every row is an option here, "Submit" and "Chat about this" included.
+ *  Returns a PromptInfo with kind 'question', descs, checked (null = not a checkbox) and textOption (-1 = none). */
+function question(text) {
+  const rows = splitNE(text, '\n').map(trimWS).filter((t) => t.length > 0).slice(-60);
+  const tabs = (t) => /^(←\s+)?[☐☒✔]\s+\S/u.test(t);
+  let top = -1;
+  for (let i = rows.length - 2; i >= 0; i--) if (isInputRule(rows[i]) && tabs(rows[i + 1])) { top = i; break; }
+  if (top < 0) return null;
+  const optRe = /^(❯\s*)?(\d+)\.\s+(.*)$/u;
+  const body = rows.slice(top + 2);
+  const f = body.findIndex((t) => optRe.test(t));
+  if (f < 0) return null;
+  const options = [], descs = [], checked = [];
+  let cursor = 0, aboveRule = -1, ruleSeen = false, multi = false;
+  for (const t of body.slice(f)) {
+    if (isInputRule(t)) { if (ruleSeen) return null; ruleSeen = true; aboveRule = options.length; continue; }
+    if (t.startsWith('Enter to select') || t.startsWith('Esc to') || t.includes('? for shortcuts')) break;
+    if (t === '❯') return null;                                   // the input box: the window is gone
+    const m = optRe.exec(t);
+    const plain = t.replace(/^❯\s*/u, '');
+    if (m || (multi && plain === 'Submit' && !ruleSeen)) {
+      let label = m ? m[3] : plain, box = null;
+      const c = /^\[(.)\]\s*(.*)$/u.exec(label);
+      if (m && c) { box = c[1] !== ' '; label = c[2]; multi = true; }
+      if (t.startsWith('❯')) cursor = options.length;
+      options.push(label); descs.push(null); checked.push(box);
+    } else if (options.length > 0) {
+      const k = options.length - 1;
+      descs[k] = descs[k] ? descs[k] + ' ' + t : t;
+    }
+  }
+  if (options.length < 2) return null;
+  // the "Type something" row: the last numbered row above the second rule (multiSelect: the last checkbox, before "Submit")
+  let textOption = aboveRule - 1;
+  while (multi && textOption >= 0 && checked[textOption] === null) textOption -= 1;
+  const head = body.slice(0, f);
+  let title, detail = null;
+  const review = head.some((t) => t.startsWith('●'));
+  if (review) { title = head[head.length - 1] || ''; detail = head.slice(0, -1).join('\n') || null; }
+  else { title = head.join(' '); detail = rows[top + 1].replace(/^←\s+|\s+→$/gu, ''); }
+  if (review) textOption = -1;
+  return { kind: 'question', title, detail, preview: null, options, descs, checked: multi ? checked : null, cursor, numbered: true, textOption };
+}
+
 /** Title, explanation, preview and options of the choice window on screen (null when no prompt waits).
  *  PromptInfo = {title, detail|null, preview|null, options: [string], cursor, numbered}. */
 function prompt(text) {
+  if (busy(text)) return null;
+  const ask = question(text);
+  if (ask) return ask;
   if (!needsInput(text)) return null;
   const ls = clean(text);
   const r = lastIndex(ls, isAnyRule);
@@ -327,14 +387,16 @@ function status(text) {
 // ───────────────────────────── PromptDriver ─────────────────────────────
 /** Answers a Claude Code choice window by walking the cursor (Up/Down) and pressing Enter. Call it on the pane's queue
  *  (tmux.queue(pane, () => screen.answer(…))). Resolves to null when the window is gone afterwards; otherwise a message
- *  that says why not. */
-async function answer(p, expected, optionIndex) {
+ *  that says why not. `text`: the answer typed into a question's "Type something" row (the cursor is put there first). */
+async function answer(p, expected, optionIndex, text = null) {
   const shell = require('./shell');
   const tmux = require('./tmux');                // lazy: tmux.js requires this module
   const { L } = require('./l10n');
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const screen = async () => { const r = await shell.tmux(['capture-pane', '-p', '-t', p, '-S', '-4']); return r.code === 0 ? r.out : null; };
-  const same = (x) => !!x && x.title === expected.title && JSON.stringify(x.options) === JSON.stringify(expected.options);
+  // a checkbox that flips is a change too (multiSelect questions stay on screen after Enter)
+  const same = (x) => !!x && x.title === expected.title && JSON.stringify(x.options) === JSON.stringify(expected.options)
+    && JSON.stringify(x.checked || null) === JSON.stringify(expected.checked || null);
   if (!(Number.isInteger(optionIndex) && optionIndex >= 0 && optionIndex < expected.options.length)) return L('없는 선택지입니다.');
   const now = await screen();
   const cur = now === null ? null : prompt(now);
@@ -348,10 +410,23 @@ async function answer(p, expected, optionIndex) {
   const moved = await screen();
   const pr = moved === null ? null : prompt(moved);
   if (!same(pr) || pr.cursor !== optionIndex) return L('커서를 원하는 선택지로 옮기지 못해 취소했습니다. 터미널에서 직접 선택해 주세요.');
+  if (text != null) {
+    if (!(await tmux.keys(['-t', p, '-l', '--', text], L('메시지 입력')))) return null;
+    await sleep(300);
+  }
   if (!(await tmux.keys(['-t', p, 'Enter'], L('선택 확정')))) return null;
+  if (text != null && expected.checked) {
+    // multiSelect: the first Enter ends the typing, the second ticks the row (Claude Code 2.1.316)
+    await sleep(500);
+    const typed = await screen();
+    const q = typed === null ? null : prompt(typed);
+    if (q && q.title === expected.title && q.checked && q.checked[optionIndex] === false && q.cursor === optionIndex) {
+      if (!(await tmux.keys(['-t', p, 'Enter'], L('선택 확정')))) return null;
+    }
+  }
   await sleep(800);
   const after = await screen();
-  if (after !== null && same(prompt(after))) return L('선택을 보냈지만 선택창이 아직 떠 있습니다. 터미널에서 확인해 주세요.');
+  if (after !== null && text == null && same(prompt(after))) return L('선택을 보냈지만 선택창이 아직 떠 있습니다. 터미널에서 확인해 주세요.');
   return null;
 }
 const PromptDriver = { answer };
@@ -413,6 +488,6 @@ function mateWordState(w) {
 }
 
 module.exports = {
-  busy, needsInput, isSwitchModelPrompt, prompt, stripANSI, overlay, typedInput, hasInputBox, suggestion, status,
+  busy, needsInput, isSwitchModelPrompt, prompt, question, stripANSI, overlay, typedInput, hasInputBox, suggestion, status,
   emptyStatus, statusIsEmpty, statusEqual, answer, PromptDriver, teammateList,
 };
