@@ -55,5 +55,28 @@ test('no question once the window is gone (input box back)', () => {
   assert.strictEqual(screen.question(t), null);
   assert.strictEqual(screen.needsInput(t), false);
 });
+test('a description that starts with "1. " is not a row; "[A] …" is not a checkbox', () => {
+  const t = fx('one-question').replace('Server-based relational database', '1. ranked choice among 3').replace('2. SQLite', '2. [A] SQLite');
+  const p = screen.prompt(t);
+  assert.deepStrictEqual(p.options, ['Postgres', '[A] SQLite', 'Type something.', 'Chat about this']);
+  assert.strictEqual(p.descs[0], '1. ranked choice among 3');
+  assert.strictEqual(p.checked, null);
+  assert.strictEqual(p.textOption, 2);
+});
+test('a short window (no descriptions) under a spinner line is still the question, not busy', () => {
+  const t = fx('one-question').replace(/\n\s*Server-based relational database/, '').replace(/\n\s*Embedded file-based database/, '')
+    .replace('✻ Crunched for 3s · done 12:02 AM', '· Thinking… (4s · ↓ 1.2k tokens)');
+  assert.ok(t.includes('Thinking…'));
+  assert.strictEqual(screen.busy(t), false);
+  const p = screen.prompt(t);
+  assert.ok(p && p.kind === 'question');
+  assert.deepStrictEqual(p.options, ['Postgres', 'SQLite', 'Type something.', 'Chat about this']);
+});
+test('textOption is -1 (never -2) when the second rule is missing', () => {
+  const t = fx('one-question').replace(/\n─+\n  4\. Chat about this/, '\n  4. Chat about this');
+  const p = screen.prompt(t);
+  assert.ok(p);
+  assert.strictEqual(p.textOption, -1);
+});
 console.log(failed ? `${failed} failed` : 'all passed');
 process.exit(failed ? 1 : 0);

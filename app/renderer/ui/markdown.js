@@ -140,8 +140,11 @@ function inlineNodes(s, key) {
 function linkNode(url, children, key) {
   if (/^file:/i.test(url) || url.startsWith('/') || url.startsWith('~/')) {
     const p = url.replace(/^file:\/\//i, '');
-    return h('a', { key, href: '#', class: 'path-link', title: p, onClick: (e) => { e.preventDefault(); act('platform.openPathLink', decodeURI(p)); } }, children);
+    let d = p;
+    try { d = decodeURI(p); } catch { }
+    return h('a', { key, href: '#', class: 'path-link', title: d, onClick: (e) => { e.preventDefault(); act('platform.openPathLink', d); } }, children);
   }
+  if (!/^(https?:|mailto:)/i.test(url)) return h('span', { key, title: url }, children);     // javascript:, data: … stay text
   return h('a', { key, href: url, target: '_blank', rel: 'noreferrer', title: url }, children);
 }
 

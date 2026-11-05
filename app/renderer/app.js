@@ -4,7 +4,7 @@
 // keyboard shortcuts (⌘ on the Mac as in Swift, Ctrl on Linux), the View menu (the menu bar's View menu on the Mac,
 // main/appmenu.js; a menu button in the tab row on Linux), the window-close question and the quit confirmation flow
 // (AppDelegate.applicationShouldTerminate; main/store.js asks with 'quit-request').
-import { html, render, useState, useEffect, useRef, loadL10n, currentLang, setLang, call, on, L, useStore, isMac, modKey, keys } from './lib.js';
+import { html, render, useState, useEffect, useRef, loadL10n, currentLang, setLang, call, on, L, useStore, isMac, modKey, keys, Freeze } from './lib.js';
 import { applyAppearance, useAppearance, AppearanceMode, Icon, Label, Button, TabButton, Menu, Chip, Checkbox, EmptyState, ProgressSpinner, BoostLogo, confirm } from './ui/widgets.js';
 import { Fmt } from './fmt.js';
 import { UsageBanner, useAppStorage, setAppStorage, getAppStorage, chooseLanguage } from './ui/banner.js';
@@ -184,7 +184,7 @@ function RootView() {
     ${tab !== 'home' && launches.length ? html`<div class="area-box launch-box">${launches.map((l) => html`<${LaunchCard} key=${l.id} launch=${l} />`)}</div>` : null}
     ${showNotices && s ? html`<${SpawnChecks} s=${s} />` : null}
     <div class="tab-stack">
-      ${alive.filter(tabExists).map((k) => html`<div key=${k} class=${'tab-layer ' + (k === current ? 'current' : 'hidden')}>${tabContent(k, k === current)}</div>`)}
+      ${alive.filter(tabExists).map((k) => html`<div key=${k} class=${'tab-layer ' + (k === current ? 'current' : 'hidden')}><${Freeze} frozen=${k !== current}>${tabContent(k, k === current)}<//></div>`)}
     </div>
     ${creating ? html`<${LazyView} file="sheets.js" name="NewSessionSheet" sheet=${true} onClose=${() => setCreating(false)} />` : null}
     ${searching ? html`<${LazyView} file="search.js" name="ConvoSearchSheet" sheet=${true} onClose=${() => setSearching(false)} />` : null}

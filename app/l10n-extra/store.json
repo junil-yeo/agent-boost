@@ -10,5 +10,35 @@
     "ja": "あなたはこの Linux コンピューターのディスク管理者です。今は分析して整理方法を提案するだけにしてください。私が承認する前には何も削除・移動しないでください。\n以下を調査してください。時間のかかる du は深さを制限し、権限エラーはスキップします。\n1. ディスク全体の容量と空き容量 (df -h / ~)。\n2. ホームフォルダ配下で最も大きいフォルダ上位 20 個。\n3. 開発・アプリのキャッシュ: ~/.cache、~/.npm、~/.cargo、pip・conda・micromamba のキャッシュ、~/.local/share/Trash、Flatpak・Snap のデータ (~/.var/app、~/snap)、Docker・Podman のイメージとボリューム、パッケージマネージャーのキャッシュ (apt/dnf/pacman)。\n4. 長く使っていない (90 日以上) キャッシュと一時ファイル: /tmp、/var/tmp、~/Downloads 内の古くて大きいファイル、journalctl ログのサイズ。\n5. 最近 30 日以内にインストールされたサイズの大きいパッケージとアプリ。\n6. ゴミ箱のサイズと、スナップショット (Timeshift、btrfs/LVM スナップショット) があればそのサイズ。\n結果は「項目 · サイズ · 最終使用 · 判断 (安全/要確認/危険) · 整理方法 (コマンド)」の表にまとめ、確保できる容量の合計と推奨順序を提案してください。\nクラウド同期フォルダ、文書・写真の原本、研究資料は整理対象として提案しないでください。",
     "zh": "你是这台 Linux 电脑的磁盘管理员。现在只做分析并提出清理方案。在我批准之前，不要删除或移动任何东西。\n调查以下内容。耗时的 du 要限制深度，跳过权限错误。\n1. 磁盘总容量和可用空间 (df -h / ~)。\n2. 主文件夹下最大的前 20 个文件夹。\n3. 开发和应用缓存: ~/.cache、~/.npm、~/.cargo、pip/conda/micromamba 缓存、~/.local/share/Trash、Flatpak/Snap 数据 (~/.var/app、~/snap)、Docker/Podman 镜像和卷、包管理器缓存 (apt/dnf/pacman)。\n4. 长期未使用 (90 天以上) 的缓存和临时文件: /tmp、/var/tmp、~/Downloads 中又旧又大的文件、journalctl 日志大小。\n5. 最近 30 天内安装且体积较大的软件包和应用。\n6. 回收站大小，以及快照 (Timeshift、btrfs/LVM 快照) 及其大小 (如有)。\n将结果整理成表格「项目 · 大小 · 上次使用 · 判断 (安全/需确认/危险) · 清理方法 (命令)」，并给出可释放空间的合计和推荐顺序。\n不要把云同步文件夹、文档和照片原件、研究资料列为清理对象。",
     "es": "Eres el administrador de disco de este ordenador Linux. Por ahora solo analiza y propón cómo limpiar. No borres ni muevas nada antes de que yo lo apruebe.\nInvestiga lo siguiente. Limita la profundidad de los du lentos y omite los errores de permisos.\n1. Capacidad total del disco y espacio libre (df -h / ~).\n2. Las 20 carpetas más grandes bajo la carpeta personal.\n3. Cachés de desarrollo y de apps: ~/.cache, ~/.npm, ~/.cargo, cachés de pip/conda/micromamba, ~/.local/share/Trash, datos de Flatpak/Snap (~/.var/app, ~/snap), imágenes y volúmenes de Docker/Podman, cachés del gestor de paquetes (apt/dnf/pacman).\n4. Cachés y archivos temporales sin usar desde hace 90 días o más: /tmp, /var/tmp, archivos antiguos y grandes en ~/Downloads, tamaño de los registros de journalctl.\n5. Paquetes y apps grandes instalados en los últimos 30 días.\n6. Tamaño de la papelera y de las instantáneas (Timeshift, instantáneas btrfs/LVM), si las hay.\nResume los resultados en una tabla \"elemento · tamaño · último uso · valoración (seguro / revisar / arriesgado) · cómo limpiar (comando)\" y propone el total de espacio que se puede liberar y un orden recomendado.\nNo propongas para limpiar carpetas sincronizadas con la nube, documentos y fotos originales ni material de investigación."
+  },
+  "보내기 직전에 질문 창이 떠서 보내지 않았습니다. 질문에 먼저 답한 뒤 다시 보내세요.": {
+    "en": "Not sent: a question window opened just before. Answer it first, then send again.",
+    "ja": "送信直前に質問ウィンドウが開いたため送信しませんでした。先に回答してから再送してください。",
+    "zh": "未发送：发送前一刻弹出了提问窗口。请先回答，再重新发送。",
+    "es": "No se envió: se abrió una ventana de pregunta justo antes. Respóndela primero y vuelve a enviar."
+  },
+  "보내기 직전에 CLI가 목록 화면으로 바뀌어 보내지 않았습니다. CLI에서 Esc로 대화로 돌아온 뒤 다시 보내세요.": {
+    "en": "Not sent: the CLI switched to a list screen just before. Press Esc in the CLI to return to the conversation, then send again.",
+    "ja": "送信直前に CLI が一覧画面に切り替わったため送信しませんでした。CLI で Esc を押して会話に戻ってから再送してください。",
+    "zh": "未发送：发送前一刻 CLI 切换到了列表界面。请在 CLI 中按 Esc 返回对话后重新发送。",
+    "es": "No se envió: el CLI cambió a una pantalla de lista justo antes. Pulsa Esc en el CLI para volver a la conversación y vuelve a enviar."
+  },
+  "'%@' 명령을 보내기 직전에 CLI에 질문 창이나 목록 화면이 떠서 보내지 않았습니다. 화면이 돌아온 뒤 다시 실행하세요.": {
+    "en": "'%@' was not sent: a question window or list screen appeared in the CLI just before. Run it again once the screen is back.",
+    "ja": "'%@' は送信しませんでした。直前に CLI に質問ウィンドウか一覧画面が表示されました。画面が戻ってから再実行してください。",
+    "zh": "未发送 '%@'：发送前一刻 CLI 出现了提问窗口或列表界面。界面恢复后请重新执行。",
+    "es": "'%@' no se envió: justo antes apareció una ventana de pregunta o una pantalla de lista en el CLI. Ejecútalo de nuevo cuando vuelva la pantalla."
+  },
+  "선택창이 이미 닫혀 Esc를 보내지 않았습니다.": {
+    "en": "The choice window had already closed; Esc was not sent.",
+    "ja": "選択ウィンドウはすでに閉じていたため Esc は送信しませんでした。",
+    "zh": "选择窗口已关闭，未发送 Esc。",
+    "es": "La ventana de opciones ya se había cerrado; no se envió Esc."
+  },
+  "휴지통이 받지 않아 그대로 둔 파일 %@개 (%@)": {
+    "en": "%@ file(s) left in place because the Trash refused them (%@)",
+    "ja": "ゴミ箱に入らなかったためそのまま残したファイル %@ 件 (%@)",
+    "zh": "回收站未接受，保留原位的文件 %@ 个 (%@)",
+    "es": "%@ archivo(s) dejados en su sitio porque la Papelera los rechazó (%@)"
   }
 }

@@ -30,6 +30,7 @@ export function LazyView({ file, name, sheet, ...props }) {
   const [C, setC] = useState(() => null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
+    if (C) return undefined;                                      // loaded: no timer to keep
     let live = true;
     const tryLoad = () => loadModule(file).then(({ m }) => {
       if (!live) return;
@@ -74,7 +75,6 @@ export function OrgChartView({ s }) {
 function Chart({ s }) {
   const teams = s.teams || [], loose = s.loose || [], launches = s.launches || [], empty = s.emptyTeams || [];
   const sel = selSet(s);
-  const cols = Math.max(1, Math.min(teams.length, 3));
   return html`<div class="vstack" style=${{ gap: 'var(--gap)' }}>
     ${teams.length === 0 && loose.length === 0 ? html`<div class="area-box" style=${{ minHeight: '420px', display: 'flex' }}>
       ${s.chartHidden > 0
@@ -91,7 +91,7 @@ function Chart({ s }) {
       <span class="spacer"></span>
       <${Button} kind="raisedCompact" onClick=${() => call('store.pruneEmptyTeams')}>${L('정리 (휴지통)')}<//>
     </div>` : null}
-    ${teams.length ? html`<div class="team-grid" style=${{ gridTemplateColumns: `repeat(${cols}, minmax(380px, 1fr))` }}>
+    ${teams.length ? html`<div class="team-grid" style=${{ gridTemplateColumns: 'repeat(auto-fit, minmax(max(380px, calc((100% - 2 * var(--gap)) / 3)), 1fr))' }}>
       ${teams.map((t) => html`<${TeamCard} key=${t.name} team=${t} s=${s} sel=${sel} />`)}
     </div>` : null}
     ${loose.length ? html`<${LooseGroup} s=${s} loose=${loose} sel=${sel} />` : null}
@@ -244,8 +244,9 @@ export function NameCard({ agent, s, badge, selected }) {
   };
   const stop = (f) => (e) => { e.stopPropagation(); f(); };
   const stateColor = Fmt.stateColor(agent.state);
-  return html`<div class=${'name-card card-surface' + (selected ? ' selected' : '')} style=${{ opacity: ended ? 0.75 : 1 }}
-      onClick=${() => call('store.open', sid)} onContextMenu=${menu}>
+  return html`<div class=${'name-card card-surface' + (selected ? ' selected' : '')} style=${{ opacity: ended ? 0.75 : 1 }} role="button" tabIndex="0"
+      onClick=${() => call('store.open', sid)} onContextMenu=${menu}
+      onKeyDown=${(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) { e.preventDefault(); call('store.open', sid); } }}>
     <div class="hstack" style=${{ gap: '8px' }}>
       <span onClick=${(e) => e.stopPropagation()}><${Checkbox} checked=${selected} onChange=${toggleSel} help=${L('선택')} /></span>
       <${StateDot} state=${agent.state} />

@@ -282,6 +282,7 @@ function readTail(p, n) {
     return readRange(fd, from, size);
   } catch { return null; } finally { fs.closeSync(fd); }
 }
+const READ_PIECE = 4 << 20;
 function readRange(fd, from, to) {
   const buf = Buffer.allocUnsafe(Math.max(0, to - from));
   let got = 0;
@@ -303,21 +304,32 @@ function readInto(st, p, mode, hold) {
     if (size === 0 && wantEntries) st.entriesLoaded = true;                              // empty file = empty conversation
     if (size > st.offset || (needFull && size > 0)) {
       if (needFull) { st.offset = 0; st.seenMessageIds = new Set(); st.tokens = { input: 0, cacheWrite: 0, cacheRead: 0, output: 0 }; st.entries = []; st.truncated = false; }
-      const data = readRange(fd, st.offset, size);
-      let consumed = 0, start = 0;
-      for (;;) {
-        const i = data.indexOf(10, start);
-        if (i < 0) break;
-        consumed = i + 1;
-        const before = st.entries.length;
-        if (i > start) ingest(data.toString('utf8', start, i), st, wantEntries);
-        start = i + 1;
-        if (mode === Mode.light) {
-          for (let k = before; k < st.entries.length; k++) {
-            const e = st.entries[k];
-            if (e.text.length > lightLimit / 4 && Buffer.byteLength(e.text) > lightLimit) { e.text = prefixChars(e.text, lightLimit) + '…'; st.truncated = true; }
+      // in pieces of 4 MB (a transcript can run to hundreds of MB; whole-file reads held all of it at once): a line cut
+      // by a piece's end waits for the next piece, and the entry cap is applied as pieces go by
+      const cap0 = hold ? 3000 : 600;
+      let consumed = 0, pos = st.offset, carry = null;
+      while (pos < size) {
+        let data = readRange(fd, pos, Math.min(size, pos + READ_PIECE));
+        if (!data.length) break;
+        pos += data.length;
+        if (carry) { data = Buffer.concat([carry, data]); carry = null; }
+        let start = 0;
+        for (;;) {
+          const i = data.indexOf(10, start);
+          if (i < 0) break;
+          const before = st.entries.length;
+          if (i > start) ingest(data.toString('utf8', start, i), st, wantEntries);
+          start = i + 1;
+          if (mode === Mode.light) {
+            for (let k = before; k < st.entries.length; k++) {
+              const e = st.entries[k];
+              if (e.text.length > lightLimit / 4 && Buffer.byteLength(e.text) > lightLimit) { e.text = prefixChars(e.text, lightLimit) + '…'; st.truncated = true; }
+            }
           }
         }
+        consumed += start;
+        if (start < data.length) carry = Buffer.from(data.subarray(start));
+        if (st.entries.length > cap0 * 2) st.entries.splice(0, st.entries.length - cap0);
       }
       st.offset += consumed;
       if (consumed > 0) st.version = (st.version + 1) | 0;
@@ -406,7 +418,7 @@ function noteSetting(c, st) {
 
 /** A message typed while a tool ran is recorded once as queued; if the user then interrupts, the CLI submits it again
  *  on a new branch. Keep only the later copy. The CLI's own "[Request interrupted …]" record is a notice, not my words. */
-function addUser(text, id, time, st) {
+function addUser(text, id, time, st, fromQueue = false) {
   if (text.startsWith('[Request interrupted')) {
     st.entries.push(entry(id, 'system', text.includes('tool use') ? L('중단됨 — 도구 실행을 멈췄습니다') : L('중단됨'), { toolName: 'auto', time }));
     return;
@@ -415,11 +427,13 @@ function addUser(text, id, time, st) {
     const lo = Math.max(0, st.entries.length - 30);
     for (let k = st.entries.length - 1; k >= lo; k--) {
       const e = st.entries[k];
-      // a missing time is .distantPast: never within 120 s
-      if (e.role === 'user' && e.text === text && e.time != null && (time - e.time) / 1000 < 120) { st.entries.splice(k, 1); break; }
+      // a missing time is .distantPast: never within 120 s. Only the queued copy folds: "ok" sent twice stays twice
+      if (e.role === 'user' && e.fromQueue && e.text === text && e.time != null && (time - e.time) / 1000 < 120) { st.entries.splice(k, 1); break; }
     }
   }
-  st.entries.push(entry(id, 'user', text, { time }));
+  const e = entry(id, 'user', text, { time });
+  if (fromQueue) e.fromQueue = true;
+  st.entries.push(e);
 }
 
 function ingest(line, st, wantEntries) {
@@ -438,7 +452,7 @@ function ingest(line, st, wantEntries) {
     if (isStr(att.prompt)) pr = att.prompt;
     else if (Array.isArray(att.prompt)) pr = att.prompt.filter((b) => b && b.type === 'text' && isStr(b.text)).map((b) => b.text).join('\n');
     if (pr != null && trimAll(pr) && !pr.startsWith('<')) {
-      addUser(unwrapPaste(pr), isStr(d.uuid) ? d.uuid : uuid(), isoDate(d.timestamp), st);
+      addUser(unwrapPaste(pr), isStr(d.uuid) ? d.uuid : uuid(), isoDate(d.timestamp), st, true);
     }
     return;
   }

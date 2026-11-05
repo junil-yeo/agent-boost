@@ -1,5 +1,6 @@
 // The banner's task area, ported from TodoCard.swift (the views; the data lives in main/todo.js, TodoStore):
-// three or more cards the size of the usage cards; clicking one unfolds its full checklist in a popover.
+// cards the size of the usage cards (three on first launch, + adds one, × deletes one); clicking one unfolds its full
+// checklist in a popover.
 // Compact banner: one checklist icon with the open-item count, every card in one popover.
 import { html, useState, useEffect, useRef, call, on, L } from '../lib.js';
 import { Icon, Button, Popover, confirm } from './widgets.js';
@@ -39,13 +40,16 @@ export function TodoCard({ forceIcon = false }) {
         </span>
       <//>
       ${open ? html`<${Popover} anchor=${iconRef} width=${300} padding=${12} onClose=${() => setOpen(false)}>
-        <div class="vstack" style=${{ gap: '10px' }}>${boards.map((b, i) => html`<${TaskPanel} key=${b.id} board=${b} index=${i + 1} count=${boards.length} act=${act} />`)}</div>
+        <div class="vstack" style=${{ gap: '10px' }}>
+          ${boards.map((b, i) => html`<${TaskPanel} key=${b.id} board=${b} index=${i + 1} act=${act} />`)}
+          <${Button} kind="plain" class="todo-add-row t-caption fg-secondary" onClick=${() => act('addBoard')}><${Icon} name="plus" size=${12} strokeWidth=${2.5} /> ${L('과제 카드 추가')}<//>
+        </div>
       <//>` : null}
     </span>`;
   }
   // cards in a row that scrolls sideways; + adds one (the banner never pushes the window wider)
   return html`<div class="todo-row">
-    ${boards.map((b, i) => html`<${TaskCardView} key=${b.id} board=${b} index=${i + 1} count=${boards.length} act=${act} />`)}
+    ${boards.map((b, i) => html`<${TaskCardView} key=${b.id} board=${b} index=${i + 1} act=${act} />`)}
     <${Button} kind="plain" class="todo-add" help=${L('과제 카드 추가')} onClick=${() => act('addBoard')}><${Icon} name="plus" size=${14} strokeWidth=${2.5} /><//>
   </div>`;
 }
@@ -63,7 +67,7 @@ async function deleteBoard(board, index, act) {
 
 /** Folded card (usage-card size). A click opens the full panel in a popover below it without moving anything.
  *  Hovering shows an × in the top right corner that deletes the card. */
-function TaskCardView({ board, index, count, act }) {
+function TaskCardView({ board, index, act }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const done = board.items.length - remaining(board);
@@ -80,13 +84,13 @@ function TaskCardView({ board, index, count, act }) {
       ? html`<span class="t-caption2 fg-tertiary one-line">${L('클릭해서 할 일 추가')}</span>`
       : board.items.slice(0, 2).map((it) => html`<span key=${it.id} class="t-caption2 fg-tertiary one-line" style=${it.done ? { textDecoration: 'line-through' } : null}>${it.text}</span>`)}
     ${open ? html`<${Popover} anchor=${ref} width=${304} padding=${12} onClose=${() => setOpen(false)}>
-      <div onClick=${(e) => e.stopPropagation()}><${TaskPanel} board=${board} index=${index} count=${count} act=${act} /></div>
+      <div onClick=${(e) => e.stopPropagation()}><${TaskPanel} board=${board} index=${index} act=${act} /></div>
     <//>` : null}
   </div>`;
 }
 
 /** The unfolded card: editable title, every item with a checkbox, an add field. Items reorder by drag and drop. */
-function TaskPanel({ board, index, count, act }) {
+function TaskPanel({ board, index, act }) {
   const [title, setTitle] = useState(board.title);
   const [draft, setDraft] = useState('');
   const [editing, setEditing] = useState(null);

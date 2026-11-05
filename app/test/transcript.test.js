@@ -46,6 +46,16 @@ const reader = () => { const r = new T.TranscriptReader(); r.metaPath = path.joi
     assert.strictEqual(s.entries[0].time, Date.parse(ts(1)));
   });
 
+  await test('a message sent twice shows twice; only a queued copy folds into the record that follows it', () => {
+    const p = path.join(dir, 'dedupe.jsonl');
+    const queued = (uuid, prompt, s) => rec({ type: 'attachment', uuid, timestamp: ts(s), attachment: { type: 'queued_command', prompt, commandMode: 'prompt' } });
+    fs.writeFileSync(p,
+      user('u1', 'ok', 1) + asst('a1', [{ type: 'text', text: 'done' }], 2) + user('u2', 'ok', 40)   // the same words, twice on purpose
+      + queued('q1', 'next step', 45) + user('u3', 'next step', 50));                                // queued, then taken: one bubble
+    const s = reader().snapshot(p, 'full');
+    assert.deepStrictEqual(s.entries.map((e) => [e.role, e.text]), [['user', 'ok'], ['assistant', 'done'], ['user', 'ok'], ['user', 'next step']]);
+  });
+
   await test('incremental: only appended lines are parsed; an unfinished line waits; version bumps', () => {
     const p = path.join(dir, 'b.jsonl');
     fs.writeFileSync(p, user('u1', 'one', 1));

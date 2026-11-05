@@ -145,12 +145,19 @@ async function reveal(p) {
   }
   return openPath(path.dirname(p));
 }
-/** PathLinks.open: a folder opens in the file manager; a file shows in its folder, selected. */
+/** A directory `open` would run rather than show: an application or other bundle (anywhere in the path, after symlinks). */
+const BUNDLE_RE = /\.(app|bundle|pkg|mpkg|prefPane|action|workflow|framework|plugin|kext|xpc|qlgenerator|appex|saver)(\/|$)/i;
+function isBundle(full) {
+  if (BUNDLE_RE.test(full)) return true;
+  try { return BUNDLE_RE.test(fs.realpathSync(full)); } catch { return false; }
+}
+/** PathLinks.open: a folder opens in the file manager; a file shows in its folder, selected. A chat can name any path,
+ *  so a bundle (Calculator.app …) is shown selected, never launched. */
 function openPathLink(p) {
   const full = p.startsWith('~/') ? path.join(shell.home, p.slice(2)) : p;
   let isDir = false;
   try { isDir = fs.statSync(full).isDirectory(); } catch { }
-  return isDir ? openPath(full) : reveal(full);
+  return isDir && !isBundle(full) ? openPath(full) : reveal(full);
 }
 /** Folder picker (NSOpenPanel, directories only). Resolves the path, or null when cancelled. */
 async function pickFolder(defaultPath) {

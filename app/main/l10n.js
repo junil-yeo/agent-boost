@@ -33,7 +33,10 @@ function load() {
 function readSettings() { try { return JSON.parse(fs.readFileSync(settingsFile, 'utf8')); } catch { return {}; } }
 function writeSettings(s) {
   if (process.env.AB_ONLY) { console.log('[only] refused l10n.writeSettings'); return; }   // sandbox tests: ~/.agent-boost untouched
-  fs.mkdirSync(path.dirname(settingsFile), { recursive: true }); fs.writeFileSync(settingsFile, JSON.stringify(s, null, 2)); }
+  if (process.env.AB_READONLY) { console.log('[readonly] l10n.writeSettings'); return; }
+  fs.mkdirSync(path.dirname(settingsFile), { recursive: true });
+  const tmp = `${settingsFile}.tmp-${process.pid}`;
+  fs.writeFileSync(tmp, JSON.stringify(s, null, 2)); fs.renameSync(tmp, settingsFile); }
 
 /** macOS: the language already picked in the Swift app (UserDefaults "app.language"), so moving to this app does not
  *  ask again. Read only. */

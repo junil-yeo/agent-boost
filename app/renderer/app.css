@@ -93,10 +93,15 @@
 .task-card { width: 180px; height: 90px; flex: 0 0 180px; display: flex; flex-direction: column; gap: 5px; padding: 8px 10px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .task-card.open { border-color: var(--line-hi); }
 .task-card { position: relative; }
-.task-card-x { position: absolute; top: 5px; right: 5px; width: 16px; height: 16px; padding: 0; border: none; border-radius: 50%; display: none;
-  align-items: center; justify-content: center; cursor: pointer; color: var(--secondary); background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.task-card > .hstack:first-child { padding-right: 16px; }   /* room for the ×, so nothing shifts on hover */
+.task-card-x { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; padding: 0; border: none; border-radius: 50%; display: none;
+  align-items: center; justify-content: center; cursor: pointer; color: var(--secondary); background: none; }
+.task-card-x::before { content: ''; position: absolute; inset: 2px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.task-card-x > * { position: relative; }
 .task-card:hover .task-card-x { display: inline-flex; }
-.task-card:hover > .hstack:first-child { padding-right: 16px; }   /* the × covers the done/total count otherwise */
+.task-card-x:hover { color: var(--fg-solid); }
+.task-card-x:hover::before { background: color-mix(in srgb, var(--ink) 26%, transparent); }
+.todo-add-row { align-self: flex-start; gap: 4px; }
 .task-card-x:hover { color: var(--fg-solid); background: color-mix(in srgb, var(--ink) 26%, transparent); }
 .task-divider { height: 1px; background: var(--line); opacity: .5; }
 .task-list { display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow-y: auto; }
@@ -117,7 +122,7 @@
 .org-count { font-size: 12px; font-weight: 500; color: var(--text-dim); }
 .name-card { display: flex; flex-direction: column; gap: 6px; padding: 12px 12px 12px 16px; min-width: 0; cursor: default; }
 .name-card .card-actions { opacity: 0; pointer-events: none; transition: opacity .12s ease-out; }
-.name-card:hover .card-actions { opacity: 1; pointer-events: auto; }
+.name-card:hover .card-actions, .name-card:focus-within .card-actions { opacity: 1; pointer-events: auto; }
 .state-label { --c: var(--secondary); font-size: var(--fs-caption); font-weight: 600; color: var(--c); padding: 2px 7px; border-radius: 3px; white-space: nowrap;
   background: color-mix(in srgb, var(--c) 12%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); }
 

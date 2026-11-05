@@ -118,7 +118,7 @@ export function Button({ kind = 'plain', active, prominent, compact, raised, str
 export function TabButton({ title, icon, active, count = 0, attention, quiet, onClick, help }) {
   return html`<${Button} kind=${quiet ? 'quiet' : 'tab'} active=${quiet && active} raised=${!quiet && active} onClick=${onClick} help=${help} style=${{ gap: '6px' }}>
     <${Icon} name=${icon} />
-    <span class="one-line">${title}</span>
+    <span class="one-line" style=${{ maxWidth: '180px' }} title=${title}>${title}</span>
     ${attention ? html`<${Icon} name="hand.raised.fill" class="t-caption" color="var(--attention)" help=${L('응답을 기다리는 세션이 있습니다')} style=${{ width: '11px', height: '11px' }} />` : null}
     ${count > 0 ? html`<${CountBadge} count=${count} tint=${active ? 'var(--accent)' : 'var(--surface2)'} fg=${active ? '#fff' : 'var(--fg)'} />` : null}
   <//>`;
@@ -471,7 +471,7 @@ export function Sheet({ width, height, padding = 20, onClose, class: cls, style,
 export const Modal = Sheet;
 
 function AlertBox({ title, message, buttons, field, onDone }) {
-  const input = useRef(null);
+  const input = useRef(null), root = useRef(null);
   const [text, setText] = useState(field ? field.value || '' : '');
   const cancelIdx = buttons.findIndex((b) => b.role === 'cancel');
   const defIdx = buttons.findIndex((b) => b.role !== 'cancel');
@@ -480,6 +480,8 @@ function AlertBox({ title, message, buttons, field, onDone }) {
     if (input.current) { input.current.focus(); input.current.select(); }
     const key = (e) => {
       if (document.querySelector('.menu-layer')) return;
+      const scrims = document.querySelectorAll('.scrim');
+      if (root.current && scrims[scrims.length - 1] !== root.current) return;     // a later dialog on top has the keys
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); pick(cancelIdx); }
       else if (e.key === 'Enter' && defIdx >= 0 && !e.isComposing) { e.preventDefault(); e.stopPropagation(); pick(defIdx); }
     };
@@ -489,7 +491,7 @@ function AlertBox({ title, message, buttons, field, onDone }) {
   // two buttons sit side by side (cancel first, as macOS lays them out); more stack, cancel last
   const row = buttons.length === 2;
   const order = row ? [...buttons.keys()].sort((a, b) => (buttons[b].role === 'cancel') - (buttons[a].role === 'cancel')) : [...buttons.keys()];
-  return html`<div class="scrim" style=${{ zIndex: 950 }}>
+  return html`<div ref=${root} class="scrim" style=${{ zIndex: 950 }}>
     <div class="alert" role="alertdialog" style=${{ boxShadow: 'var(--shadow)' }}>
       <${BoostLogo} size=${44} />
       <div class="alert-title">${title}</div>

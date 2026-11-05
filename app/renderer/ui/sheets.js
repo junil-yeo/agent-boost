@@ -144,7 +144,8 @@ function CloudForm({ st, onClose }) {
   /** The user's repositories through the gh CLI (own, collaborator and organisation ones), most recently pushed first. */
   async function loadRepos() {
     setRepoNote(L('저장소 목록을 불러오는 중…'));
-    const r = (await act('cloud.loadRepos')) || { rows: [], gh: false };
+    let r;
+    try { r = (await act('cloud.loadRepos')) || { rows: [], gh: false }; } catch { r = { rows: [], gh: true }; }
     const rows = r.rows || [];
     const note = rows.length ? null : (r.gh
       ? L('저장소 목록을 불러오지 못했습니다 (gh auth login 필요할 수 있음). owner/repo를 위에 직접 입력하세요.')

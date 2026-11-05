@@ -218,7 +218,8 @@ function SessionRow({ r, onResume, onArchive }) {
   const out = a.tokensUnread ? '…' : Fmt.tokens(a.tokens ? a.tokens.output : 0);
   const model = a.model == null && a.tokensUnread ? '…' : a.displayModel;
   const branch = m && m.branch ? m.branch : null;
-  return html`<div class=${'sl-row' + (r.pinned ? ' pinned' : '') + (live(a) ? '' : ' ended')} onDblClick=${open} onContextMenu=${menu}>
+  return html`<div class=${'sl-row' + (r.pinned ? ' pinned' : '') + (live(a) ? '' : ' ended')} role="button" tabIndex="0" onDblClick=${open} onContextMenu=${menu}
+      onKeyDown=${(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) { e.preventDefault(); open(); } }}>
     <div class="sl-title">
       <${StateDot} state=${a.state} />
       <div class="vstack" style=${{ minWidth: 0, gap: '2px' }}>

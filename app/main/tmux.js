@@ -96,8 +96,9 @@ function send(text, pane, sid = '') {
   if (!valid(pane)) { SendLog.note(`tmux ${pane}: 잘못된 pane id — 보내지 않음`); return Promise.resolve(); }
   if (readonlyRefuse('send ' + pane)) { if (T.onDone) setImmediate(() => T.onDone(sid)); return Promise.resolve(); }
   return enqueue(pane, async () => {
+    C._inflight[pane] = (C._inflight[pane] || 0) + 1;
     try { await sendNow(text, pane, sid); }
-    finally { if (T.onDone) setImmediate(() => T.onDone(sid)); }
+    finally { C._inflight[pane] -= 1; if (T.onDone) setImmediate(() => T.onDone(sid)); }
   });
 }
 /** Messages waiting in the CLI's queue come back into its box with ↑ (the CLI records "popAll"); the box is then
@@ -193,9 +194,25 @@ async function accepted(sid, hOff, t, seconds) {
   } while (now() < end);
   return false;
 }
+/** The pane waits on a question or shows a CLI list right now (a fresh capture, not the 2 s cache): typing would land in
+ *  that window and Enter would pick its highlighted row. */
+async function paneBlocked(pane) {
+  const r = await shell.tmux(['capture-pane', '-p', '-t', pane, '-S', '-4']);
+  if (r.code !== 0) return null;
+  if (Screen.overlay(r.out)) return 'overlay';
+  if (Screen.needsInput(r.out)) return 'prompt';
+  return null;
+}
 async function sendNow(text, pane, sid = '') {
   if (!text) return;
   const Attach = require('./attach');
+  const why = await paneBlocked(pane);
+  if (why) {
+    SendLog.note(`tmux ${pane}: 보내기 직전에 ${why === 'prompt' ? '질문 창' : 'CLI 목록 화면'}이 떠 있어 보내지 않음`);
+    if (T.onWarning) T.onWarning(why === 'prompt' ? L('보내기 직전에 질문 창이 떠서 보내지 않았습니다. 질문에 먼저 답한 뒤 다시 보내세요.') : L('보내기 직전에 CLI가 목록 화면으로 바뀌어 보내지 않았습니다. CLI에서 Esc로 대화로 돌아온 뒤 다시 보내세요.'));
+    if (sid && T.onLost) T.onLost(sid);
+    return;
+  }
   const mark = await size(historyPath());
   const tpath = await transcript(sid), tmark = tpath ? { path: tpath, off: await size(tpath) } : null;
   SendLog.note(`tmux ${pane}: 입력 시작 ` + SendLog.head(text));
@@ -256,6 +273,12 @@ function command(cmd, pane) {
   return enqueue(pane, () => commandNow(cmd, pane));
 }
 async function commandNow(cmd, pane) {
+  const why = await paneBlocked(pane);
+  if (why) {
+    SendLog.note(`tmux ${pane}: ${cmd} 직전에 ${why === 'prompt' ? '질문 창' : 'CLI 목록 화면'}이 떠 있어 보내지 않음`);
+    if (T.onWarning) T.onWarning(L("'%@' 명령을 보내기 직전에 CLI에 질문 창이나 목록 화면이 떠서 보내지 않았습니다. 화면이 돌아온 뒤 다시 실행하세요.", cmd));
+    return;
+  }
   if (!(await keys(['-t', pane, 'C-u'], L('%@ 명령', cmd)))) return;
   await sleep(40);
   await sendNow(cmd, pane);
@@ -307,7 +330,7 @@ async function panesChecked() {
 /** Background-collected tmux state. The store's refresh reads these maps; update() (async, never blocks) fills them:
  *  list-panes, plus one capture-pane per wanted pane. All times are epoch ms. */
 const C = {
-  _panes: {}, _sessions: {}, _busy: {}, _input: {}, _prompt: {},
+  _panes: {}, _sessions: {}, _busy: {}, _input: {}, _prompt: {}, _inflight: {},
   _status: {},      // spinner / done line / footer of the last capture
   _overlay: {},     // pane -> CLI screen covering the conversation ("agents" / "resume")
   _typed: {},       // pane -> text sits in the CLI's input box (someone is typing there)
@@ -337,6 +360,7 @@ const cache = {
   /** Text in the CLI's input box that the board did not just type (someone else uses the same terminal). */
   foreignTyped(pane) {
     if (C._typed[pane] !== true) return false;
+    if (C._inflight[pane] > 0) return false;                  // the app's own send is still being pasted / taken
     const t = C._sentAt[pane];
     if (t !== undefined && now() - t < 3000) return false;
     return true;
@@ -382,11 +406,13 @@ const cache = {
       const oldPanes = C._panes, oldSessions = C._sessions;
       const p = (await panesChecked()) || oldPanes, s = (await paneSessionsChecked()) || oldSessions;   // a timed-out list keeps the old map
       const b = {}, inp = {}, prm = {}, sts = {}, failed = new Set(), ov = {}, ty = {}, mt = {};
-      for (const pane of Object.keys(p)) {
-        if (!(wantAll || wanted.has(pane))) continue;
-        // with colours (-e): the CLI's suggestion differs from typed text only by being dim; everything else reads plain text
-        const raw = await shell.tmux(['capture-pane', '-p', '-e', '-t', pane, '-S', '-4']);
-        if (raw.code === -1) { failed.add(pane); continue; }               // timed out: keep what we knew
+      // with colours (-e): the CLI's suggestion differs from typed text only by being dim; everything else reads plain text.
+      // All panes at once (the tmux server serves clients concurrently): one capture's wall time per tick, not N
+      const panes = Object.keys(p).filter((pane) => wantAll || wanted.has(pane));
+      const raws = await Promise.all(panes.map((pane) => shell.tmux(['capture-pane', '-p', '-e', '-t', pane, '-S', '-4'])));
+      panes.forEach((pane, i) => {
+        const raw = raws[i];
+        if (raw.code === -1) { failed.add(pane); return; }                 // timed out: keep what we knew
         const out = Screen.stripANSI(raw.out);
         const stat = Screen.status(out); stat.suggestion = Screen.suggestion(raw.out);
         b[pane] = Screen.busy(out); inp[pane] = Screen.needsInput(out); put(prm, pane, Screen.prompt(out)); sts[pane] = stat;
@@ -398,7 +424,7 @@ const cache = {
           if (!readonlyRefuse('autoConfirm ' + pane)) queue(pane, () => keys(['-t', pane, 'Enter'], L('모델 전환 확인(Enter)')));
           if (cache.onAutoConfirm) cache.onAutoConfirm(pane);
         } else if (sent !== undefined && now() - sent >= 20000) delete C._modelSentAt[pane];
-      }
+      });
       for (const pane of failed) {
         put(b, pane, C._busy[pane]); put(inp, pane, C._input[pane]); put(prm, pane, C._prompt[pane]); put(sts, pane, C._status[pane]);
         put(ov, pane, C._overlay[pane]); put(ty, pane, C._typed[pane]); put(mt, pane, C._mates[pane]);

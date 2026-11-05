@@ -54,6 +54,7 @@ function boxTop(rules, bottom) {
 }
 
 function busy(text) {
+  if (question(text)) return false;
   const ls = clean(text);
   const rules = ls.map((_, i) => i).filter((i) => isInputRule(ls[i]));
   if (rules.length === 0) return false;
@@ -73,8 +74,8 @@ function busy(text) {
 /** A permission / choice prompt waits for the user. Only the block below the last rule counts, so a long diff preview
  *  cannot push the options out of range and old answers in the scrollback cannot trigger it. */
 function needsInput(text) {
-  if (busy(text)) return false;
   if (question(text)) return true;
+  if (busy(text)) return false;
   const ls = clean(text);
   if (isAgentList(ls)) return false;
   const r = lastIndex(ls, isAnyRule);
@@ -136,17 +137,19 @@ function question(text) {
   const f = body.findIndex((t) => optRe.test(t));
   if (f < 0) return null;
   const options = [], descs = [], checked = [];
-  let cursor = 0, aboveRule = -1, ruleSeen = false, multi = false;
+  let cursor = 0, aboveRule = -1, ruleSeen = false, multi = false, nextNum = 1;
   for (const t of body.slice(f)) {
     if (isInputRule(t)) { if (ruleSeen) return null; ruleSeen = true; aboveRule = options.length; continue; }
     if (t.startsWith('Enter to select') || t.startsWith('Esc to') || t.includes('? for shortcuts')) break;
     if (t === '❯') return null;                                   // the input box: the window is gone
-    const m = optRe.exec(t);
+    // rows are numbered 1, 2, 3 … in order: a description that starts with "2. " is not a row
+    const m0 = optRe.exec(t), m = m0 && Number(m0[2]) === nextNum ? m0 : null;
     const plain = t.replace(/^❯\s*/u, '');
     if (m || (multi && plain === 'Submit' && !ruleSeen)) {
       let label = m ? m[3] : plain, box = null;
-      const c = /^\[(.)\]\s*(.*)$/u.exec(label);
+      const c = /^\[([ ✔✓xX])\]\s*(.*)$/u.exec(label);
       if (m && c) { box = c[1] !== ' '; label = c[2]; multi = true; }
+      if (m) nextNum += 1;
       if (t.startsWith('❯')) cursor = options.length;
       options.push(label); descs.push(null); checked.push(box);
     } else if (options.length > 0) {
@@ -156,7 +159,7 @@ function question(text) {
   }
   if (options.length < 2) return null;
   // the "Type something" row: the last numbered row above the second rule (multiSelect: the last checkbox, before "Submit")
-  let textOption = aboveRule - 1;
+  let textOption = Math.max(-1, aboveRule - 1);
   while (multi && textOption >= 0 && checked[textOption] === null) textOption -= 1;
   const head = body.slice(0, f);
   let title, detail = null;
@@ -170,7 +173,6 @@ function question(text) {
 /** Title, explanation, preview and options of the choice window on screen (null when no prompt waits).
  *  PromptInfo = {title, detail|null, preview|null, options: [string], cursor, numbered}. */
 function prompt(text) {
-  if (busy(text)) return null;
   const ask = question(text);
   if (ask) return ask;
   if (!needsInput(text)) return null;

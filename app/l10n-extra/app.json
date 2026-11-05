@@ -1,3 +1,26 @@
 {
-  "보기": { "en": "View", "ja": "表示", "zh": "视图", "es": "Ver" }
+  "보기": {
+    "en": "View",
+    "ja": "表示",
+    "zh": "视图",
+    "es": "Ver"
+  },
+  "RAM %@GB": {
+    "en": "RAM %@GB",
+    "ja": "RAM %@GB",
+    "zh": "RAM %@GB",
+    "es": "RAM %@GB"
+  },
+  "오류 — %@": {
+    "en": "Error — %@",
+    "ja": "エラー — %@",
+    "zh": "错误 — %@",
+    "es": "Error — %@"
+  },
+  "다른 앱으로 여는 링크입니다. 열까요?": {
+    "en": "This link opens in another app. Open it?",
+    "ja": "このリンクは別のアプリで開きます。開きますか?",
+    "zh": "此链接将在其他应用中打开。要打开吗?",
+    "es": "Este enlace se abre en otra aplicación. ¿Abrirlo?"
+  }
 }

@@ -279,10 +279,15 @@ export function TrafficLight({ meter, testing, children }) {
   return html`<${AnnunciatorPanel} on=${on} tip=${tip}>${children}<//>`;
 }
 
-/** 24-hour HH:mm, redrawn every second. */
+/** 24-hour HH:mm, redrawn on each minute. */
 function Clock({ compact }) {
   const [now, setNow] = useState(Date.now());
-  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
+  useEffect(() => {
+    let id = null;
+    const tick = () => { const t = Date.now(); setNow(t); id = setTimeout(tick, 60000 - (t % 60000) + 20); };
+    id = setTimeout(tick, 60000 - (Date.now() % 60000) + 20);
+    return () => clearTimeout(id);
+  }, []);
   return html`<span class="banner-clock" style=${{ fontSize: `${compact ? 15 : 20}px` }} title=${L('현재 시각')}>${Fmt.time(now)}</span>`;
 }
 

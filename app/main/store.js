@@ -81,6 +81,7 @@ const exists = (p) => { try { fs.accessSync(p); return true; } catch { return fa
 const isDir = (p) => { try { return fs.statSync(p).isDirectory(); } catch { return false; } };
 const isExecutable = (p) => { try { if (!fs.statSync(p).isFile()) return false; fs.accessSync(p, fs.constants.X_OK); return true; } catch { return false; } };
 const readdir = (p) => { try { return fs.readdirSync(p); } catch { return null; } };
+const mtime = (p) => { try { return fs.statSync(p).mtimeMs; } catch { return 0; } };
 const readJSON = (p) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } };
 const stat = (p) => { try { return fs.statSync(p); } catch { return null; } };
 const basenameNoExt = (p) => path.basename(p).replace(/\.[^.]*$/, '');
@@ -114,7 +115,12 @@ function readTail(p, n) {
 function writeFileSafe(p, data) {
   // AB_ONLY: the board's own files go to a temp folder (only.dataDir), ~/.agent-boost stays untouched
   if (ONLY && p.startsWith(home + '/.agent-boost/')) p = path.join(Only.dataDir(), p.slice((home + '/.agent-boost/').length));
-  try { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, data); return true; } catch { return false; } }
+  // tmp + rename: a crash mid-write leaves the old file, never a truncated one (the archive, the deleted set …)
+  try {
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    const tmp = `${p}.tmp-${process.pid}`;
+    fs.writeFileSync(tmp, data); fs.renameSync(tmp, p); return true;
+  } catch { return false; } }
 /** Moves a file or folder to the desktop Trash (recoverable). false when the Trash refused. macOS: the Finder's Trash
  *  (FileManager.trashItem, which Electron's shell.trashItem calls) and nothing else, as Swift. */
 async function trashItem(p) {
@@ -381,6 +387,7 @@ function refreshSoon() {
 
 function refresh() {
   tick += 1;
+  prunePidCaches();
   const panes = Cache.panes();
   const paneSess = Cache.paneSessions();
   paneSessionMap = paneSess;
@@ -414,6 +421,7 @@ function refresh() {
   const memberPaths = new Set([...memberSessionIds].map((s) => transcriptIndex[s]).filter((x) => x != null));   // teammates' transcripts belong to their team cards
   for (const { sid, path: p } of transcriptList()) {
     if (claimed.has(sid) || memberPaths.has(p) || S.archive[sid]) continue;
+    claimed.add(sid);
     if (transcriptIndex[sid] !== p) transcriptIndex[sid] = p;
     const a = newAgent(sid, null, '', 'ended');
     a.cwd = transcriptCwd(p);
@@ -542,51 +550,6 @@ function refresh() {
   changed();
 }
 
-// ── in-process subagents (Agent tool) — they never get a pane or a team config entry ────────────────────────────────
-// (Ported as in Swift, where attachSubagents is defined but not called from refresh.)
-const subScan = {};
-/** For every live session: its subagents started since the process began (newest 8), read off
- *  <transcript dir>/<sessionId>/subagents/agent-*.jsonl + .meta.json. Re-scanned every 4 s per session. */
-function subagents(p) {
-  if (p.state === 'ended' || p.transcriptPath == null || p.pid == null) return [];
-  const c = subScan[p.sessionId];
-  if (c && now() - c.at < 4000) return c.items;
-  const sid = basenameNoExt(p.transcriptPath);
-  const dir = path.join(path.dirname(p.transcriptPath), sid + '/subagents');
-  const since = processStart(p.pid) ?? now() - 6 * 3600 * 1000;
-  const out = [];
-  for (const f of readdir(dir) || []) {
-    if (!f.endsWith('.jsonl')) continue;
-    const full = dir + '/' + f;
-    const st = stat(full);
-    if (!st || st.mtimeMs < since) continue;
-    const id = f.slice(0, -6);
-    const meta = readJSON(dir + '/' + id + '.meta.json') || {};
-    const key = 'sub:' + p.sessionId + ':' + id;
-    const a = newAgent(key, null, typeof meta.description === 'string' ? meta.description : id);
-    a.isSubagent = true; a.parentSid = p.sessionId;
-    a.agentType = typeof meta.agentType === 'string' ? meta.agentType : null;
-    a.state = now() - st.mtimeMs < 20000 ? 'busy' : 'ended';
-    a.cwd = p.cwd;
-    transcriptIndex[key] = full;
-    out.push([st.mtimeMs, a]);
-  }
-  const items = out.sort((x, y) => y[0] - x[0]).slice(0, 8).map((x) => x[1]);
-  subScan[p.sessionId] = { at: now(), items };
-  return items;
-}
-function attachSubagents(teams, loose) {
-  const focus = liveChats();
-  const enriched = (list) => list.map((x) => { const a = copyAgent(x); enrich(a, focus.has(a.sessionId)); return a; });
-  for (const t of teams) {
-    const subs = enriched(t.members.filter((m) => !m.isSubagent).flatMap(subagents));
-    if (subs.length) t.members.push(...subs);
-  }
-  const extra = [];
-  for (const a of loose) if (!a.isSubagent) extra.push(...enriched(subagents(a)));
-  loose.push(...extra);
-}
-
 // ── answering Claude Code's choice windows from inside the app ──────────────────────────────────────────────────────
 /** Picks option `optionIndex` (0-based) of the prompt the agent waits on: re-reads the pane first, walks the cursor with
  *  Up/Down (number keys behave differently between versions) and presses Enter; then checks the prompt is gone. */
@@ -608,9 +571,15 @@ function answerPrompt(a, optionIndex, text = null) {
 }
 /** Esc: cancels / declines whatever the window asks. */
 function cancelPrompt(a) {
-  if (a.tmuxPane == null || S.promptSending.has(a.sessionId)) return;
+  const p = a.tmuxPane;
+  if (p == null || S.promptSending.has(a.sessionId)) return;
   if (ro(`cancelPrompt ${a.sessionId}`, a)) return;
-  TmuxControl().interrupt(a.tmuxPane);
+  const C = TmuxControl();
+  C.queue(p, async () => {
+    const out = (await Shell.tmux(['capture-pane', '-p', '-t', p, '-S', '-4'])).out;   // the window may be gone since the last refresh
+    if (!Screen().needsInput(out)) { setNoticeValue(L('선택창이 이미 닫혀 Esc를 보내지 않았습니다.')); return; }
+    await C.keys(['-t', p, 'Escape'], L('중단(Esc)'));
+  });
   setTimeout(refreshSoon, 800);
 }
 function holdOlderRows(hold, sid) {
@@ -834,8 +803,17 @@ function transcriptList() {
       if (f.endsWith('.jsonl') && !f.startsWith('agent-')) out.push({ sid: f.slice(0, -6), path: `${root}/${d}/${f}` });
     }
   }
-  transcriptScan = { tick, list: out };
-  return out;
+  // a conversation resumed from another folder leaves the same <sid>.jsonl under two project folders: the newer one is
+  // the live copy (one card, and rename / delete / resume act on that file, not on whichever readdir listed first)
+  const bySid = new Map();
+  for (const e of out) {
+    const prev = bySid.get(e.sid);
+    if (!prev) { bySid.set(e.sid, e); continue; }
+    if (mtime(e.path) > mtime(prev.path)) bySid.set(e.sid, e);
+  }
+  const list = [...bySid.values()];
+  transcriptScan = { tick, list };
+  return list;
 }
 const cwdCache = {};
 /** "cwd" of a transcript's first records, read once per file. */
@@ -945,17 +923,45 @@ function loadSessions(paneByPid, jobs) {
 const PS = isMac ? '/bin/ps' : 'ps', PGREP = isMac ? '/usr/bin/pgrep' : 'pgrep';
 // a process's parent and command line never change: look them up once per pid
 const ppidCache = {}, cmdCache = {}, startCache = {};
+/** The per-pid caches (parent, command line, start time, team identity …) hold facts of a process that is gone once it
+ *  exits; a later process with the same pid must not inherit them (wrong model, team or pane). Dead pids go every tick:
+ *  kill(pid, 0) is a syscall, not a spawn, and a pid is dead for at least one tick before the system reuses it. */
+function prunePidCaches() {
+  for (const c of [ppidCache, cmdCache, startCache, claudePids, spawnable, identityCache, attachScan]) {
+    for (const k of Object.keys(c)) { const pid = Number.parseInt(k, 10); if (Number.isInteger(pid) && !alive(pid)) delete c[k]; }
+  }
+}
 const hasProc = exists('/proc/self/stat');
 function readProcStat(pid) {
   // /proc/<pid>/stat: "pid (comm) state ppid … starttime(22nd field)"; comm may hold spaces / parentheses
   try { const s = fs.readFileSync(`/proc/${pid}/stat`, 'utf8'); return s.slice(s.lastIndexOf(')') + 2).split(' '); } catch { return null; }
+}
+/** Without /proc (macOS): every process's parent and command line from one `ps` per tick, read only when a lookup
+ *  misses its cache. Before, each pane's child scan was its own `pgrep`, each parent and command line its own `ps`. */
+let procTab = null;
+function procTable() {
+  if (procTab && procTab.tick === tick) return procTab;
+  const t = { tick, ppid: new Map(), cmd: new Map(), kids: new Map() };
+  for (const line of Shell.runSync([PS, '-axo', 'pid=,ppid=,command='], { timeout: 3 }).out.split('\n')) {
+    const m = /^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line);
+    if (!m) continue;
+    const pid = Number(m[1]), pp = Number(m[2]);
+    t.ppid.set(pid, pp); t.cmd.set(pid, m[3].trim());
+    if (!t.kids.has(pp)) t.kids.set(pp, []);
+    t.kids.get(pp).push(pid);
+  }
+  procTab = t;
+  return t;
 }
 /** A pane's pid is usually the shell; the agent is its child. */
 function paneViaParent(pid, paneByPid) {
   if (ppidCache[pid] != null) return paneByPid[ppidCache[pid]] ?? null;
   let pp = null;
   if (hasProc) { const f = readProcStat(pid); if (f) pp = Number(f[1]); }
-  else { const r = Shell.runSync([PS, '-o', 'ppid=', '-p', String(pid)], { timeout: 2 }); pp = Number.parseInt(r.out.trim(), 10); }
+  else {
+    pp = procTable().ppid.get(pid);
+    if (pp === undefined) { const r = Shell.runSync([PS, '-o', 'ppid=', '-p', String(pid)], { timeout: 2 }); pp = Number.parseInt(r.out.trim(), 10); }   // newer than the table
+  }
   if (!Number.isInteger(pp)) return null;
   ppidCache[pid] = pp;
   return paneByPid[pp] ?? null;
@@ -969,7 +975,7 @@ function childPids(pid) {
     }
     return out;
   }
-  return Shell.runSync([PGREP, '-P', String(pid)], { timeout: 2 }).out.split('\n').map((x) => Number.parseInt(x.trim(), 10)).filter(Number.isInteger);
+  return (procTable().kids.get(pid) || []).slice();
 }
 function effortFromCommandLine(pid) {
   const out = cmdline(pid);
@@ -1001,7 +1007,10 @@ function cmdline(pid) {
   if (cmdCache[pid] != null) return cmdCache[pid];
   let c = '';
   if (hasProc) { try { c = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0').filter(Boolean).join(' ').trim(); } catch { } }
-  else c = Shell.runSync([PS, '-o', 'command=', '-p', String(pid)], { timeout: 2 }).out.trim();
+  else {
+    c = procTable().cmd.get(pid) || '';
+    if (!c) c = Shell.runSync([PS, '-o', 'command=', '-p', String(pid)], { timeout: 2 }).out.trim();   // newer than the table
+  }
   if (c) cmdCache[pid] = c;
   return c;
 }
@@ -1517,8 +1526,6 @@ function command(cmd, a) {
 /** `/model` and `/effort` also overwrite the user's defaults for new sessions
  *  in ~/.claude/settings.json. Snapshot those keys, send, then put them back:
  *  the running session keeps its new setting, the defaults stay the user's. */
-const defaultKeys = ['model', 'effortLevel', 'modelSettings'];
-const settingsPath = () => home + '/.claude/settings.json';
 /** Remote Control on/off for one session. Off goes through /remote-control's menu ("Disconnect this session"). */
 function toggleRemote(a) {
   const pane = a.tmuxPane, on = a.remoteControl;
@@ -1575,6 +1582,7 @@ function sendSlash(cmd, pane, sid = null) {
       for (let i = 0; i < 32; i++) {                        // up to 8 s: mid-turn the window can come late
         await sleep(250);
         const out = (await Shell.tmux(['capture-pane', '-p', '-t', pane])).out;   // not C.exec: that waits on this same queue
+        if (/Set model to|Kept model as|Set effort level to/.test(out.split('\n').slice(-15).join('\n'))) return;   // answered without a window
         if (Screen().isSwitchModelPrompt(out)) {
           if (Cache.clearModelConfirm) Cache.clearModelConfirm(pane);   // answered here: the background check must not press Enter again
           await C.keys(['-t', pane, 'Enter'], L('모델 전환 확인(Enter)'));
@@ -1599,38 +1607,6 @@ function sendSlash(cmd, pane, sid = null) {
     })();
   }
 }
-function onlyDefaultsChanged(raw) {
-  let a, b;
-  try { a = JSON.parse(raw.toString('utf8')); b = JSON.parse(fs.readFileSync(settingsPath(), 'utf8')); } catch { return false; }
-  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
-  for (const k of defaultKeys) { delete a[k]; delete b[k]; }
-  return deepEqual(a, b);
-}
-function readDefaults() {
-  const j = readJSON(settingsPath());
-  if (!j || typeof j !== 'object') return {};
-  const out = {};
-  for (const k of defaultKeys) out[k] = k in j ? j[k] : null;
-  return out;
-}
-/** The file is put back with the user's own permissions (settings.json is usually 0600; a fresh temp file was 0644). */
-function keepMode(p, mode) { if (mode != null) { try { fs.chmodSync(p, mode); } catch { } } }
-let defaultsGuard = null;   // {before, raw, mode, until}: see sendSlash
-function restoreDefaults(before, mode = null) {
-  if (!before || Object.keys(before).length === 0) return;
-  const j = readJSON(settingsPath());
-  if (!j || typeof j !== 'object') return;
-  let changedAny = false;
-  for (const k of defaultKeys) {
-    const old = before[k];
-    if (old == null) { if (k in j) { delete j[k]; changedAny = true; } }
-    else if (!deepEqual(j[k], old)) { j[k] = old; changedAny = true; }
-  }
-  if (!changedAny) return;
-  const tmp = settingsPath() + '.agentboost.tmp';
-  try { fs.writeFileSync(tmp, JSON.stringify(j, null, 2)); keepMode(tmp, mode); fs.renameSync(tmp, settingsPath()); } catch { }
-}
-
 // ── quit (the same for leads, teammates and single sessions) ────────────────────────────────────────────────────────
 /** Only sessions the board can type into can be quit or deleted from the board.
  *  Sessions without a pane (Claude desktop app, plain terminals) are left alone:
@@ -2189,18 +2165,22 @@ async function deleteAgent(a) {
     if (!canQuit(a) || a.pid == null) return;
     const pid = a.pid;
     quit(a, 'now');
-    for (let i = 0; i < 120 && alive(pid); i++) await sleep(100);
+    for (let i = 0; i < 300 && alive(pid); i++) await sleep(100);
+    if (alive(pid)) { signal(pid, 'SIGTERM'); for (let i = 0; i < 50 && alive(pid); i++) await sleep(100); }
     if (alive(pid)) signal(pid, 'SIGKILL');
     const ended = copyAgent(a); ended.state = 'ended';
     return deleteAgent(ended);
   }
-  const trashed = [];
+  const trashed = [], refused = [];
   const p = a.transcriptPath ?? transcript(a.sessionId);
-  if (p != null) {
-    // to the Trash (recoverable); plain removal only when the Trash refuses
-    if ((await trashItem(p)) || removeItem(p)) trashed.push(L('대화 기록'));
+  // to the Trash only (recoverable): when the Trash refuses the file stays and the notice says so. Only the CLI's own
+  // transcript folder is ever touched (the path comes from the archive file, which anyone can edit)
+  const projects = home + '/.claude/projects/';
+  if (p != null && !path.resolve(p).startsWith(projects)) refused.push(p);
+  else if (p != null) {
+    if (await trashItem(p)) trashed.push(L('대화 기록')); else if (exists(p)) refused.push(p);
     const sub = p.replace(/\.[^./]*$/, '');   // subagent folder, if any
-    if (exists(sub) && !(await trashItem(sub))) removeItem(sub);
+    if (exists(sub) && !(await trashItem(sub))) refused.push(sub);
   }
   if (a.teamName != null) {
     const t = a.teamName;
@@ -2209,8 +2189,9 @@ async function deleteAgent(a) {
     const othersEnded = others.every((k) => (agent(k) ? agent(k).state : 'ended') === 'ended');
     if (a.isLead && othersEnded) {
       for (const dir of ['teams', 'tasks']) {
-        const tp = home + `/.claude/${dir}/${t}`;
-        if (exists(tp) && removeItem(tp)) trashed.push(L('팀 %@ 폴더', dir));
+        const tp = teamDir(dir, t);
+        if (tp == null || !exists(tp)) continue;
+        if (await trashItem(tp)) trashed.push(L('팀 %@ 폴더', dir)); else refused.push(tp);
       }
       delete seen[t];
     }
@@ -2222,8 +2203,14 @@ async function deleteAgent(a) {
   transcriptScan.tick = -100;                          // the file list changed: rescan now
   setChat(a.sessionId, null);
   if (S.selectedAgent === a.sessionId) setSelectedAgentValue(null);
-  setNoticeValue(L("'%@' 삭제: %@", a.name, trashed.length === 0 ? L('옮길 파일 없음') : L('%@을 휴지통으로 이동', trashed.join(', '))));
+  setNoticeValue(L("'%@' 삭제: %@", a.name, trashed.length === 0 ? L('옮길 파일 없음') : L('%@을 휴지통으로 이동', trashed.join(', ')))
+    + (refused.length ? ' — ' + L('휴지통이 받지 않아 그대로 둔 파일 %@개 (%@)', String(refused.length), refused.join(', ')) : ''));
   refresh();
+}
+/** ~/.claude/<teams|tasks>/<team>; null for a team name that would leave that folder ("../x", "a/b"). */
+function teamDir(dir, t) {
+  if (typeof t !== 'string' || !t || t === '.' || t === '..' || /[\/\\\0]/.test(t)) return null;
+  return home + `/.claude/${dir}/${t}`;
 }
 function forget(a) {
   if (a.state !== 'ended' || a.teamName == null) return;
@@ -2613,8 +2600,8 @@ async function pruneEmptyTeams(silent = false) {
   let n = 0;
   for (const t of emptyTeams()) {
     for (const dir of ['teams', 'tasks']) {
-      const p = home + `/.claude/${dir}/${t.name}`;
-      if (exists(p)) await trashItem(p);
+      const p = teamDir(dir, t.name);
+      if (p != null && exists(p)) await trashItem(p);
     }
     delete seen[t.name]; n += 1;
   }
@@ -2934,5 +2921,4 @@ module.exports = {
   overlayName, storedTitle, queuedTexts, queuedCount, cmdline, flag, expandModelAlias, processStart, paneIsBusy, shellQuote,
   isFirstRunScreen, diskManagerPrompt, teammateInstructionRaw: teammateInstruction, parseUsage, loginStatus, skipShutdownFlag,
   // unused in Swift too (defined, not called): kept for side-by-side reading
-  _attachSubagents: attachSubagents,
 };

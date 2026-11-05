@@ -1,6 +1,6 @@
 // Port of PromptCard.swift: the question Claude Code is asking in the terminal (permission, trust, model switch …),
 // answered from here. Pure display: the caller supplies the texts and what happens on choose / cancel.
-import { html, useState, L } from '../lib.js';
+import { html, useState, useEffect, useRef, L } from '../lib.js';
 import { Icon, Button, ProgressSpinner } from './widgets.js';
 import { ensureStyles } from './board.js';
 
@@ -22,8 +22,8 @@ export function PromptCard({ title, detail, preview, options = [], descs = null,
     <div class="prompt-options">
       ${options.map((label, i) => i === textOption
         ? html`<${FreeText} key=${i} num=${i + 1} placeholder=${label} sending=${sending} onSend=${(t) => onChoose(i, t)} />`
-        : html`<${Button} key=${i} kind="raised" prominent=${i === 0} minHeight=${30} disabled=${sending} class="prompt-option" onClick=${() => onChoose(i)}>
-        <span class="prompt-num" style=${{ background: `color-mix(in srgb, var(--ink) ${i === 0 ? 28 : 12}%, transparent)` }}>${i + 1}</span>
+        : html`<${Button} key=${i} kind="raised" prominent=${i === 0 && !checked} minHeight=${30} disabled=${sending} class="prompt-option" onClick=${() => onChoose(i)}>
+        <span class="prompt-num" style=${{ background: `color-mix(in srgb, var(--ink) ${i === 0 && !checked ? 28 : 12}%, transparent)` }}>${i + 1}</span>
         ${checked && checked[i] != null ? html`<${Icon} name=${checked[i] ? 'checkmark.square.fill' : 'square'} size=${14} />` : null}
         <span class="vstack prompt-text">
           <span class="prompt-label">${label}</span>
@@ -41,21 +41,29 @@ export function PromptCard({ title, detail, preview, options = [], descs = null,
   </div>`;
 }
 
-/** The question's "Type something" row: a field; Enter (or the button) answers with its text. */
+/** The question's "Type something" row: a field; Enter (or the button) answers with its text. The text stays until the
+ *  CLI has taken it (the row's label turns into the typed text), so a refused send does not lose it. Esc hands the
+ *  keys back to the chat box, where Esc cancels and the numbers pick. */
 function FreeText({ num, placeholder, sending, onSend }) {
   const [text, setText] = useState('');
-  const go = () => { const t = text.trim(); if (t && !sending) { onSend(t); setText(''); } };
-  return html`<div class="prompt-free hstack">
+  const ref = useRef(null);
+  useEffect(() => { setText(''); }, [placeholder]);
+  const go = () => { const t = text.trim(); if (t && !sending) { onSend(t); focusComposer(ref.current); } };
+  return html`<div ref=${ref} class="prompt-free hstack">
     <span class="prompt-num" style=${{ background: 'color-mix(in srgb, var(--ink) 12%, transparent)' }}>${num}</span>
-    <input class="textfield-plain t-callout" style=${{ flex: '1 1 auto', minWidth: 0 }} placeholder=${placeholder} value=${text} disabled=${sending}
+    <input class="textfield-plain prompt-free-field" placeholder=${placeholder} value=${text} disabled=${sending}
       onInput=${(e) => setText(e.currentTarget.value)}
       onKeyDown=${(e) => {
-        e.stopPropagation();                              // the composer's keys (numbers, Esc) stay out of this field
-        if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); go(); }
-        else if (e.key === 'Escape') { e.preventDefault(); e.currentTarget.blur(); }
+        if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); e.stopPropagation(); go(); }
+        else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); focusComposer(ref.current); }
       }} />
     <${Button} kind="raisedCompact" disabled=${sending || !text.trim()} onClick=${go}>${L('보내기')}<//>
   </div>`;
+}
+/** The chat box under the card `el` sits in (each session's composer has its own card in a split view). */
+function focusComposer(el) {
+  const f = el && el.closest('.composer-column')?.querySelector('textarea.composer-field');
+  if (f) f.focus();
 }
 
 function PreviewBox({ text }) {
@@ -76,6 +84,11 @@ PromptCard.handleKey = (ev, { optionCount, textOption = -1, sending, composerEmp
   if (ev.key === 'Escape') { onCancel(); return true; }
   if (!composerEmpty || ev.metaKey || ev.ctrlKey || ev.altKey) return false;
   const n = /^[1-9]$/.test(ev.key) ? Number(ev.key) : NaN;
-  if (!(n >= 1 && n <= Math.min(optionCount, 9)) || n - 1 === textOption) return false;   // the free-text row needs its field
+  if (!(n >= 1 && n <= Math.min(optionCount, 9))) return false;
+  if (n - 1 === textOption) {                           // the free-text row: its number moves the caret into the field
+    const f = ev.target instanceof Element ? ev.target.closest('.composer-column')?.querySelector('.prompt-free-field') : null;
+    if (f) f.focus();
+    return true;
+  }
   onChoose(n - 1); return true;
 };

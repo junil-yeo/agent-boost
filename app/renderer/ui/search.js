@@ -169,7 +169,7 @@ export function ConvoSearchSheet({ onClose }) {
     <div class="cs-bar">
       <${Icon} name="magnifyingglass" color="var(--secondary)" />
       <input ref=${field} class="textfield-plain" value=${query} placeholder=${L('모든 세션의 대화에서 찾기 (여러 단어는 모두 포함)')}
-        onInput=${(e) => setQuery(e.currentTarget.value)} />
+        onInput=${(e) => setQuery(e.currentTarget.value)} onKeyDown=${listKey} />
       ${loading ? html`<${ProgressSpinner} />` : null}
       <${Button} kind="raisedCompact" onClick=${onClose}>${L('닫기')}<//>
     </div>

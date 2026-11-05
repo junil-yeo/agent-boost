@@ -34,6 +34,7 @@ function isoDate(s) {
 }
 const trimAll = (s) => s.replace(/^[\s\u0085]+|[\s\u0085]+$/g, '');
 
+const READ_PIECE = 4 << 20;
 class ConvoIndex {
   constructor(root) {
     this.root = root || path.join(os.homedir(), '.claude', 'projects');
@@ -100,16 +101,29 @@ class ConvoIndex {
   read(p, f) {
     let fd;
     try { fd = fs.openSync(p, 'r'); } catch { return; }
-    let data;
     try {
       const end = fs.fstatSync(fd).size;
       if (end < f.offset) { f.offset = 0; f.title = null; f.msgs = []; }               // rewritten: start over
       if (end <= f.offset) return;
-      data = Buffer.allocUnsafe(end - f.offset);
-      let got = 0;
-      while (got < data.length) { const n = fs.readSync(fd, data, got, data.length - got, f.offset + got); if (!n) break; got += n; }
-      data = data.subarray(0, got);
-    } catch { return; } finally { fs.closeSync(fd); }
+      // in pieces of 4 MB (a transcript can run to hundreds of MB; one buffer for the whole file held all of it at once):
+      // a line cut by a piece's end waits for the next piece
+      let pos = f.offset, carry = null;
+      while (pos < end) {
+        let data = Buffer.allocUnsafe(Math.min(READ_PIECE, end - pos));
+        let got = 0;
+        while (got < data.length) { const n = fs.readSync(fd, data, got, data.length - got, pos + got); if (!n) break; got += n; }
+        if (!got) break;
+        data = data.subarray(0, got); pos += got;
+        if (carry) { data = Buffer.concat([carry, data]); carry = null; }
+        const used = this.absorb(data, f);
+        f.offset += used;
+        if (used < data.length) carry = Buffer.from(data.subarray(used));
+      }
+    } catch { } finally { fs.closeSync(fd); }
+  }
+  /** One piece: the records' lines are found by byte patterns, parsed and appended to f.msgs. Returns the bytes used
+   *  (up to the last full line). */
+  absorb(data, f) {
     const lines = [], titles = [];
     // pattern hits, ascending: "custom-title"/"ai-title", "type":"user", "type":"assistant", "type":"text", "tool_use_id"
     const title = hits(data, 0, A_TITLE, (i) => at(data, i - 7, PRE_CUSTOM) || at(data, i - 3, PRE_AI));
@@ -135,7 +149,6 @@ class ConvoIndex {
       else if ((within(1, start, nl) && !within(4, start, nl)) || (within(2, start, nl) && within(3, start, nl))) lines.push(data.subarray(start, nl));
       start = nl + 1;
     }
-    f.offset += start;
     for (const t of titles) {
       let d; try { d = JSON.parse(t.toString('utf8')); } catch { continue; }
       if (!d || typeof d !== 'object') continue;
@@ -163,6 +176,7 @@ class ConvoIndex {
       if (!text) continue;
       f.msgs.push({ user: type === 'user', time, text, low: text.toLowerCase() });
     }
+    return start;
   }
 
   /** Messages holding every word of the query, newest first. → [{id, sid, path, project, title, index, user, time, text}]

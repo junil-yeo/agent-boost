@@ -16,10 +16,13 @@ let win = null;
 /** Sends an event to the window (no-op before it exists). */
 function send(channel, payload) { if (win && !win.isDestroyed()) win.webContents.send(channel, payload); }
 
+// runs a command / writes a script / reads any path: the store wraps these with its own checks, the page never calls them
+const PAGE_DENIED = new Set(['platform.openTerminal', 'platform.attachTerminal', 'platform.attachTerminalMac', 'platform.openPath', 'transcript.snapshot', 'store._attachSubagents']);
+process.on('unhandledRejection', (e) => console.error('[main] unhandled rejection:', e && e.stack ? e.stack : e));
 ipcMain.handle('call', async (_e, method, args) => {
   const dot = method.indexOf('.');
   // the page never runs commands directly: the shell module is for the main process only
-  if (method.slice(0, dot) === 'shell') throw new Error(`not callable from the page: ${method}`);
+  if (method.slice(0, dot) === 'shell' || PAGE_DENIED.has(method)) throw new Error(`not callable from the page: ${method}`);
   const mod = modules[method.slice(0, dot)];
   const fn = mod && mod[method.slice(dot + 1)];
   if (typeof fn !== 'function') throw new Error(`unknown method ${method}`);
@@ -43,7 +46,14 @@ function isOwnPage(url) {
  *  not be opened either); every other scheme (https, mailto, an editor's own scheme …) goes to the system. */
 function openOutside(url) {
   if (/^(file|javascript|data|blob|about|chrome|devtools):/i.test(url)) return;
-  shell.openExternal(url).catch(() => { });
+  if (/^(https?|mailto):/i.test(url)) { shell.openExternal(url).catch(() => { }); return; }
+  // another app's scheme (vscode://, ssh://, zoommtg:// …) can act the moment it opens, and the link came from chat
+  // text the model or a tool wrote: the person confirms first
+  const { dialog } = require('electron');
+  const { L } = require('./l10n');
+  const opts = { type: 'question', buttons: [L('열기'), L('취소')], defaultId: 1, cancelId: 1, message: L('다른 앱으로 여는 링크입니다. 열까요?'), detail: url.length > 300 ? url.slice(0, 300) + '…' : url };
+  (win && !win.isDestroyed() ? dialog.showMessageBox(win, opts) : dialog.showMessageBox(opts))
+    .then((r) => { if (r.response === 0) shell.openExternal(url).catch(() => { }); }).catch(() => { });
 }
 
 function createWindow() {

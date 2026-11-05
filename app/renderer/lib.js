@@ -1,10 +1,10 @@
 // Shared renderer helpers: html`` templates (Preact + htm), the store state, calls into the main process, L().
-import { h, render, Fragment } from 'preact';
-import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from 'preact/hooks';
+import { h, render, Fragment, Component, createContext } from 'preact';
+import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, useContext } from 'preact/hooks';
 import htm from 'htm';
 
 export const html = htm.bind(h);
-export { h, render, Fragment, useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect };
+export { h, render, Fragment, Component, createContext, useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, useContext };
 
 /** Calls a main-process function: call('store.send', text, sid). */
 export const call = (method, ...args) => window.api.call(method, ...args);
@@ -46,10 +46,29 @@ call('store.getState').then((s) => { if (s && !state) { state = s; subs.forEach(
 export function getState() { return state; }
 /** The latest store state; the component redraws on every update. */
 export function useStore() {
+  const frozen = useContext(Frozen);
+  const fr = useRef(frozen); fr.current = frozen;
   const [s, set] = useState(state);
-  useEffect(() => { subs.add(set); if (state && state !== s) set(state); return () => subs.delete(set); }, []);
+  useEffect(() => { const f = (st) => { if (!fr.current) set(st); }; subs.add(f); if (state && state !== s) set(state); return () => subs.delete(f); }, []);
+  useEffect(() => { if (!frozen && state && state !== s) set(state); }, [frozen]);
   return s;
 }
+/** true inside a tab that is built but not on screen: useStore() there skips the store's pushes until the tab shows
+ *  again (every hidden tab used to redraw on each push). Click handlers read getState() and stay current. */
+export const Frozen = createContext(false);
+/** Wraps a tab layer: hidden, it neither redraws from its parent nor from the store; shown, it catches up at once. */
+export class Freeze extends Component {
+  shouldComponentUpdate(next) { return !next.frozen || next.frozen !== this.props.frozen; }
+  render({ frozen, children }) { return html`<${Frozen.Provider} value=${!!frozen}>${children}<//>`; }
+}
+
+// a main-process call that throws rejects here; nothing used to catch most of them, so the failure was invisible
+window.addEventListener('unhandledrejection', (e) => {
+  const msg = e.reason && (e.reason.message || String(e.reason));
+  console.error('unhandled', e.reason);
+  if (!msg || /setNotice/.test(msg)) return;
+  call('store.setNotice', L('오류 — %@', msg.replace(/^Error invoking remote method 'call': Error: /, ''))).catch(() => {});
+});
 /** An agent by session id from the current state. */
 export function agentOf(s, sid) {
   if (!s || !sid) return null;

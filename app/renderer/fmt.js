@@ -123,7 +123,7 @@ export function overlayName(o) { return o === 'agents' ? L('세션 목록(← ag
 
 /** The banner's free-memory lines (UsageBanner.swift). Values come from the main process (GB; NaN = not read yet). */
 export const HostMemory = {
-  ramText(gb) { return `RAM ${(Number(gb) || 0).toFixed(1)}GB`; },
+  ramText(gb) { return L('RAM %@GB', (Number(gb) || 0).toFixed(1)); },
   diskText(gb) { return gb == null || Number.isNaN(Number(gb)) ? L('디스크 …') : L('디스크 %@GB', Number(gb).toFixed(1)); },
 };
 
